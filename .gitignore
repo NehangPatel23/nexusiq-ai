@@ -1,0 +1,39 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build
+.next
+out
+dist
+build
+
+# env
+.env
+.env.local
+.env.*.local
+
+# debug
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# testing
+coverage
+playwright-report
+test-results
+
+# prisma
+prisma/migrations/**/migration_lock.toml
+
+# storage
+storage/
+
+# misc
+.DS_Store
+*.pem
+.vercel
+*.tsbuildinfo
+next-env.d.ts

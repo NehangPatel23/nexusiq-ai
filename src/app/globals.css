@@ -1,0 +1,81 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 5%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 8%;
+    --card-foreground: 210 40% 96%;
+    --popover: 222 47% 8%;
+    --popover-foreground: 210 40% 96%;
+    --glass: 222 47% 10% / 0.7;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 96%;
+    --muted: 217 33% 14%;
+    --muted-foreground: 215 20% 55%;
+    --accent: 262 83% 58%;
+    --accent-foreground: 210 40% 96%;
+    --destructive: 0 63% 50%;
+    --destructive-foreground: 210 40% 96%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 217 91% 60%;
+    --radius: 0.625rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: hsl(var(--glass));
+    backdrop-filter: blur(12px);
+    border: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .text-display {
+    @apply text-4xl font-bold tracking-tight md:text-5xl;
+  }
+
+  .text-h1 {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  .text-h2 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  .text-h3 {
+    @apply text-xl font-semibold;
+  }
+}
