@@ -1,15 +1,18 @@
 # dependencies
-node_modules
+node_modules/
 .pnp
 .pnp.js
+.pnpm-store/
 
 # build
-.next
-out
-dist
-build
+.next/
+.next*/
+out/
+dist/
+build/
+.turbo/
 
-# env
+# env & secrets
 .env
 .env.local
 .env.*.local
@@ -19,21 +22,28 @@ npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
 # testing
-coverage
-playwright-report
-test-results
+coverage/
+playwright-report/
+test-results/
 
-# prisma
-prisma/migrations/**/migration_lock.toml
-
-# storage
+# storage & uploads
 storage/
 
-# misc
+# IDE / OS
 .DS_Store
+.idea/
+.vscode/
 *.pem
 .vercel
 *.tsbuildinfo
+
+# next.js generated
 next-env.d.ts
+
+# cursor (keep project rules, ignore local IDE state)
+.cursor/**
+!.cursor/rules/
+!.cursor/rules/**

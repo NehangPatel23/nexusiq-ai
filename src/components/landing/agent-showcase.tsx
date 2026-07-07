@@ -1,58 +1,104 @@
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+"use client";
+
+import {
+  AlertTriangle,
+  Building2,
+  FileWarning,
+  Scale,
+  ShieldAlert,
+} from "lucide-react";
+
+import { AgentOrb } from "@/components/brand/agent-orb";
+import { NexusMark } from "@/components/brand/nexus-mark";
+import { ScrollReveal } from "@/components/motion/scroll-reveal";
+import { motion, useReducedMotion } from "framer-motion";
 
 const agents = [
   {
     name: "Financial",
-    description: "Revenue quality, EBITDA adjustments, working capital, and debt covenants.",
-    color: "bg-primary/10 text-primary",
+    score: 91,
+    icon: Building2,
+    color: "from-primary/20 to-primary/5 text-primary",
+    ringColor: "hsl(213, 94%, 62%)",
+    focus: "Revenue & capital structure",
+    description:
+      "Analyzes P&L trends, working capital, debt covenants, and EBITDA adjustments with cited financials.",
+    tags: ["Revenue", "EBITDA", "Debt"],
   },
   {
     name: "Legal",
-    description: "Contract review, litigation exposure, IP ownership, and regulatory filings.",
-    color: "bg-accent/10 text-accent",
+    score: 87,
+    icon: Scale,
+    color: "from-accent/20 to-accent/5 text-accent",
+    ringColor: "hsl(252, 78%, 68%)",
+    focus: "Contracts & liability",
+    description:
+      "Reviews MSAs, change-of-control clauses, IP assignments, and pending litigation exposure.",
+    tags: ["Contracts", "IP", "Litigation"],
   },
   {
     name: "Compliance",
-    description: "Policy gaps, regulatory requirements, and audit trail completeness.",
-    color: "bg-success/10 text-success",
+    score: 84,
+    icon: ShieldAlert,
+    color: "from-success/20 to-success/5 text-success",
+    ringColor: "hsl(152, 68%, 46%)",
+    focus: "Regulatory & policy",
+    description:
+      "Flags GDPR gaps, SOC 2 controls, industry-specific regulations, and audit findings.",
+    tags: ["Policy", "Audit", "Regulatory"],
   },
   {
     name: "Risk",
-    description: "Operational, market, and concentration risks with severity scoring.",
-    color: "bg-warning/10 text-warning",
+    score: 79,
+    icon: AlertTriangle,
+    color: "from-warning/20 to-warning/5 text-warning",
+    ringColor: "hsl(38, 92%, 55%)",
+    focus: "Operational & market",
+    description:
+      "Evaluates customer concentration, supply chain dependencies, and competitive positioning.",
+    tags: ["Market", "Ops", "Concentration"],
   },
   {
     name: "Fraud",
-    description: "Anomaly detection, related-party transactions, and red flag patterns.",
-    color: "bg-destructive/10 text-destructive",
+    score: 76,
+    icon: FileWarning,
+    color: "from-destructive/20 to-destructive/5 text-destructive",
+    ringColor: "hsl(0, 72%, 58%)",
+    focus: "Anomalies & red flags",
+    description:
+      "Detects related-party transactions, revenue recognition issues, and inconsistent disclosures.",
+    tags: ["Anomalies", "Related-party", "Red flags"],
   },
 ];
 
 export function AgentShowcase() {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <section className="bg-card/30 px-4 py-20 md:px-6" aria-labelledby="agents-heading">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-12 text-center">
+    <section className="section-padding bg-card/20" aria-labelledby="agents-heading" id="agents">
+      <div className="page-container">
+        <ScrollReveal className="mx-auto mb-16 max-w-2xl text-center">
+          <div className="mb-6 flex justify-center">
+            <motion.div
+              animate={reduceMotion ? undefined : { rotate: [0, 360] }}
+              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+            >
+              <NexusMark size={48} glow />
+            </motion.div>
+          </div>
+          <p className="text-label mb-4 text-accent">Intelligence</p>
           <h2 id="agents-heading" className="text-h2">
-            Five specialized intelligence agents
+            Five specialized agents
           </h2>
-          <p className="mt-4 text-muted-foreground">
-            Multi-agent intelligence with explainable consensus — never a black box.
+          <p className="mt-5 text-body-lg">
+            Each agent scores, cites, and reports independently — consensus synthesizes with full
+            transparency and conflict resolution.
           </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {agents.map((agent) => (
-            <Card key={agent.name} className="border-border/50">
-              <CardHeader>
-                <Badge variant="outline" className={agent.color}>
-                  {agent.name}
-                </Badge>
-                <CardTitle className="text-lg">{agent.name} Agent</CardTitle>
-                <CardDescription>{agent.description}</CardDescription>
-              </CardHeader>
-              <CardContent />
-            </Card>
+        </ScrollReveal>
+
+        <div className="grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          {agents.map((agent, index) => (
+            <AgentOrb key={agent.name} {...agent} delay={index * 0.1} />
           ))}
         </div>
       </div>

@@ -25,7 +25,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
         position="bottom-right"
         toastOptions={{
           classNames: {
-            toast: "bg-card border-border text-foreground",
+            toast:
+              "surface-elevated border-border/60 text-foreground shadow-soft font-sans",
           },
         }}
       />

@@ -11,8 +11,9 @@ export default defineConfig({
     exclude: [...configDefaults.exclude, "e2e/**"],
   },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+    alias: [
+      { find: "@/features", replacement: path.resolve(__dirname, "./features") },
+      { find: "@", replacement: path.resolve(__dirname, "./src") },
+    ],
   },
 });

@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/landing/hero-section";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { LandingHeader } from "@/components/landing/landing-header";
 import { ProblemStrip } from "@/components/landing/problem-strip";
+import { SocialProofStrip } from "@/components/landing/social-proof-strip";
 import { TrustSection } from "@/components/landing/trust-section";
 
 export default function LandingPage() {
@@ -12,6 +13,7 @@ export default function LandingPage() {
       <LandingHeader />
       <main id="main-content">
         <HeroSection />
+        <SocialProofStrip />
         <ProblemStrip />
         <FeatureGrid />
         <AgentShowcase />
