@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { deleteOrganizationAction } from "@/features/organizations/actions";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface DeleteOrganizationButtonProps {
   orgId: string;
@@ -31,36 +32,22 @@ export function DeleteOrganizationButton({ orgId, orgName }: DeleteOrganizationB
     });
   }
 
-  if (!confirmOpen) {
-    return (
+  return (
+    <>
       <Button variant="destructive" onClick={() => setConfirmOpen(true)}>
         Delete organization
       </Button>
-    );
-  }
-
-  return (
-    <div
-      role="alertdialog"
-      aria-labelledby="delete-org-title"
-      aria-describedby="delete-org-description"
-      className="rounded-xl border border-destructive/30 bg-destructive/5 p-4"
-    >
-      <h3 id="delete-org-title" className="font-semibold text-destructive">
-        Delete {orgName}?
-      </h3>
-      <p id="delete-org-description" className="mt-2 text-sm text-muted-foreground">
-        This will soft-delete the organization. Members will lose access. This action cannot be
-        undone from the UI.
-      </p>
-      <div className="mt-4 flex gap-3">
-        <Button variant="outline" onClick={() => setConfirmOpen(false)} disabled={isPending}>
-          Cancel
-        </Button>
-        <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-          {isPending ? "Deleting…" : "Confirm delete"}
-        </Button>
-      </div>
-    </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={`Delete ${orgName}?`}
+        description="This permanently deletes the organization, its teams, members, and pending invitations. This cannot be undone."
+        confirmLabel="Confirm delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+        loading={isPending}
+        onConfirm={handleDelete}
+      />
+    </>
   );
 }

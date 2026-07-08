@@ -68,7 +68,7 @@ What-if scenarios, prioritized action plan kanban.
 
 ## Slice 15: History + Settings
 **Task:** [tasks/15-settings.md](../tasks/15-settings.md)  
-Audit log, project comparison, profile, AI config, notifications, shortcuts.
+Audit log, project comparison, settings hub (profile, security, notifications, AI, appearance, shortcuts), deferred deletion + 24h account/org recovery, purge job.
 
 ## Slice 16: Admin
 **Task:** [tasks/16-admin.md](../tasks/16-admin.md)  

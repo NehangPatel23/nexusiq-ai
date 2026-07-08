@@ -2,8 +2,8 @@ import {
   requireOrgRole,
 } from "@/features/organizations/lib/authorization";
 import {
+  deleteOrganization,
   getOrganizationById,
-  softDeleteOrganization,
   updateOrganization,
 } from "@/features/organizations/lib/organizations";
 import { updateOrganizationSchema } from "@/features/organizations/schemas";
@@ -68,7 +68,7 @@ export async function DELETE(_request: Request, context: RouteContext) {
       return apiError("NOT_FOUND", "Organization not found", 404);
     }
 
-    await softDeleteOrganization(orgId);
+    await deleteOrganization(orgId);
     return apiSuccess({ deleted: true });
   } catch (error) {
     return handleApiError(error);

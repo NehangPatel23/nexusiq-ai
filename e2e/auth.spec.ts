@@ -1,29 +1,19 @@
 import { expect, test } from "@playwright/test";
 
+import { registerAccount, signOutFromApp } from "./helpers";
+
 test.describe("auth flow", () => {
   test("register → login → dashboard → logout", async ({ page }) => {
     const email = `e2e-${Date.now()}@test.com`;
     const password = "E2ETestPass123";
     const name = "E2E User";
 
-    await page.goto("/register");
-    await page.waitForLoadState("networkidle");
-    await page.getByLabel("Name").fill(name);
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password", { exact: true }).fill(password);
-    await page.getByLabel("Confirm password").fill(password);
-    await page.locator("#terms").click();
-    await page.getByRole("button", { name: /create account/i }).click();
-
-    await expect(page).toHaveURL("/onboarding", { timeout: 15_000 });
+    await registerAccount(page, { name, email, password });
     await page.getByRole("button", { name: /skip for now/i }).click();
     await expect(page).toHaveURL("/dashboard", { timeout: 15_000 });
     await expect(page.getByText("Intelligence workspace")).toBeVisible();
 
-    await page.getByRole("button", { name: "User menu" }).click();
-    await page.getByRole("menuitem", { name: "Sign out" }).click();
-
-    await expect(page).toHaveURL("/login");
+    await signOutFromApp(page);
 
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Password", { exact: true }).fill(password);
@@ -51,21 +41,11 @@ test.describe("auth flow", () => {
     const newPassword = "UpdatedPass456";
     const name = "Reset User";
 
-    await page.goto("/register");
-    await page.waitForLoadState("networkidle");
-    await page.getByLabel("Name").fill(name);
-    await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password", { exact: true }).fill(password);
-    await page.getByLabel("Confirm password").fill(password);
-    await page.locator("#terms").click();
-    await page.getByRole("button", { name: /create account/i }).click();
-    await expect(page).toHaveURL("/onboarding", { timeout: 15_000 });
+    await registerAccount(page, { name, email, password });
     await page.getByRole("button", { name: /skip for now/i }).click();
     await expect(page).toHaveURL("/dashboard", { timeout: 15_000 });
 
-    await page.getByRole("button", { name: "User menu" }).click();
-    await page.getByRole("menuitem", { name: "Sign out" }).click();
-    await expect(page).toHaveURL("/login");
+    await signOutFromApp(page);
 
     await page.goto("/forgot-password");
     await page.getByLabel("Email").fill(email);

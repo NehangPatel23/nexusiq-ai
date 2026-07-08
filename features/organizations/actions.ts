@@ -19,8 +19,8 @@ import {
   createOrganization,
   createTeam,
   getOrganizationById,
+  deleteOrganization,
   removeMember,
-  softDeleteOrganization,
   updateMemberRole,
   updateOrganization,
 } from "@/features/organizations/lib/organizations";
@@ -110,7 +110,7 @@ export async function updateOrganizationAction(
 export async function deleteOrganizationAction(orgId: string): Promise<ActionResult> {
   try {
     await requireOrgRole(orgId, "OWNER");
-    await softDeleteOrganization(orgId);
+    await deleteOrganization(orgId);
     revalidatePath("/dashboard/organizations");
     return { success: true };
   } catch (error) {

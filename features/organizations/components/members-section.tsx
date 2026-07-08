@@ -2,7 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useConfirm } from "@/hooks/use-confirm";
 import type { OrgRole } from "@prisma/client";
 
 interface MemberUser {
@@ -68,11 +69,22 @@ export function MembersSection({
   currentUserId,
 }: MembersSectionProps) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [isInviting, startInvite] = useTransition();
   const [pendingMemberId, setPendingMemberId] = useState<string | null>(null);
   const [pendingInviteId, setPendingInviteId] = useState<string | null>(null);
+  const [memberRoleOverrides, setMemberRoleOverrides] = useState<Record<string, OrgRole>>({});
+  const [inviteRoleOverrides, setInviteRoleOverrides] = useState<Record<string, OrgRole>>({});
+
+  const memberRolesKey = members.map((member) => `${member.id}:${member.role}`).join("|");
+  const inviteRolesKey = pendingInvites.map((invite) => `${invite.id}:${invite.role}`).join("|");
+
+  useEffect(() => {
+    setMemberRoleOverrides({});
+    setInviteRoleOverrides({});
+  }, [memberRolesKey, inviteRolesKey]);
 
   function handleInvite(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -109,13 +121,24 @@ export function MembersSection({
     });
   }
 
-  function handleRoleChange(memberId: string, role: OrgRole) {
-    if (!canManage) return;
-    setPendingMemberId(memberId);
+  async function handleRoleChange(memberId: string, previousRole: OrgRole, newRole: OrgRole) {
+    if (!canManage || newRole === previousRole) return;
 
-    updateMemberRoleAction(orgId, memberId, { role }).then((result) => {
+    const confirmed = await confirm({
+      title: "Change member role?",
+      description: `Update this member's role to ${formatOrgRole(newRole)}?`,
+      confirmLabel: "Update role",
+    });
+    if (!confirmed) {
+      setMemberRoleOverrides((prev) => ({ ...prev, [memberId]: previousRole }));
+      return;
+    }
+
+    setPendingMemberId(memberId);
+    updateMemberRoleAction(orgId, memberId, { role: newRole }).then((result) => {
       setPendingMemberId(null);
       if (!result.success) {
+        setMemberRoleOverrides((prev) => ({ ...prev, [memberId]: previousRole }));
         toast.error(result.error.message);
         return;
       }
@@ -124,9 +147,16 @@ export function MembersSection({
     });
   }
 
-  function handleRemove(memberId: string, name: string) {
+  async function handleRemove(memberId: string, name: string) {
     if (!canManage) return;
-    if (!window.confirm(`Remove ${name} from this organization?`)) return;
+
+    const confirmed = await confirm({
+      title: `Remove ${name}?`,
+      description: "This member will lose access to the organization.",
+      confirmLabel: "Remove",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     setPendingMemberId(memberId);
     removeMemberAction(orgId, memberId).then((result) => {
@@ -140,12 +170,28 @@ export function MembersSection({
     });
   }
 
-  function handleInviteRoleChange(inviteId: string, role: OrgRole) {
-    if (!canManage) return;
+  async function handleInviteRoleChange(
+    inviteId: string,
+    previousRole: OrgRole,
+    newRole: OrgRole,
+  ) {
+    if (!canManage || newRole === previousRole) return;
+
+    const confirmed = await confirm({
+      title: "Change invite role?",
+      description: `Update this invitation's role to ${formatOrgRole(newRole)}?`,
+      confirmLabel: "Update role",
+    });
+    if (!confirmed) {
+      setInviteRoleOverrides((prev) => ({ ...prev, [inviteId]: previousRole }));
+      return;
+    }
+
     setPendingInviteId(inviteId);
-    updateInviteRoleAction(orgId, inviteId, { role }).then((result) => {
+    updateInviteRoleAction(orgId, inviteId, { role: newRole }).then((result) => {
       setPendingInviteId(null);
       if (!result.success) {
+        setInviteRoleOverrides((prev) => ({ ...prev, [inviteId]: previousRole }));
         toast.error(result.error.message);
         return;
       }
@@ -154,9 +200,16 @@ export function MembersSection({
     });
   }
 
-  function handleCancelInvite(inviteId: string, email: string) {
+  async function handleCancelInvite(inviteId: string, email: string) {
     if (!canManage) return;
-    if (!window.confirm(`Cancel invitation for ${email}?`)) return;
+
+    const confirmed = await confirm({
+      title: "Cancel invitation?",
+      description: `Cancel the pending invitation for ${email}?`,
+      confirmLabel: "Cancel invite",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     setPendingInviteId(inviteId);
     cancelInviteAction(orgId, inviteId).then((result) => {
@@ -263,11 +316,14 @@ export function MembersSection({
                   <td className="px-4 py-3">
                     {canManage && !isOwner && !isSelf ? (
                       <select
-                        value={member.role}
+                        value={memberRoleOverrides[member.id] ?? member.role}
                         disabled={pendingMemberId === member.id}
-                        onChange={(event) =>
-                          handleRoleChange(member.id, event.target.value as OrgRole)
-                        }
+                        onChange={(event) => {
+                          const previousRole = memberRoleOverrides[member.id] ?? member.role;
+                          const newRole = event.target.value as OrgRole;
+                          setMemberRoleOverrides((prev) => ({ ...prev, [member.id]: newRole }));
+                          void handleRoleChange(member.id, previousRole, newRole);
+                        }}
                         aria-label={`Role for ${displayName}`}
                         className="rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
@@ -316,11 +372,14 @@ export function MembersSection({
                 <div className="flex items-center gap-2">
                   {canManage ? (
                     <select
-                      value={invite.role}
+                      value={inviteRoleOverrides[invite.id] ?? invite.role}
                       disabled={pendingInviteId === invite.id}
-                      onChange={(event) =>
-                        handleInviteRoleChange(invite.id, event.target.value as OrgRole)
-                      }
+                      onChange={(event) => {
+                        const previousRole = inviteRoleOverrides[invite.id] ?? invite.role;
+                        const newRole = event.target.value as OrgRole;
+                        setInviteRoleOverrides((prev) => ({ ...prev, [invite.id]: newRole }));
+                        void handleInviteRoleChange(invite.id, previousRole, newRole);
+                      }}
                       aria-label={`Role for invite ${invite.email}`}
                       className="rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >

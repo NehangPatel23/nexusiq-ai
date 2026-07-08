@@ -5,7 +5,7 @@ import type { OrgRole } from "@prisma/client";
 import { findUserByEmail } from "@/features/auth/lib/users";
 import { prisma } from "@/lib/db";
 
-import { createNotification } from "./notifications";
+import { createNotification, deleteInviteNotifications } from "./notifications";
 
 const INVITE_EXPIRY_DAYS = 7;
 
@@ -217,6 +217,7 @@ export async function cancelOrganizationInvite(organizationId: string, inviteId:
     return null;
   }
 
+  await deleteInviteNotifications(invite.token);
   await prisma.invite.delete({ where: { id: inviteId } });
   return invite;
 }

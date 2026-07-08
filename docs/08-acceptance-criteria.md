@@ -107,7 +107,11 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 ### 15 History + Settings
 - [ ] Audit log with filters
 - [ ] Project comparison view
+- [ ] Settings shell: Profile, Security, Notifications, AI Models, Appearance, Shortcuts
 - [ ] Profile, password, AI model config, notification prefs
+- [ ] Account deletion with 24h grace period and recovery on re-login
+- [ ] Organization deletion tombstone + 24h recovery (revert immediate hard delete)
+- [ ] Purge job removes expired tombstoned users/orgs after 24h
 - [ ] Keyboard shortcuts page
 
 ### 16 Admin

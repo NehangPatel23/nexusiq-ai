@@ -51,3 +51,9 @@ export async function markAllNotificationsRead(userId: string) {
     data: { readAt: new Date() },
   });
 }
+
+export async function deleteInviteNotifications(token: string) {
+  return prisma.notification.deleteMany({
+    where: { link: `/invite/${token}` },
+  });
+}
