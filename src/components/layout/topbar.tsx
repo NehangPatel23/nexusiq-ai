@@ -1,10 +1,11 @@
 "use client";
 
-import { Bell, ChevronRight, LogOut, Search, Settings, User } from "lucide-react";
+import { ChevronRight, LogOut, Search, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 
 import { signOutUser } from "@/features/auth/actions";
+import { NotificationsBell } from "@/features/organizations/components/notifications-bell";
 import type { AppShellUser } from "@/components/layout/app-shell";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -90,14 +91,7 @@ export function Topbar({
 
         <CommandPalette />
 
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 text-muted-foreground hover:text-foreground"
-          aria-label="Notifications"
-        >
-          <Bell className="h-4 w-4" aria-hidden="true" />
-        </Button>
+        <NotificationsBell />
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

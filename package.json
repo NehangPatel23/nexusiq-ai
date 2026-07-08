@@ -11,6 +11,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "db:migrate": "prisma migrate deploy",
+    "db:sync-to-supabase": "tsx --env-file=.env scripts/sync-to-supabase.ts",
+    "db:purge-test-users": "tsx --env-file=.env scripts/purge-test-users.ts",
     "db:seed": "prisma db seed",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",

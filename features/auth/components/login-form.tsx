@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { PasswordField } from "@/features/auth/components/password-field";
@@ -10,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -25,6 +28,7 @@ export function LoginForm() {
     const input = {
       email: formData.get("email"),
       password,
+      redirectTo: callbackUrl ?? "/dashboard",
     };
 
     startTransition(async () => {
