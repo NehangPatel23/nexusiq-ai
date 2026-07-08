@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useState } from "react";
 import { Toaster } from "sonner";
 
+import { ConfirmProvider } from "@/hooks/use-confirm";
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
     () =>
@@ -19,17 +21,19 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {children}
-      <Toaster
-        theme="dark"
-        position="bottom-right"
-        toastOptions={{
-          classNames: {
-            toast:
-              "surface-elevated border-border/60 text-foreground shadow-soft font-sans",
-          },
-        }}
-      />
+      <ConfirmProvider>
+        {children}
+        <Toaster
+          theme="dark"
+          position="bottom-right"
+          toastOptions={{
+            classNames: {
+              toast:
+                "surface-elevated border-border/60 text-foreground shadow-soft font-sans",
+            },
+          }}
+        />
+      </ConfirmProvider>
     </QueryClientProvider>
   );
 }

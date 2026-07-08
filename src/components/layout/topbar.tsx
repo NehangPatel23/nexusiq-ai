@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useConfirm } from "@/hooks/use-confirm";
 
 interface TopbarProps {
   user?: AppShellUser;
@@ -40,9 +41,20 @@ export function Topbar({
   user,
   breadcrumbs = [{ label: "Dashboard" }],
 }: TopbarProps) {
+  const confirm = useConfirm();
   const [isSigningOut, startSignOut] = useTransition();
 
-  function handleSignOut() {
+  async function handleSignOut(event: Event) {
+    event.preventDefault();
+
+    const confirmed = await confirm({
+      title: "Sign out of NexusIQ?",
+      description: "You will need to sign in again to access your workspace.",
+      confirmLabel: "Sign out",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
+
     startSignOut(async () => {
       await signOutUser();
     });

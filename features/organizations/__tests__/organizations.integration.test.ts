@@ -7,7 +7,7 @@ import {
   getOrganizationById,
   getOrganizationMembership,
   listUserOrganizations,
-  softDeleteOrganization,
+  deleteOrganization,
   updateOrganization,
 } from "../lib/organizations";
 import { hasMinRole } from "../lib/roles";
@@ -104,14 +104,17 @@ describe("organizations integration", () => {
     expect(daysUntilExpiry).toBeLessThan(7.1);
   });
 
-  it("soft deletes organization", async () => {
+  it("permanently deletes organization and related data", async () => {
     const tempOrg = await createOrganization(ownerId, { name: "Temp Delete Org" });
-    await softDeleteOrganization(tempOrg.id);
-    const deleted = await getOrganizationById(tempOrg.id);
-    expect(deleted).toBeNull();
+    await deleteOrganization(tempOrg.id);
 
-    await prisma.organizationMember.deleteMany({ where: { organizationId: tempOrg.id } });
-    await prisma.organization.delete({ where: { id: tempOrg.id } });
+    expect(await getOrganizationById(tempOrg.id)).toBeNull();
+    expect(
+      await prisma.organization.findUnique({ where: { id: tempOrg.id } }),
+    ).toBeNull();
+    expect(
+      await prisma.organizationMember.count({ where: { organizationId: tempOrg.id } }),
+    ).toBe(0);
   });
 
   it("enforces role hierarchy for viewer members", async () => {

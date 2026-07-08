@@ -105,10 +105,22 @@ export async function updateOrganization(organizationId: string, input: UpdateOr
   });
 }
 
-export async function softDeleteOrganization(organizationId: string) {
-  return prisma.organization.update({
+export async function deleteOrganization(organizationId: string) {
+  const invites = await prisma.invite.findMany({
+    where: { organizationId },
+    select: { token: true },
+  });
+
+  if (invites.length > 0) {
+    await prisma.notification.deleteMany({
+      where: {
+        link: { in: invites.map((invite) => `/invite/${invite.token}`) },
+      },
+    });
+  }
+
+  return prisma.organization.delete({
     where: { id: organizationId },
-    data: { deletedAt: new Date() },
   });
 }
 
