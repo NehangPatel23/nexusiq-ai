@@ -14,6 +14,9 @@ import {
   logPasswordResetLink,
 } from "@/features/auth/lib/password-reset";
 import {
+  syncInviteNotificationsForEmail,
+} from "@/features/organizations/lib/invites";
+import {
   createUser,
   findUserByEmail,
   updateUserPassword,
@@ -49,56 +52,97 @@ export async function register(input: unknown): Promise<ActionResult> {
     return validationError(parsed.error.flatten().fieldErrors);
   }
 
-  const existing = await findUserByEmail(parsed.data.email);
-  if (existing) {
+  if (!process.env.DATABASE_URL) {
     return {
       success: false,
       error: {
-        code: "CONFLICT",
-        message: "An account with this email already exists",
+        code: "CONFIG_ERROR",
+        message: "Server database is not configured. Set DATABASE_URL on Vercel and redeploy.",
       },
     };
   }
 
-  await createUser({
-    name: parsed.data.name,
-    email: parsed.data.email,
-    password: parsed.data.password,
-  });
-
   try {
-    await signIn("credentials", {
+    const existing = await findUserByEmail(parsed.data.email);
+    if (existing) {
+      return {
+        success: false,
+        error: {
+          code: "CONFLICT",
+          message: "An account with this email already exists",
+        },
+      };
+    }
+
+    const user = await createUser({
+      name: parsed.data.name,
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/dashboard",
     });
+
+    await syncInviteNotificationsForEmail(user.id, user.email);
+
+    try {
+      await signIn("credentials", {
+        email: parsed.data.email,
+        password: parsed.data.password,
+        redirectTo: "/onboarding",
+      });
+    } catch (error) {
+      if (isRedirectError(error)) {
+        throw error;
+      }
+      return {
+        success: false,
+        error: {
+          code: "AUTH_ERROR",
+          message: "Account created but sign-in failed. Please log in.",
+        },
+      };
+    }
+
+    return { success: true };
   } catch (error) {
     if (isRedirectError(error)) {
       throw error;
     }
+    console.error("[register] failed", error);
     return {
       success: false,
       error: {
-        code: "AUTH_ERROR",
-        message: "Account created but sign-in failed. Please log in.",
+        code: "SERVER_ERROR",
+        message: "Unable to create account. Check database connection on the server.",
       },
     };
   }
-
-  return { success: true };
 }
 
-export async function signInWithCredentials(input: unknown): Promise<ActionResult> {
+export async function signInWithCredentials(
+  input: unknown,
+): Promise<ActionResult> {
   const parsed = loginSchema.safeParse(input);
   if (!parsed.success) {
     return validationError(parsed.error.flatten().fieldErrors);
   }
 
+  const redirectTo =
+    typeof input === "object" &&
+    input !== null &&
+    "redirectTo" in input &&
+    typeof (input as { redirectTo?: string }).redirectTo === "string"
+      ? (input as { redirectTo: string }).redirectTo
+      : "/dashboard";
+
+  const existingUser = await findUserByEmail(parsed.data.email);
+  if (existingUser) {
+    await syncInviteNotificationsForEmail(existingUser.id, existingUser.email);
+  }
+
   try {
     await signIn("credentials", {
       email: parsed.data.email,
       password: parsed.data.password,
-      redirectTo: "/dashboard",
+      redirectTo,
     });
   } catch (error) {
     if (isRedirectError(error)) {

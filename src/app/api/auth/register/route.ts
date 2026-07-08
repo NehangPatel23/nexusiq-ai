@@ -4,6 +4,16 @@ import { createUser, findUserByEmail } from "@/features/auth/lib/users";
 import { registerSchema } from "@/features/auth/schemas";
 
 export async function POST(request: Request) {
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: { code: "CONFIG_ERROR", message: "DATABASE_URL is not configured" },
+      },
+      { status: 503 },
+    );
+  }
+
   try {
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);
@@ -43,7 +53,8 @@ export async function POST(request: Request) {
       success: true,
       data: { id: user.id, email: user.email, name: user.name },
     });
-  } catch {
+  } catch (error) {
+    console.error("[register] failed", error);
     return NextResponse.json(
       {
         success: false,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { LoginForm } from "@/features/auth/components/login-form";
 import { AuthCard, AuthLayout } from "@/components/layout/auth-layout";
@@ -15,7 +16,9 @@ export default function LoginPage() {
       }
     >
       <AuthCard>
-        <LoginForm />
+        <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+          <LoginForm />
+        </Suspense>
       </AuthCard>
     </AuthLayout>
   );

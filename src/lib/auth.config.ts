@@ -22,16 +22,23 @@ export const authConfig = {
         nextUrl.pathname === "/forgot-password" ||
         nextUrl.pathname === "/reset-password";
 
-      const isDashboardRoute = nextUrl.pathname.startsWith("/dashboard");
+      const isProtectedRoute =
+        nextUrl.pathname.startsWith("/dashboard") || nextUrl.pathname === "/onboarding";
 
-      if (isDashboardRoute && !isLoggedIn) {
+      if (isProtectedRoute && !isLoggedIn) {
         const loginUrl = new URL("/login", nextUrl);
         loginUrl.searchParams.set("callbackUrl", nextUrl.pathname);
         return NextResponse.redirect(loginUrl);
       }
 
+      const isInviteRoute = nextUrl.pathname.startsWith("/invite/");
+
       if (isAuthRoute && isLoggedIn) {
         return NextResponse.redirect(new URL("/dashboard", nextUrl));
+      }
+
+      if (isInviteRoute && isLoggedIn) {
+        return true;
       }
 
       return true;

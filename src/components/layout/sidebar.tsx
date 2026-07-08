@@ -3,6 +3,7 @@
 import {
   BarChart3,
   Bot,
+  Building2,
   FileText,
   FolderOpen,
   LayoutDashboard,
@@ -44,6 +45,7 @@ const navGroups = [
   {
     label: "System",
     items: [
+      { href: "/dashboard/organizations", label: "Organizations", icon: Building2 },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
       { href: "/dashboard/admin", label: "Admin", icon: Shield },
     ],

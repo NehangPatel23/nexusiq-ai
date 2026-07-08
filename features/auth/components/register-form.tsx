@@ -53,7 +53,7 @@ export function RegisterForm() {
           }
         }
       } catch {
-        // Redirect on success
+        setError("Unable to create account. Please try again.");
       }
     });
   }

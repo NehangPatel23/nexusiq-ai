@@ -1,6 +1,6 @@
 # Task 02: Organizations
 
-**Status:** NOT STARTED | **Slice:** 2/16 | **Depends on:** 01-auth
+**Status:** DONE | **Slice:** 2/16 | **Depends on:** 01-auth
 
 ## Goal
 Multi-tenant orgs with teams, roles, permissions, invites, in-app notifications.
