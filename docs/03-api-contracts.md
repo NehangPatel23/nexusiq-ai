@@ -49,8 +49,10 @@ Actions: `signIn`, `signOut`, `register`, `updateProfile`, `changePassword`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET/POST | `/api/organizations/[orgId]/workspaces` | Workspaces |
-| GET/PATCH/DELETE | `/api/workspaces/[id]` | Workspace CRUD |
+| GET/POST | `/api/organizations/[orgId]/workspaces` | Workspaces (`?status=deleted` admin-only) |
+| GET/PATCH/DELETE | `/api/workspaces/[id]` | Workspace CRUD (DELETE = soft delete) |
+| POST | `/api/workspaces/[id]/restore` | Restore soft-deleted workspace (admin+) |
+| DELETE | `/api/workspaces/[id]/permanent` | Permanently delete workspace (admin+) |
 | GET/POST | `/api/workspaces/[id]/projects` | Projects |
 | GET/PATCH/DELETE | `/api/projects/[id]` | Project CRUD |
 | GET | `/api/dashboard` | Dashboard widgets data |

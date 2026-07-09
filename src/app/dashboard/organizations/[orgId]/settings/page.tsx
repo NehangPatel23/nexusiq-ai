@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { DeleteOrganizationButton } from "@/features/organizations/components/delete-organization-button";
 import { MembersSection } from "@/features/organizations/components/members-section";
+import { OrgRolesInfoButton } from "@/features/organizations/components/org-roles-info-button";
 import { OrgSettingsForm } from "@/features/organizations/components/org-settings-form";
 import { TeamsSection } from "@/features/organizations/components/teams-section";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
@@ -14,6 +16,7 @@ import {
 } from "@/features/organizations/lib/organizations";
 import { hasMinRole } from "@/features/organizations/lib/roles";
 import { PageHeader } from "@/components/layout/page-header";
+import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
 
 interface PageProps {
@@ -59,8 +62,12 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
     <div className="space-y-10">
       <PageHeader
         title={organization.name}
-        description="Manage organization settings, members, and teams."
-      />
+        description="Manage organization settings, members, teams, and workspaces."
+      >
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/organizations/${orgId}/workspaces`}>Workspaces</Link>
+        </Button>
+      </PageHeader>
 
       <section aria-labelledby="org-details-heading" className="space-y-4">
         <h2 id="org-details-heading" className="text-lg font-semibold">
@@ -77,9 +84,12 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
       </section>
 
       <section aria-labelledby="members-heading" className="space-y-4">
-        <h2 id="members-heading" className="text-lg font-semibold">
-          Members
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 id="members-heading" className="text-lg font-semibold">
+            Members
+          </h2>
+          <OrgRolesInfoButton />
+        </div>
         <MembersSection
           orgId={orgId}
           members={members}

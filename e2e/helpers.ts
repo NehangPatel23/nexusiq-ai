@@ -17,7 +17,8 @@ export async function registerAccount(
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByLabel("Confirm password").fill(password);
-  await page.getByRole("checkbox", { name: /agree to the/i }).check();
+  await page.locator('label[for="terms"]').click();
+  await expect(page.locator("#terms")).toHaveAttribute("data-state", "checked");
   await page.getByRole("button", { name: /create account/i }).click();
   await expect(page).toHaveURL("/onboarding", { timeout: 30_000 });
 }

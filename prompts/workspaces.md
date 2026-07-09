@@ -13,8 +13,9 @@
 
 ## Constraints
 - Member+ can create
-- Admin+ can delete
-- Slug auto-generated, editable
+- Admin+ can edit
+- Admin+ can delete, restore, and permanently delete
+- Slug auto-generated, editable (admin+)
 
 ## Citation Rules
 N/A
