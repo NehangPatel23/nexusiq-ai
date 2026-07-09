@@ -53,17 +53,27 @@ function createClient(url: string) {
 }
 
 async function exportLocal(local: PrismaClient) {
-  const [users, passwordResetTokens, organizations, organizationMembers, teams, teamMembers, invites, notifications] =
-    await Promise.all([
-      local.user.findMany(),
-      local.passwordResetToken.findMany(),
-      local.organization.findMany(),
-      local.organizationMember.findMany(),
-      local.team.findMany(),
-      local.teamMember.findMany(),
-      local.invite.findMany(),
-      local.notification.findMany(),
-    ]);
+  const [
+    users,
+    passwordResetTokens,
+    organizations,
+    organizationMembers,
+    teams,
+    teamMembers,
+    workspaces,
+    invites,
+    notifications,
+  ] = await Promise.all([
+    local.user.findMany(),
+    local.passwordResetToken.findMany(),
+    local.organization.findMany(),
+    local.organizationMember.findMany(),
+    local.team.findMany(),
+    local.teamMember.findMany(),
+    local.workspace.findMany(),
+    local.invite.findMany(),
+    local.notification.findMany(),
+  ]);
 
   return {
     users,
@@ -72,6 +82,7 @@ async function exportLocal(local: PrismaClient) {
     organizationMembers,
     teams,
     teamMembers,
+    workspaces,
     invites,
     notifications,
   };
@@ -85,6 +96,7 @@ async function importRemote(
     await tx.$executeRawUnsafe(`
       TRUNCATE TABLE
         notifications,
+        workspaces,
         team_members,
         teams,
         invites,
@@ -112,6 +124,9 @@ async function importRemote(
     }
     if (data.teamMembers.length > 0) {
       await tx.teamMember.createMany({ data: data.teamMembers });
+    }
+    if (data.workspaces.length > 0) {
+      await tx.workspace.createMany({ data: data.workspaces });
     }
     if (data.invites.length > 0) {
       await tx.invite.createMany({ data: data.invites });
