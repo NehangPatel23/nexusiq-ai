@@ -67,9 +67,10 @@ model Organization {
   updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  members OrganizationMember[]
-  teams   Team[]
-  invites Invite[]
+  members    OrganizationMember[]
+  teams      Team[]
+  invites    Invite[]
+  workspaces Workspace[]
 
   @@map("organizations")
 }
@@ -100,6 +101,7 @@ model Team {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   members      TeamMember[]
+  workspaces   Workspace[]
 
   @@index([organizationId])
   @@map("teams")
@@ -149,4 +151,23 @@ model Notification {
 
   @@index([userId, readAt])
   @@map("notifications")
+}
+
+model Workspace {
+  id             String    @id @default(uuid())
+  organizationId String    @map("organization_id")
+  name           String
+  slug           String
+  description    String?
+  teamId         String?   @map("team_id")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  team         Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, slug])
+  @@index([organizationId, deletedAt])
+  @@map("workspaces")
 }

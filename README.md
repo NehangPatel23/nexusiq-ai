@@ -15,10 +15,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/slices-2%2F16_live-6366f1?style=flat-square" alt="Progress" />
+  <img src="https://img.shields.io/badge/slices-3%2F16_live-6366f1?style=flat-square" alt="Progress" />
   <img src="https://img.shields.io/badge/AI-Ollama_local-22c55e?style=flat-square" alt="Ollama" />
   <img src="https://img.shields.io/badge/stack-Next.js_15_·_Prisma_·_PostgreSQL-0ea5e9?style=flat-square" alt="Stack" />
-  <img src="https://img.shields.io/badge/tests-51_unit_·_7_e2e-8b5cf6?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/tests-72_unit_·_9_e2e-8b5cf6?style=flat-square" alt="Tests" />
 </p>
 
 ---
@@ -38,32 +38,32 @@ Built as a **solo, zero-API-cost** stack: Next.js on Vercel, PostgreSQL on Supab
 | | |
 |---|---|
 | **URL** | [nexusiq-ai-steel.vercel.app](https://nexusiq-ai-steel.vercel.app) |
-| **Try it** | Register → onboarding → create org → explore dashboard |
-| **Deep dive** | Organizations → Settings → members, invites, roles |
+| **Try it** | Register → onboarding → create org → **Workspaces** → create/edit (admin) |
+| **Deep dive** | Organizations → Settings → members, invites, roles (ⓘ role guide) |
 
-Cloud auth & orgs run on **Supabase + Vercel**. AI agents ship in upcoming slices (UI shell + placeholders live today).
+Cloud auth, orgs, and workspaces run on **Supabase + Vercel**. AI agents ship in upcoming slices (UI shell + placeholders live today).
 
 ---
 
 ## What's built today
 
-### Shipped (slices 01–02)
+### Shipped (slices 01–03)
 
 | Area | Features |
 |------|----------|
 | **Auth** | Register, login, logout, forgot/reset password, profile (name, avatar), protected routes |
-| **Organizations** | CRUD, soft delete, slug generation, onboarding flow |
-| **Members & RBAC** | Owner, Admin, Analyst, Reviewer, Viewer — `requireOrgRole()` on every API |
+| **Organizations** | CRUD, hard delete, slug generation, onboarding flow |
+| **Members & RBAC** | Owner, Admin, Analyst, Reviewer, Viewer — `requireOrgRole()` on every API; role guide (ⓘ) on Members |
 | **Invites** | 7-day tokens, pending invite edit/cancel, accept via link or onboarding banner |
 | **Notifications** | In-app bell + dropdown + `/dashboard/notifications` |
-| **Teams** | Create & list teams (member assignment → slice 03) |
+| **Teams** | Create & list teams within an org |
+| **Workspaces** | CRUD per org, unique slug, optional team assignment, soft delete + admin Deleted tab (restore / permanent delete) |
 | **UI shell** | Premium dark dashboard, sidebar, command palette, responsive layout |
 
-### Coming soon (slices 03–16)
+### Coming soon (slices 04–16)
 
 | Slice | Focus |
 |-------|--------|
-| 03 | Workspaces |
 | 04 | Projects + dashboard stats |
 | 05–06 | Data room + document processing |
 | 07–08 | Search + cited chat |
@@ -136,7 +136,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** → register → create your first org.
+Open **[http://localhost:3000](http://localhost:3000)** → register → create your first org → **Organizations → Workspaces**.
 
 ### Useful commands
 
@@ -147,7 +147,7 @@ Open **[http://localhost:3000](http://localhost:3000)** → register → create 
 | `pnpm test` | Unit + integration tests |
 | `pnpm test:e2e` | Playwright end-to-end (uses local Docker DB) |
 | `pnpm db:studio` | Prisma Studio |
-| `pnpm db:sync-to-supabase` | Copy local data → Supabase (excludes test users) |
+| `pnpm db:sync-to-supabase` | Copy local data → Supabase (users, orgs, teams — **not** workspaces rows yet) |
 | `pnpm db:purge-test-users` | Remove `*@test.com` fixtures |
 
 ---
@@ -156,9 +156,11 @@ Open **[http://localhost:3000](http://localhost:3000)** → register → create 
 
 Hackathon / judge setup uses **Vercel + Supabase**:
 
-1. Run migrations against Supabase (Session pooler, port 5432)
-2. Set env vars on Vercel (`DATABASE_URL` pooler :6543, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`)
-3. Verify `/api/health` returns `ok: true`
+1. **Commit & push** your slice branch (migrations live in `prisma/migrations/`)
+2. **Run migrations** against Supabase (Session pooler, port 5432)
+3. Set env vars on Vercel (`DATABASE_URL` pooler :6543, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`)
+4. Verify `/api/health` returns `ok: true`
+5. **Optional:** `pnpm db:sync-to-supabase` to copy local users/orgs (re-run after schema migrate)
 
 Full walkthrough: **[docs/deployment.md](./docs/deployment.md)**
 
@@ -167,9 +169,10 @@ Full walkthrough: **[docs/deployment.md](./docs/deployment.md)**
 ## Judge walkthrough (~5 min)
 
 1. **Register** at `/register` → org onboarding (“Target Co DD”)
-2. **Dashboard** — sidebar: Agents, Projects, Chat (placeholders, product vision)
-3. **Organizations** → Settings → invite a second email (incognito browser to accept)
-4. **Pitch** — multi-tenant UX live; Ollama runs locally by design (privacy + $0 API cost)
+2. **Workspaces** — create a workspace; admin can edit, soft-delete, restore from Deleted tab
+3. **Organizations** → Settings → invite a second email (incognito browser to accept); tap **ⓘ** for role permissions
+4. **Dashboard** — sidebar: Agents, Projects, Chat (placeholders, product vision)
+5. **Pitch** — multi-tenant UX live; Ollama runs locally by design (privacy + $0 API cost)
 
 Optional: upload sample PDFs to Supabase Storage `documents` bucket for the data-room story.
 
@@ -208,7 +211,7 @@ nexusiq-ai/
 ## Build roadmap
 
 ```text
- ✅ 01 Auth          ✅ 02 Organizations    ○ 03 Workspaces
+ ✅ 01 Auth          ✅ 02 Organizations    ✅ 03 Workspaces
  ○ 04 Projects      ○ 05 Uploads           ○ 06 Documents
  ○ 07 Search        ○ 08 Chat              ○ 09 Reports
  ○ 10 Timeline      ○ 11 Graph             ○ 12 Risk

@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Plus, Users } from "lucide-react";
+import { Building2, FolderKanban, Plus, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
@@ -137,8 +137,14 @@ export function OrganizationsList({ organizations }: OrganizationsListProps) {
                   {org.description ?? "No description"}
                 </p>
 
-                <div className="mt-auto border-t border-border/40 pt-4">
+                <div className="mt-auto border-t border-border/40 pt-4 flex flex-col gap-2">
                   <Button variant="outline" size="sm" asChild className="w-full">
+                    <Link href={`/dashboard/organizations/${org.id}/workspaces`}>
+                      <FolderKanban className="h-3.5 w-3.5" aria-hidden="true" />
+                      Workspaces
+                    </Link>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild className="w-full">
                     <Link href={`/dashboard/organizations/${org.id}/settings`}>
                       Manage organization
                     </Link>
