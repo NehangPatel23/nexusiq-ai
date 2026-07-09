@@ -7,6 +7,7 @@ import type {
   Team,
   TeamMember,
   User,
+  Workspace,
 } from "@prisma/client";
 import type { Prisma, PrismaClient } from "@prisma/client";
 
@@ -17,6 +18,7 @@ export interface AppDataSnapshot {
   organizationMembers: OrganizationMember[];
   teams: Team[];
   teamMembers: TeamMember[];
+  workspaces: Workspace[];
   invites: Invite[];
   notifications: Notification[];
 }
@@ -81,6 +83,7 @@ export function excludeTestData(data: AppDataSnapshot): AppDataSnapshot {
     organizationMembers,
     teams: data.teams.filter((team) => organizationIds.has(team.organizationId)),
     teamMembers: data.teamMembers.filter((member) => userIds.has(member.userId)),
+    workspaces: data.workspaces.filter((workspace) => organizationIds.has(workspace.organizationId)),
     invites: data.invites.filter((invite) => organizationIds.has(invite.organizationId)),
     notifications: data.notifications.filter((notification) => userIds.has(notification.userId)),
   };
@@ -94,6 +97,7 @@ export function countSnapshot(data: AppDataSnapshot) {
     organizationMembers: data.organizationMembers.length,
     teams: data.teams.length,
     teamMembers: data.teamMembers.length,
+    workspaces: data.workspaces.length,
     invites: data.invites.length,
     notifications: data.notifications.length,
   };
