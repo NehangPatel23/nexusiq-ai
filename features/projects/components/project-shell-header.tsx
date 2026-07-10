@@ -39,7 +39,7 @@ export function ProjectShellHeader({ projectId }: ProjectShellHeaderProps) {
           projectName={project.name}
           pinned={project.pinned}
           canDelete={canDelete}
-          canEdit
+          canEdit={canEdit}
         />
       </div>
     </>

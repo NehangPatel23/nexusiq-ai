@@ -6,11 +6,7 @@ import {
   getOrganizationById,
   listOrganizationTeams,
 } from "@/features/organizations/lib/organizations";
-import {
-  canCreateWorkspace,
-  canEditWorkspace,
-  canManageWorkspaces,
-} from "@/features/workspaces/lib/roles";
+import { resolveWorkspaceOrgPermissions } from "@/features/workspaces/lib/roles";
 import { WorkspacesBreadcrumbs } from "@/features/workspaces/components/workspaces-breadcrumbs";
 import { OrgRolesInfoButton } from "@/features/organizations/components/org-roles-info-button";
 import { WorkspacesTabs } from "@/features/workspaces/components/workspaces-tabs";
@@ -51,9 +47,8 @@ export default async function OrganizationWorkspacesPage({ params }: PageProps) 
     redirect("/dashboard/organizations");
   }
 
-  const canCreate = canCreateWorkspace(membership.role);
-  const canEdit = canEditWorkspace(membership.role);
-  const canManageDeleted = canManageWorkspaces(membership.role);
+  const workspacePermissions = resolveWorkspaceOrgPermissions(membership.role);
+  const { canCreate, canEdit, canDelete: canManageDeleted } = workspacePermissions;
 
   const [workspaces, deletedWorkspaces, teams] = await Promise.all([
     listOrganizationWorkspaces(orgId),

@@ -17,12 +17,15 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
-import type { ProjectType } from "@prisma/client";
+import type { OrgRole, ProjectType } from "@prisma/client";
 
 import { bulkDeleteProjectsAction } from "@/features/projects/actions";
 import { ProjectCard, type ProjectListItem } from "@/features/projects/components/project-card";
 import { ProjectFormDialog } from "@/features/projects/components/project-form-dialog";
 import { collectDealStatusOptions, type DealStatusFilter } from "@/features/projects/lib/deal-statuses";
+import {
+  resolveProjectOrgPermissions,
+} from "@/features/projects/lib/roles";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -46,9 +49,7 @@ interface ProjectsListProps {
   projects: ProjectListItem[];
   workspaces: WorkspaceOption[];
   organizations: OrganizationOption[];
-  canCreate: boolean;
-  canEdit: boolean;
-  canDelete: boolean;
+  orgRolesByOrgId: Record<string, OrgRole>;
 }
 
 type SortOption = "updated" | "name" | "type" | "pinned";
@@ -145,9 +146,7 @@ export function ProjectsList({
   projects,
   workspaces,
   organizations,
-  canCreate,
-  canEdit,
-  canDelete,
+  orgRolesByOrgId,
 }: ProjectsListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -166,6 +165,27 @@ export function ProjectsList({
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false);
   const [isBulkPending, startBulkTransition] = useTransition();
   const reduceMotion = useReducedMotion();
+
+  const canCreate = useMemo(() => {
+    const canCreateInOrg = (organizationId: string) =>
+      resolveProjectOrgPermissions(orgRolesByOrgId[organizationId]).canCreate;
+
+    if (workspaceFilter !== "ALL") {
+      const workspace = workspaces.find((item) => item.id === workspaceFilter);
+      return workspace ? canCreateInOrg(workspace.organizationId) : false;
+    }
+
+    return workspaces.some((workspace) => canCreateInOrg(workspace.organizationId));
+  }, [orgRolesByOrgId, workspaceFilter, workspaces]);
+
+  function getProjectPermissions(project: ProjectListItem) {
+    return resolveProjectOrgPermissions(orgRolesByOrgId[project.workspace.organization.id]);
+  }
+
+  const canDeleteAny = useMemo(
+    () => projects.some((project) => getProjectPermissions(project).canDelete),
+    [projects, orgRolesByOrgId],
+  );
 
   useEffect(() => {
     if (workspaceParam && workspaces.some((workspace) => workspace.id === workspaceParam)) {
@@ -249,13 +269,17 @@ export function ProjectsList({
     });
   }, [projects, search, typeFilter, dealStatusFilter, workspaceFilter, sortBy]);
 
-  function toggleSelection(projectId: string, selected: boolean) {
+  function toggleSelection(project: ProjectListItem, selected: boolean) {
+    if (!getProjectPermissions(project).canDelete) {
+      return;
+    }
+
     setSelectedIds((current) => {
       const next = new Set(current);
       if (selected) {
-        next.add(projectId);
+        next.add(project.id);
       } else {
-        next.delete(projectId);
+        next.delete(project.id);
       }
       return next;
     });
@@ -411,7 +435,7 @@ export function ProjectsList({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {canDelete && (
+          {canDeleteAny && (
             <Button
               type="button"
               variant={bulkMode ? "secondary" : "outline"}
@@ -515,7 +539,10 @@ export function ProjectsList({
           )}
           role="list"
         >
-          {filteredProjects.map((project) => (
+          {filteredProjects.map((project) => {
+            const permissions = getProjectPermissions(project);
+
+            return (
             <motion.li
               key={project.id}
               className={cn("h-full", viewMode === "grid" && "min-h-[280px]")}
@@ -525,15 +552,16 @@ export function ProjectsList({
               <ProjectCard
                 project={project}
                 viewMode={viewMode}
-                canDelete={canDelete && !bulkMode}
-                canEdit={canEdit}
+                canDelete={permissions.canDelete && !bulkMode}
+                canEdit={permissions.canEdit}
                 processingPercent={0}
-                bulkMode={bulkMode}
+                bulkMode={bulkMode && permissions.canDelete}
                 selected={selectedIds.has(project.id)}
-                onSelectChange={(selected) => toggleSelection(project.id, selected)}
+                onSelectChange={(selected) => toggleSelection(project, selected)}
               />
             </motion.li>
-          ))}
+            );
+          })}
         </ul>
       )}
 

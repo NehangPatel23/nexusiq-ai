@@ -8,13 +8,13 @@ import { OrgRolesInfoButton } from "@/features/organizations/components/org-role
 import { OrgSettingsForm } from "@/features/organizations/components/org-settings-form";
 import { TeamsSection } from "@/features/organizations/components/teams-section";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
+import { resolveOrganizationPermissions } from "@/features/organizations/lib/org-permissions";
 import {
   getOrganizationById,
   listOrganizationMembers,
   listOrganizationTeams,
   listPendingInvites,
 } from "@/features/organizations/lib/organizations";
-import { hasMinRole } from "@/features/organizations/lib/roles";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
 import { getSession } from "@/lib/session";
@@ -48,9 +48,8 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
     redirect("/dashboard/organizations");
   }
 
-  const canEdit = hasMinRole(membership.role, "ADMIN");
-  const canManageMembers = canEdit;
-  const isOwner = membership.role === "OWNER";
+  const permissions = resolveOrganizationPermissions(membership.role);
+  const { canManageSettings, canManageMembers, canDeleteOrganization } = permissions;
 
   const [members, pendingInvites, teams] = await Promise.all([
     listOrganizationMembers(orgId),
@@ -62,7 +61,11 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
     <div className="space-y-10">
       <PageHeader
         title={organization.name}
-        description="Manage organization settings, members, teams, and workspaces."
+        description={
+          canManageSettings
+            ? "Manage organization settings, members, teams, and workspaces."
+            : "View organization settings, members, and teams. Contact an admin to make changes."
+        }
       >
         <Button variant="outline" asChild>
           <Link href={`/dashboard/organizations/${orgId}/workspaces`}>Workspaces</Link>
@@ -78,7 +81,7 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
             orgId={orgId}
             name={organization.name}
             description={organization.description}
-            canEdit={canEdit}
+            canEdit={canManageSettings}
           />
         </div>
       </section>
@@ -103,10 +106,10 @@ export default async function OrganizationSettingsPage({ params }: PageProps) {
         <h2 id="teams-heading" className="text-lg font-semibold">
           Teams
         </h2>
-        <TeamsSection orgId={orgId} teams={teams} canManage={canEdit} />
+        <TeamsSection orgId={orgId} teams={teams} canManage={canManageSettings} />
       </section>
 
-      {isOwner && (
+      {canDeleteOrganization && (
         <section aria-labelledby="danger-heading" className="space-y-4">
           <h2 id="danger-heading" className="text-lg font-semibold text-destructive">
             Danger zone

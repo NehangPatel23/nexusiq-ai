@@ -2,9 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { slugifyName } from "@/features/organizations/lib/slug";
 import {
+  buildOrgRoleMap,
   canCreateProject,
   canEditProject,
+  canManageAnyListedProject,
   canManageProjects,
+  resolveProjectOrgPermissions,
 } from "../lib/roles";
 import { PROJECT_TYPES, PROJECT_TYPE_LABELS, getProjectTypeLabel } from "../lib/project-types";
 import {
@@ -123,5 +126,57 @@ describe("project role checks", () => {
     expect(canManageProjects("VIEWER")).toBe(false);
     expect(canManageProjects("ANALYST")).toBe(false);
     expect(canManageProjects("REVIEWER")).toBe(false);
+  });
+
+  it("resolves per-organization project permissions from role", () => {
+    expect(resolveProjectOrgPermissions("REVIEWER")).toEqual({
+      canCreate: true,
+      canEdit: true,
+      canDelete: false,
+    });
+    expect(resolveProjectOrgPermissions("ADMIN")).toEqual({
+      canCreate: true,
+      canEdit: true,
+      canDelete: true,
+    });
+    expect(resolveProjectOrgPermissions(undefined)).toEqual({
+      canCreate: false,
+      canEdit: false,
+      canDelete: false,
+    });
+  });
+
+  it("builds an org role lookup map for project permission checks", () => {
+    const map = buildOrgRoleMap([
+      { id: "org-a", role: "OWNER" },
+      { id: "org-b", role: "REVIEWER" },
+    ]);
+
+    expect(map).toEqual({
+      "org-a": "OWNER",
+      "org-b": "REVIEWER",
+    });
+    expect(resolveProjectOrgPermissions(map["org-b"]).canDelete).toBe(false);
+    expect(resolveProjectOrgPermissions(map["org-a"]).canDelete).toBe(true);
+  });
+
+  it("checks delete access per listed project organization", () => {
+    const orgRolesByOrgId = buildOrgRoleMap([
+      { id: "org-a", role: "OWNER" },
+      { id: "org-b", role: "REVIEWER" },
+    ]);
+
+    expect(
+      canManageAnyListedProject(orgRolesByOrgId, [
+        { workspace: { organization: { id: "org-b" } } },
+      ]),
+    ).toBe(false);
+
+    expect(
+      canManageAnyListedProject(orgRolesByOrgId, [
+        { workspace: { organization: { id: "org-a" } } },
+        { workspace: { organization: { id: "org-b" } } },
+      ]),
+    ).toBe(true);
   });
 });
