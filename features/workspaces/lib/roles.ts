@@ -14,6 +14,12 @@ export const WORKSPACE_EDIT_MIN_ROLE = "ADMIN" satisfies OrgRole;
 /** Admin+ can soft-delete, restore, and permanently delete workspaces. */
 export const WORKSPACE_MANAGE_MIN_ROLE = "ADMIN" satisfies OrgRole;
 
+export type WorkspaceOrgPermissions = {
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
 export function canListWorkspaces(role: OrgRole): boolean {
   return hasMinRole(role, WORKSPACE_LIST_MIN_ROLE);
 }
@@ -28,4 +34,18 @@ export function canEditWorkspace(role: OrgRole): boolean {
 
 export function canManageWorkspaces(role: OrgRole): boolean {
   return hasMinRole(role, WORKSPACE_MANAGE_MIN_ROLE);
+}
+
+export function resolveWorkspaceOrgPermissions(
+  role: OrgRole | undefined,
+): WorkspaceOrgPermissions {
+  if (!role) {
+    return { canCreate: false, canEdit: false, canDelete: false };
+  }
+
+  return {
+    canCreate: canCreateWorkspace(role),
+    canEdit: canEditWorkspace(role),
+    canDelete: canManageWorkspaces(role),
+  };
 }

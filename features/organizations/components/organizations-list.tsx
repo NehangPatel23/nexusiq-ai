@@ -6,6 +6,7 @@ import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { CreateOrganizationDialog } from "@/features/organizations/components/create-organization-dialog";
+import { resolveOrganizationPermissions } from "@/features/organizations/lib/org-permissions";
 import { formatOrgRole, getOrgRoleBadgeClass } from "@/features/organizations/lib/roles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -91,7 +92,10 @@ export function OrganizationsList({ organizations }: OrganizationsListProps) {
       </motion.div>
 
       <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" role="list">
-        {organizations.map((org) => (
+        {organizations.map((org) => {
+          const permissions = resolveOrganizationPermissions(org.role);
+
+          return (
           <motion.li key={org.id} className="h-full" variants={fadeUp} transition={easeOut}>
             <Card className="group relative flex h-full flex-col overflow-hidden border-border/60 bg-card/40 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card/60 hover:shadow-soft">
               <div
@@ -145,14 +149,15 @@ export function OrganizationsList({ organizations }: OrganizationsListProps) {
                   </Button>
                   <Button variant="ghost" size="sm" asChild className="w-full">
                     <Link href={`/dashboard/organizations/${org.id}/settings`}>
-                      Manage organization
+                      {permissions.canManageSettings ? "Manage organization" : "View organization"}
                     </Link>
                   </Button>
                 </div>
               </div>
             </Card>
           </motion.li>
-        ))}
+          );
+        })}
       </ul>
 
       <CreateOrganizationDialog open={createOpen} onOpenChange={setCreateOpen} />

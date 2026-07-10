@@ -4,6 +4,7 @@ import { Archive, FolderOpen, RotateCcw, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import type { OrgRole } from "@prisma/client";
 
 import {
   hardDeleteProjectAction,
@@ -11,6 +12,7 @@ import {
 } from "@/features/projects/actions";
 import type { DeletedProjectListItem } from "@/features/projects/components/project-card";
 import { ProjectTypeBadge } from "@/features/projects/components/project-type-badge";
+import { resolveProjectOrgPermissions } from "@/features/projects/lib/roles";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,10 +28,10 @@ function formatDeletedAt(value: Date | string) {
 
 export function DeletedProjectsList({
   projects,
-  readOnly = false,
+  orgRolesByOrgId,
 }: {
   projects: DeletedProjectListItem[];
-  readOnly?: boolean;
+  orgRolesByOrgId: Record<string, OrgRole>;
 }) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -87,9 +89,8 @@ export function DeletedProjectsList({
         </div>
         <h2 className="text-xl font-semibold">No deleted projects</h2>
         <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          {readOnly
-            ? "Archived projects removed by an administrator will appear here."
-            : "Soft-deleted projects appear here. Restore them or permanently remove them from the database."}
+          Soft-deleted projects appear here. Administrators can restore them or permanently remove
+          them from the database.
         </p>
       </div>
     );
@@ -98,7 +99,12 @@ export function DeletedProjectsList({
   return (
     <>
       <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" role="list">
-        {projects.map((project) => (
+        {projects.map((project) => {
+          const canManage = resolveProjectOrgPermissions(
+            orgRolesByOrgId[project.workspace.organization.id],
+          ).canDelete;
+
+          return (
           <li key={project.id} className="h-full">
             <Card className="flex h-full min-h-[220px] flex-col border-border/60 bg-card/30 p-5">
               <div className="flex items-start justify-between gap-3">
@@ -118,7 +124,7 @@ export function DeletedProjectsList({
                 Deleted {formatDeletedAt(project.deletedAt)}
               </p>
 
-              {!readOnly && (
+              {canManage ? (
                 <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/40 pt-4">
                   <Button
                     variant="outline"
@@ -140,19 +146,21 @@ export function DeletedProjectsList({
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 </div>
-              )}
-
-              {readOnly && (
+              ) : (
                 <p className="mt-auto border-t border-border/40 pt-4 text-xs text-muted-foreground">
                   Contact an administrator to restore this project.
                 </p>
               )}
             </Card>
           </li>
-        ))}
+          );
+        })}
       </ul>
 
-      {!readOnly && (
+      {projects.some(
+        (project) =>
+          resolveProjectOrgPermissions(orgRolesByOrgId[project.workspace.organization.id]).canDelete,
+      ) && (
         <>
           <ConfirmDialog
             open={!!restoreTarget}

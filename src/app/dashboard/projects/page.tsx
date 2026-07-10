@@ -5,11 +5,8 @@ import { Suspense } from "react";
 import { listUserOrganizations } from "@/features/organizations/lib/organizations";
 import { DeletedProjectsList, ProjectsTabs } from "@/features/projects/components/projects-tabs";
 import { ProjectsList } from "@/features/projects/components/projects-list";
-import {
-  canCreateProject,
-  canEditProject,
-  canManageProjects,
-} from "@/features/projects/lib/roles";
+import { buildOrgRoleMap } from "@/features/organizations/lib/org-permissions";
+import { canManageAnyListedProject } from "@/features/projects/lib/roles";
 import {
   listUserVisibleDeletedProjects,
   listUserProjects,
@@ -35,9 +32,8 @@ export default async function ProjectsPage() {
     listUserOrganizations(session.user.id),
   ]);
 
-  const canCreate = organizations.some((org) => canCreateProject(org.role));
-  const canEdit = organizations.some((org) => canEditProject(org.role));
-  const canManageDeleted = organizations.some((org) => canManageProjects(org.role));
+  const orgRolesByOrgId = buildOrgRoleMap(organizations);
+  const canManageDeleted = canManageAnyListedProject(orgRolesByOrgId, deletedProjects);
 
   const workspaceOptions = workspaces.map((workspace) => ({
     id: workspace.id,
@@ -74,15 +70,13 @@ export default async function ProjectsPage() {
               projects={projects}
               workspaces={workspaceOptions}
               organizations={orgOptions}
-              canCreate={canCreate}
-              canEdit={canEdit}
-              canDelete={canManageDeleted}
+              orgRolesByOrgId={orgRolesByOrgId}
             />
           </Suspense>
         }
         deletedPanel={
           <DeletedProjectsList
-            readOnly={!canManageDeleted}
+            orgRolesByOrgId={orgRolesByOrgId}
             projects={deletedProjects.map((project) => ({
               ...project,
               deletedAt: project.deletedAt!,

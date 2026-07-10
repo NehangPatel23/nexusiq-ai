@@ -5,6 +5,7 @@ import {
   canCreateWorkspace,
   canEditWorkspace,
   canManageWorkspaces,
+  resolveWorkspaceOrgPermissions,
 } from "../lib/roles";
 import {
   createWorkspaceSchema,
@@ -78,5 +79,18 @@ describe("workspace role checks", () => {
     expect(canManageWorkspaces("VIEWER")).toBe(false);
     expect(canManageWorkspaces("ANALYST")).toBe(false);
     expect(canManageWorkspaces("REVIEWER")).toBe(false);
+  });
+
+  it("resolves workspace permissions from org role", () => {
+    expect(resolveWorkspaceOrgPermissions("REVIEWER")).toEqual({
+      canCreate: true,
+      canEdit: false,
+      canDelete: false,
+    });
+    expect(resolveWorkspaceOrgPermissions("ADMIN")).toEqual({
+      canCreate: true,
+      canEdit: true,
+      canDelete: true,
+    });
   });
 });

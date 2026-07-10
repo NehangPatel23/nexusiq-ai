@@ -1,5 +1,6 @@
 import type { OrgRole } from "@prisma/client";
 
+import { buildOrgRoleMap } from "@/features/organizations/lib/org-permissions";
 import { hasMinRole } from "@/features/organizations/lib/roles";
 
 /** Any org member can list and view projects. */
@@ -29,3 +30,33 @@ export function canEditProject(role: OrgRole): boolean {
 export function canManageProjects(role: OrgRole): boolean {
   return hasMinRole(role, PROJECT_MANAGE_MIN_ROLE);
 }
+
+export type ProjectOrgPermissions = {
+  canCreate: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+};
+
+export function resolveProjectOrgPermissions(role: OrgRole | undefined): ProjectOrgPermissions {
+  if (!role) {
+    return { canCreate: false, canEdit: false, canDelete: false };
+  }
+
+  return {
+    canCreate: canCreateProject(role),
+    canEdit: canEditProject(role),
+    canDelete: canManageProjects(role),
+  };
+}
+
+export function canManageAnyListedProject(
+  orgRolesByOrgId: Record<string, OrgRole>,
+  projects: ReadonlyArray<{ workspace: { organization: { id: string } } }>,
+): boolean {
+  return projects.some(
+    (project) =>
+      resolveProjectOrgPermissions(orgRolesByOrgId[project.workspace.organization.id]).canDelete,
+  );
+}
+
+export { buildOrgRoleMap };
