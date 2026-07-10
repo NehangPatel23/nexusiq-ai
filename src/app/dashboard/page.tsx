@@ -2,10 +2,10 @@ import { redirect } from "next/navigation";
 
 import { getDashboardData } from "@/features/projects/lib/dashboard";
 import { DashboardHome } from "@/components/dashboard/dashboard-home";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 export default async function DashboardPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }

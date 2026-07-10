@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { cache } from "react";
 
 import { prisma } from "@/lib/db";
 
@@ -149,7 +150,7 @@ export async function countUserProjects(userId: string) {
   });
 }
 
-export async function getProjectById(projectId: string) {
+export const getProjectById = cache(async (projectId: string) => {
   return prisma.project.findFirst({
     where: {
       id: projectId,
@@ -157,7 +158,7 @@ export async function getProjectById(projectId: string) {
     },
     include: projectInclude,
   });
-}
+});
 
 export async function getDeletedProjectById(projectId: string) {
   return prisma.project.findFirst({

@@ -148,7 +148,7 @@ Open **[http://localhost:3000](http://localhost:3000)** → register → complet
 | `pnpm test` | Unit + integration tests (Vitest) |
 | `pnpm test:e2e` | Playwright end-to-end (11 specs, uses local Docker DB) |
 | `pnpm db:studio` | Prisma Studio |
-| `pnpm db:sync-to-supabase` | Copy local data → Supabase |
+| `pnpm db:sync-to-supabase` | Copy local data (incl. projects) → Supabase |
 | `pnpm db:purge-test-users` | Remove `*@test.com` fixtures |
 
 ---

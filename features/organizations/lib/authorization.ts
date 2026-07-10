@@ -1,6 +1,6 @@
 import type { OrgRole, OrganizationMember } from "@prisma/client";
 
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 import { getOrganizationMembership } from "./organizations";
 import { hasMinRole } from "./roles";
@@ -16,7 +16,7 @@ export class AuthError extends Error {
 }
 
 export async function requireSession() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     throw new AuthError("UNAUTHORIZED", "Authentication required");
   }

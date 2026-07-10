@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
-import { ProjectBreadcrumbs } from "@/features/projects/components/project-breadcrumbs";
+import { ProjectShellHeader } from "@/features/projects/components/project-shell-header";
+import { ProjectShellProvider } from "@/features/projects/components/project-shell-context";
 import { ProjectShellNav } from "@/features/projects/components/project-shell-nav";
-import { ProjectShellHeaderActions } from "@/features/projects/components/project-shell-header-actions";
-import { ProjectTypeBadge } from "@/features/projects/components/project-type-badge";
-import { canManageProjects } from "@/features/projects/lib/roles";
+import { canEditProject, canManageProjects } from "@/features/projects/lib/roles";
 import { getProjectById } from "@/features/projects/lib/projects";
-import { auth } from "@/lib/auth";
+import { toProjectSnapshot } from "@/features/projects/lib/project-snapshot";
+import { getSession } from "@/lib/session";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: LayoutProps): Promise<Metadat
 }
 
 export default async function ProjectLayout({ children, params }: LayoutProps) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }
@@ -44,40 +44,20 @@ export default async function ProjectLayout({ children, params }: LayoutProps) {
   }
 
   const canDelete = canManageProjects(membership.role);
+  const canEdit = canEditProject(membership.role);
 
   return (
-    <div className="space-y-6">
-      <ProjectBreadcrumbs projectId={projectId} projectName={project.name} />
+    <ProjectShellProvider
+      initialProject={toProjectSnapshot(project)}
+      canEdit={canEdit}
+      canDelete={canDelete}
+    >
+      <div className="space-y-6">
+        <ProjectShellHeader projectId={projectId} />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <ProjectTypeBadge type={project.type} />
-            {project.pinned && (
-              <span className="rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">
-                Pinned
-              </span>
-            )}
-            <span className="text-sm text-muted-foreground">
-              {project.workspace.organization.name} · {project.workspace.name}
-            </span>
-          </div>
-          <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
-          {project.targetCompany && (
-            <p className="text-sm text-muted-foreground">Target: {project.targetCompany}</p>
-          )}
-        </div>
-        <ProjectShellHeaderActions
-          projectId={project.id}
-          projectName={project.name}
-          pinned={project.pinned}
-          canDelete={canDelete}
-          canEdit
-        />
+        <ProjectShellNav projectId={projectId} />
+        {children}
       </div>
-
-      <ProjectShellNav projectId={projectId} />
-      {children}
-    </div>
+    </ProjectShellProvider>
   );
 }

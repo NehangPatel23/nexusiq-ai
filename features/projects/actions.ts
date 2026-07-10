@@ -32,6 +32,7 @@ import {
   bulkSoftDeleteProjects,
   updateProject,
 } from "./lib/projects";
+import { toProjectSnapshot, type ProjectSnapshot } from "./lib/project-snapshot";
 
 export type ActionResult<T = void> =
   | { success: true; data?: T }
@@ -94,7 +95,7 @@ export async function createProjectAction(
 export async function updateProjectAction(
   projectId: string,
   input: unknown,
-): Promise<ActionResult> {
+): Promise<ActionResult<{ project: ProjectSnapshot }>> {
   try {
     const project = await getProjectById(projectId);
     if (!project) {
@@ -113,7 +114,7 @@ export async function updateProjectAction(
     }
 
     revalidateProjectPaths(projectId);
-    return { success: true };
+    return { success: true, data: { project: toProjectSnapshot(result.project) } };
   } catch (error) {
     if (error instanceof AuthError) {
       return actionError(error.code, error.message);

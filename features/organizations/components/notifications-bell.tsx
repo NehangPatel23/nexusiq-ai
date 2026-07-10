@@ -3,7 +3,7 @@
 import { Bell, Check } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,14 +24,20 @@ interface NotificationItem {
   createdAt: string;
 }
 
+const POLL_INTERVAL_MS = 120_000;
+const DEFER_FETCH_MS = 2_000;
+
 export function NotificationsBell() {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
+  const [open, setOpen] = useState(false);
+  const hasFetchedRef = useRef(false);
 
   const fetchNotifications = useCallback(async () => {
+    setLoading(true);
     try {
       const response = await fetch("/api/notifications");
       const json = await response.json();
@@ -42,6 +48,7 @@ export function NotificationsBell() {
       setNotifications(json.data.items);
       setUnreadCount(json.data.unreadCount);
       setError(false);
+      hasFetchedRef.current = true;
     } catch {
       setError(true);
     } finally {
@@ -50,12 +57,33 @@ export function NotificationsBell() {
   }, []);
 
   useEffect(() => {
-    void fetchNotifications();
+    let cancelled = false;
+
+    const deferredId = window.setTimeout(() => {
+      if (!cancelled && !hasFetchedRef.current) {
+        void fetchNotifications();
+      }
+    }, DEFER_FETCH_MS);
+
     const interval = window.setInterval(() => {
-      void fetchNotifications();
-    }, 60_000);
-    return () => window.clearInterval(interval);
+      if (document.visibilityState === "visible") {
+        void fetchNotifications();
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(deferredId);
+      window.clearInterval(interval);
+    };
   }, [fetchNotifications]);
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+    if (nextOpen && !hasFetchedRef.current) {
+      void fetchNotifications();
+    }
+  }
 
   async function markRead(notification: NotificationItem) {
     if (notification.readAt) {
@@ -79,7 +107,7 @@ export function NotificationsBell() {
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
@@ -108,36 +136,34 @@ export function NotificationsBell() {
           </Link>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {loading && (
+        {loading && notifications.length === 0 && (
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">Loading…</p>
         )}
-        {error && !loading && (
+        {error && !loading && notifications.length === 0 && (
           <p className="px-3 py-6 text-center text-sm text-destructive" role="alert">
             Could not load notifications.
           </p>
         )}
-        {!loading && !error && notifications.length === 0 && (
+        {!loading && !error && notifications.length === 0 && hasFetchedRef.current && (
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">
             No notifications yet.
           </p>
         )}
-        {!loading &&
-          !error &&
-          notifications.slice(0, 8).map((notification) => (
-            <DropdownMenuItem
-              key={notification.id}
-              className="flex cursor-pointer flex-col items-start gap-1 py-3"
-              onSelect={() => void markRead(notification)}
-            >
-              <div className="flex w-full items-start justify-between gap-2">
-                <span className="text-sm font-medium">{notification.title}</span>
-                {notification.readAt && (
-                  <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-                )}
-              </div>
-              <span className="line-clamp-2 text-xs text-muted-foreground">{notification.body}</span>
-            </DropdownMenuItem>
-          ))}
+        {notifications.slice(0, 8).map((notification) => (
+          <DropdownMenuItem
+            key={notification.id}
+            className="flex cursor-pointer flex-col items-start gap-1 py-3"
+            onSelect={() => void markRead(notification)}
+          >
+            <div className="flex w-full items-start justify-between gap-2">
+              <span className="text-sm font-medium">{notification.title}</span>
+              {notification.readAt && (
+                <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+              )}
+            </div>
+            <span className="line-clamp-2 text-xs text-muted-foreground">{notification.body}</span>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );

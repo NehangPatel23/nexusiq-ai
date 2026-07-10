@@ -4,6 +4,7 @@ import type {
   Organization,
   OrganizationMember,
   PasswordResetToken,
+  Project,
   Team,
   TeamMember,
   User,
@@ -19,6 +20,7 @@ export interface AppDataSnapshot {
   teams: Team[];
   teamMembers: TeamMember[];
   workspaces: Workspace[];
+  projects: Project[];
   invites: Invite[];
   notifications: Notification[];
 }
@@ -75,6 +77,8 @@ export function excludeTestData(data: AppDataSnapshot): AppDataSnapshot {
     userIds.has(member.userId),
   );
   const organizationIds = new Set(organizationMembers.map((member) => member.organizationId));
+  const workspaces = data.workspaces.filter((workspace) => organizationIds.has(workspace.organizationId));
+  const workspaceIds = new Set(workspaces.map((workspace) => workspace.id));
 
   return {
     users,
@@ -83,7 +87,8 @@ export function excludeTestData(data: AppDataSnapshot): AppDataSnapshot {
     organizationMembers,
     teams: data.teams.filter((team) => organizationIds.has(team.organizationId)),
     teamMembers: data.teamMembers.filter((member) => userIds.has(member.userId)),
-    workspaces: data.workspaces.filter((workspace) => organizationIds.has(workspace.organizationId)),
+    workspaces,
+    projects: data.projects.filter((project) => workspaceIds.has(project.workspaceId)),
     invites: data.invites.filter((invite) => organizationIds.has(invite.organizationId)),
     notifications: data.notifications.filter((notification) => userIds.has(notification.userId)),
   };
@@ -98,6 +103,7 @@ export function countSnapshot(data: AppDataSnapshot) {
     teams: data.teams.length,
     teamMembers: data.teamMembers.length,
     workspaces: data.workspaces.length,
+    projects: data.projects.length,
     invites: data.invites.length,
     notifications: data.notifications.length,
   };

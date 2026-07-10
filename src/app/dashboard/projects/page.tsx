@@ -16,14 +16,14 @@ import {
 } from "@/features/projects/lib/projects";
 import { listUserWorkspaces } from "@/features/projects/lib/user-workspaces";
 import { PageHeader } from "@/components/layout/page-header";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Projects",
 };
 
 export default async function ProjectsPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }

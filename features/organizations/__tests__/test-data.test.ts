@@ -80,6 +80,7 @@ describe("test data helpers", () => {
       teams: [],
       teamMembers: [],
       workspaces: [],
+      projects: [],
       invites: [],
       notifications: [],
     });

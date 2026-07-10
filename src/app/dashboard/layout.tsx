@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 
 import { AppShell } from "@/components/layout/app-shell";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Dashboard",
 };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
+  const session = await getSession();
 
   return (
     <AppShell

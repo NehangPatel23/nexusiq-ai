@@ -9,6 +9,7 @@ import {
   duplicateProjectAction,
   toggleProjectPinAction,
 } from "@/features/projects/actions";
+import { useProjectShellOptional } from "@/features/projects/components/project-shell-context";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -31,6 +32,7 @@ export function ProjectCardMenu({
   canEdit,
 }: ProjectCardMenuProps) {
   const router = useRouter();
+  const shell = useProjectShellOptional();
   const [isPending, startTransition] = useTransition();
 
   function handlePin() {
@@ -40,8 +42,13 @@ export function ProjectCardMenu({
         toast.error(result.error.message);
         return;
       }
-      toast.success(result.data?.pinned ? "Project pinned" : "Project unpinned");
-      router.refresh();
+      const nextPinned = result.data?.pinned ?? !pinned;
+      toast.success(nextPinned ? "Project pinned" : "Project unpinned");
+      if (shell) {
+        shell.setProject({ pinned: nextPinned });
+      } else {
+        router.refresh();
+      }
     });
   }
 
@@ -53,7 +60,9 @@ export function ProjectCardMenu({
         return;
       }
       toast.success("Project duplicated");
-      router.refresh();
+      if (!shell) {
+        router.refresh();
+      }
       if (result.data?.id) {
         router.push(`/dashboard/projects/${result.data.id}`);
       }
