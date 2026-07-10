@@ -1,42 +1,27 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { ProjectType } from "@prisma/client";
 
 import { ProcessingProgress } from "@/features/projects/components/processing-progress";
 import { TagsInput } from "@/features/projects/components/tags-input";
+import { useProjectShell } from "@/features/projects/components/project-shell-context";
 import { updateProjectAction } from "@/features/projects/actions";
 import { ProjectTypeBadge } from "@/features/projects/components/project-type-badge";
 import {
   DEFAULT_AGENTS,
   DEFAULT_AGENT_LABELS,
-  getDefaultAgentFromMetadata,
   type DefaultAgent,
 } from "@/features/projects/lib/default-agents";
 import { COMMON_DEAL_STATUSES } from "@/features/projects/lib/deal-statuses";
 import { PROJECT_TYPES, PROJECT_TYPE_LABELS } from "@/features/projects/lib/project-types";
+import { getSnapshotDefaultAgent } from "@/features/projects/lib/project-snapshot";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-interface ProjectOverviewProps {
-  project: {
-    id: string;
-    name: string;
-    description: string | null;
-    type: ProjectType;
-    targetCompany: string | null;
-    dealStatus: string | null;
-    tags: string[];
-    metadata: unknown;
-    workspace: { name: string; organization: { name: string } };
-  };
-  canEdit: boolean;
-}
 
 const AGENT_PLACEHOLDERS = [
   { name: "Financial", score: "—" },
@@ -46,8 +31,8 @@ const AGENT_PLACEHOLDERS = [
   { name: "Fraud", score: "—" },
 ];
 
-export function ProjectOverview({ project, canEdit }: ProjectOverviewProps) {
-  const router = useRouter();
+export function ProjectOverview() {
+  const { project, setProject, canEdit } = useProjectShell();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description ?? "");
@@ -56,13 +41,33 @@ export function ProjectOverview({ project, canEdit }: ProjectOverviewProps) {
   const [dealStatus, setDealStatus] = useState(project.dealStatus ?? "");
   const [tags, setTags] = useState(project.tags);
   const [defaultAgent, setDefaultAgent] = useState<DefaultAgent | "">(
-    getDefaultAgentFromMetadata(project.metadata) ?? "",
+    getSnapshotDefaultAgent(project) ?? "",
   );
   const [isPending, startTransition] = useTransition();
 
+  function resetFormFromProject() {
+    setName(project.name);
+    setDescription(project.description ?? "");
+    setType(project.type);
+    setTargetCompany(project.targetCompany ?? "");
+    setDealStatus(project.dealStatus ?? "");
+    setTags(project.tags);
+    setDefaultAgent(getSnapshotDefaultAgent(project) ?? "");
+  }
+
+  function handleStartEditing() {
+    resetFormFromProject();
+    setEditing(true);
+  }
+
+  function handleCancelEditing() {
+    resetFormFromProject();
+    setEditing(false);
+  }
+
   function handleSave() {
     startTransition(async () => {
-      const result = await updateProjectAction(project.id, {
+      const payload = {
         name,
         description: description.trim() ? description.trim() : null,
         type,
@@ -70,20 +75,25 @@ export function ProjectOverview({ project, canEdit }: ProjectOverviewProps) {
         dealStatus: dealStatus.trim() ? dealStatus.trim() : null,
         tags,
         defaultAgent: defaultAgent || null,
-      });
+      };
+
+      const result = await updateProjectAction(project.id, payload);
 
       if (!result.success) {
         toast.error(result.error.message);
         return;
       }
 
+      if (result.data?.project) {
+        setProject(result.data.project);
+      }
+
       toast.success("Project updated");
       setEditing(false);
-      router.refresh();
     });
   }
 
-  const displayDefaultAgent = getDefaultAgentFromMetadata(project.metadata);
+  const displayDefaultAgent = getSnapshotDefaultAgent(project);
 
   return (
     <div className="space-y-6">
@@ -96,7 +106,7 @@ export function ProjectOverview({ project, canEdit }: ProjectOverviewProps) {
             </CardDescription>
           </div>
           {canEdit && !editing && (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
+            <Button variant="outline" size="sm" onClick={handleStartEditing}>
               Edit
             </Button>
           )}
@@ -193,7 +203,7 @@ export function ProjectOverview({ project, canEdit }: ProjectOverviewProps) {
                 <Button type="submit" disabled={isPending}>
                   {isPending ? "Saving…" : "Save changes"}
                 </Button>
-                <Button type="button" variant="outline" onClick={() => setEditing(false)}>
+                <Button type="button" variant="outline" onClick={handleCancelEditing}>
                   Cancel
                 </Button>
               </div>

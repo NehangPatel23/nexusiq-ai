@@ -20,7 +20,7 @@ import {
 } from "@/features/workspaces/lib/workspaces";
 import { countProjectsByWorkspaceIds } from "@/features/projects/lib/projects";
 import { PageHeader } from "@/components/layout/page-header";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 interface PageProps {
   params: Promise<{ orgId: string }>;
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function OrganizationWorkspacesPage({ params }: PageProps) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }

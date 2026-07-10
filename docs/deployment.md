@@ -87,7 +87,7 @@ Verify tables exist in **Supabase → Table Editor** (`users`, `organizations`, 
 
 ### 4b. Sync local Docker data to Supabase (optional)
 
-Copy users, orgs, invites, etc. from local dev into Supabase so Vercel has the same test data:
+Copy users, orgs, workspaces, projects, invites, etc. from local dev into Supabase so Vercel has the same test data:
 
 1. Add to `.env` (Session pooler, port **5432** — not the Vercel 6543 URL):
 

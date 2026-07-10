@@ -1,31 +1,22 @@
 import type { OrgRole, OrganizationMember } from "@prisma/client";
+import { cache } from "react";
 
 import { prisma } from "@/lib/db";
 
 import type { CreateOrganizationInput, UpdateOrganizationInput } from "../schemas";
 import { generateUniqueOrgSlug } from "./slug";
 
-export async function getOrganizationMembership(
-  organizationId: string,
-  userId: string,
-): Promise<OrganizationMember | null> {
-  const organization = await prisma.organization.findFirst({
-    where: { id: organizationId, deletedAt: null },
-  });
-
-  if (!organization) {
-    return null;
-  }
-
-  return prisma.organizationMember.findUnique({
-    where: {
-      organizationId_userId: {
+export const getOrganizationMembership = cache(
+  async (organizationId: string, userId: string): Promise<OrganizationMember | null> => {
+    return prisma.organizationMember.findFirst({
+      where: {
         organizationId,
         userId,
+        organization: { deletedAt: null },
       },
-    },
-  });
-}
+    });
+  },
+);
 
 export async function listUserOrganizations(userId: string) {
   const memberships = await prisma.organizationMember.findMany({
@@ -59,11 +50,11 @@ export async function countUserOrganizations(userId: string) {
   });
 }
 
-export async function getOrganizationById(organizationId: string) {
+export const getOrganizationById = cache(async (organizationId: string) => {
   return prisma.organization.findFirst({
     where: { id: organizationId, deletedAt: null },
   });
-}
+});
 
 export async function createOrganization(userId: string, input: CreateOrganizationInput) {
   const slug = await generateUniqueOrgSlug(input.name);

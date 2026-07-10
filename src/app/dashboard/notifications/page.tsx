@@ -4,14 +4,14 @@ import { redirect } from "next/navigation";
 
 import { listUserNotifications } from "@/features/organizations/lib/notifications";
 import { PageHeader } from "@/components/layout/page-header";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 export const metadata: Metadata = {
   title: "Notifications",
 };
 
 export default async function NotificationsPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }

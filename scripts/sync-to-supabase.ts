@@ -7,7 +7,7 @@
  *   pnpm db:sync-to-supabase -- --dry-run
  */
 
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 
 import { countSnapshot, excludeTestData } from "./lib/test-data";
 
@@ -61,6 +61,7 @@ async function exportLocal(local: PrismaClient) {
     teams,
     teamMembers,
     workspaces,
+    projects,
     invites,
     notifications,
   ] = await Promise.all([
@@ -71,6 +72,7 @@ async function exportLocal(local: PrismaClient) {
     local.team.findMany(),
     local.teamMember.findMany(),
     local.workspace.findMany(),
+    local.project.findMany(),
     local.invite.findMany(),
     local.notification.findMany(),
   ]);
@@ -83,8 +85,22 @@ async function exportLocal(local: PrismaClient) {
     teams,
     teamMembers,
     workspaces,
+    projects,
     invites,
     notifications,
+  };
+}
+
+function toProjectCreateManyInput(
+  project: Awaited<ReturnType<typeof exportLocal>>["projects"][number],
+): Prisma.ProjectCreateManyInput {
+  const { metadata, ...rest } = project;
+  return {
+    ...rest,
+    metadata:
+      metadata === null || metadata === undefined
+        ? Prisma.DbNull
+        : (metadata as Prisma.InputJsonValue),
   };
 }
 
@@ -96,6 +112,7 @@ async function importRemote(
     await tx.$executeRawUnsafe(`
       TRUNCATE TABLE
         notifications,
+        projects,
         workspaces,
         team_members,
         teams,
@@ -127,6 +144,11 @@ async function importRemote(
     }
     if (data.workspaces.length > 0) {
       await tx.workspace.createMany({ data: data.workspaces });
+    }
+    if (data.projects.length > 0) {
+      await tx.project.createMany({
+        data: data.projects.map(toProjectCreateManyInput),
+      });
     }
     if (data.invites.length > 0) {
       await tx.invite.createMany({ data: data.invites });

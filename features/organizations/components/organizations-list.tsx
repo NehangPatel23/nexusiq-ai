@@ -63,8 +63,7 @@ export function OrganizationsList({ organizations }: OrganizationsListProps) {
     <motion.div
       className="space-y-6"
       variants={reduceMotion ? undefined : staggerContainer}
-      initial="hidden"
-      animate="visible"
+      initial={false}
     >
       <motion.div
         className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-card/90 via-card/70 to-primary/5 p-6 md:p-8"

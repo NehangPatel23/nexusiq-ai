@@ -17,7 +17,7 @@ import {
 import { hasMinRole } from "@/features/organizations/lib/roles";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 
 interface PageProps {
   params: Promise<{ orgId: string }>;
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function OrganizationSettingsPage({ params }: PageProps) {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }

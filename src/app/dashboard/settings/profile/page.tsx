@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { ProfileForm } from "@/features/auth/components/profile-form";
 import { PageHeader } from "@/components/layout/page-header";
-import { auth } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ProfileSettingsPage() {
-  const session = await auth();
+  const session = await getSession();
   if (!session?.user?.id) {
     redirect("/login");
   }
