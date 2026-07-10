@@ -214,11 +214,13 @@ No Storage required. ~3 minutes.
 
 1. **Landing** (`/`) — product vision, agent showcase
 2. **Register** (`/register`) — create judge account
-3. **Onboarding** — create org e.g. “Acme Due Diligence” (or skip)
-4. **Dashboard** (`/dashboard`) — workspace shell, quick actions
-5. **Organizations** — open org → **Settings** → invite a second email (optional)
-6. **Sidebar** — **Agents**, **Projects**, **Chat** — placeholder pages (“Coming in slice N”)
-7. **Pitch** — “Full pipeline uses local Ollama; cloud demo shows multi-tenant UX”
+3. **Onboarding** — 3 steps: org → workspace → optional project (skip allowed at each step)
+4. **Dashboard** (`/dashboard`) — stats, risk overview, activity feed, quick actions
+5. **Projects** (`/dashboard/projects`) — create project, grid/list, filters, project shell tabs
+6. **Workspaces** — org → Workspaces; create workspace; **View projects** filters by workspace
+7. **Organizations** — Settings → invite a second email (optional); tap **ⓘ** for role permissions
+8. **Sidebar** — Intelligence, Chat, Reports tabs are placeholders inside a project shell
+9. **Pitch** — multi-tenant UX + project scaffolding live; Ollama runs locally by design ($0 API cost)
 
 ### Path B — Sample data room simulation (recommended narrative)
 
@@ -298,12 +300,14 @@ Neon does **not** include file storage—you would need a separate service for d
 
 ## What works on Vercel today
 
-- Landing, auth, onboarding, dashboard
+- Landing, auth, 3-step onboarding, dashboard
 - Organizations (CRUD, members, invites, teams, notifications)
-- Placeholder pages (Projects, Agents, Chat, Reports, etc.)
+- Workspaces (CRUD, soft delete, restore, workspace cards with project counts)
+- Projects (CRUD, types, tags, deal status, pin/duplicate/bulk delete, 13-tab project shell)
+- Placeholder tabs inside projects (Data Room, Intelligence, Chat, Reports, etc.)
 
 ## Deferred
 
 - Supabase Storage integration in upload/avatar code
 - Ollama agent execution on cloud
-- Full data room UI (slice 05+)
+- Full data room UI and document processing

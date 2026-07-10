@@ -79,6 +79,7 @@ describe("test data helpers", () => {
       ],
       teams: [],
       teamMembers: [],
+      workspaces: [],
       invites: [],
       notifications: [],
     });

@@ -4,6 +4,7 @@ import {
   AlertCircle,
   CheckSquare,
   FileStack,
+  FileText,
   FolderPlus,
   MessageSquare,
   Scan,
@@ -13,6 +14,10 @@ import {
 import Link from "next/link";
 import { motion, useReducedMotion } from "framer-motion";
 
+import { ActivityFeed } from "@/features/projects/components/activity-feed";
+import { DashboardOnboardingNudge } from "@/features/projects/components/dashboard-onboarding-nudge";
+import { RiskOverviewDonut } from "@/features/projects/components/risk-overview-donut";
+import type { DashboardData } from "@/features/projects/lib/dashboard";
 import { BrandBadge } from "@/components/brand/brand-badge";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -20,22 +25,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { StatCard } from "@/components/ui/stat-card";
 import { easeOut, staggerContainer, fadeUp } from "@/lib/motion";
 
-const quickActions = [
-  { label: "New Project", icon: FolderPlus, href: "/dashboard/projects" },
-  { label: "Upload", icon: Upload, href: "/dashboard/projects" },
+const quickActions = (recentProjectId: string | null) => [
+  { label: "New Project", icon: FolderPlus, href: "/dashboard/projects?create=true" },
+  {
+    label: "Upload",
+    icon: Upload,
+    href: recentProjectId
+      ? `/dashboard/projects/${recentProjectId}/data-room`
+      : "/dashboard/projects?create=true",
+  },
   { label: "Full Scan", icon: Scan, href: "/dashboard/intelligence" },
   { label: "New Chat", icon: MessageSquare, href: "/dashboard/chat" },
 ];
 
-const stats = [
-  { label: "Projects", value: 0, icon: FolderPlus },
-  { label: "Documents processed", value: 0, icon: FileStack },
-  { label: "Open risks", value: 0, icon: AlertCircle },
-  { label: "Pending tasks", value: 0, icon: CheckSquare },
-];
+interface DashboardHomeProps {
+  data: DashboardData;
+}
 
-export function DashboardHome() {
+export function DashboardHome({ data }: DashboardHomeProps) {
   const reduceMotion = useReducedMotion();
+  const hasProjects = data.stats.projectCount > 0;
+
+  const stats = [
+    { label: "Projects", value: data.stats.projectCount, icon: FolderPlus },
+    { label: "Documents processed", value: data.stats.documentsProcessed, icon: FileStack },
+    { label: "Open risks", value: data.stats.openRisks, icon: AlertCircle },
+    { label: "Pending tasks", value: data.stats.pendingTasks, icon: CheckSquare },
+  ];
 
   return (
     <motion.div
@@ -44,6 +60,8 @@ export function DashboardHome() {
       initial="hidden"
       animate="visible"
     >
+      <DashboardOnboardingNudge onboarding={data.onboarding} />
+
       <motion.div
         className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-card/90 via-card/70 to-primary/5 p-8 md:p-10"
         variants={fadeUp}
@@ -73,6 +91,15 @@ export function DashboardHome() {
         ))}
       </div>
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.15 }}>
+          <RiskOverviewDonut data={data.riskOverview} />
+        </motion.div>
+        <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.2 }}>
+          <ActivityFeed items={data.recentActivity} />
+        </motion.div>
+      </div>
+
       <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.2 }}>
         <Card>
           <CardHeader>
@@ -81,7 +108,7 @@ export function DashboardHome() {
           </CardHeader>
           <CardContent>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              {quickActions.map((action, i) => {
+              {quickActions(data.recentProjectId).map((action, i) => {
                 const Icon = action.icon;
                 return (
                   <motion.div
@@ -110,28 +137,72 @@ export function DashboardHome() {
         </Card>
       </motion.div>
 
-      <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.3 }}>
-        <Card className="border-dashed border-border/60 bg-transparent shadow-none">
-          <CardHeader className="items-center text-center">
-            <motion.div
-              className="mb-2 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10"
-              animate={reduceMotion ? undefined : { y: [0, -4, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <FolderPlus className="h-6 w-6 text-primary" aria-hidden="true" />
-            </motion.div>
-            <CardTitle>Create your first project</CardTitle>
-            <CardDescription className="max-w-md">
-              Set up a workspace and upload your data room to begin AI-powered due diligence.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex justify-center pb-8">
-            <Button size="lg" asChild>
-              <Link href="/dashboard/projects">Create your first project</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.25 }}>
+          <Card className="h-full border-border/60 bg-card/40">
+            <CardHeader>
+              <CardTitle>Recent reports</CardTitle>
+              <CardDescription>Generated reports across your projects</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-secondary/50">
+                  <FileText className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                </div>
+                <p className="text-sm font-medium">No reports yet</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Generate executive summaries and risk registers after running intelligence agents.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.3 }}>
+          <Card className="h-full border-border/60 bg-card/40">
+            <CardHeader>
+              <CardTitle>Upcoming tasks</CardTitle>
+              <CardDescription>Action items from your diligence workflows</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-secondary/50">
+                  <CheckSquare className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                </div>
+                <p className="text-sm font-medium">No upcoming tasks</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Action plan tasks will appear here once you create items from findings.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {!hasProjects && (
+        <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.3 }}>
+          <Card className="border-dashed border-border/60 bg-transparent shadow-none">
+            <CardHeader className="items-center text-center">
+              <motion.div
+                className="mb-2 flex h-14 w-14 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10"
+                animate={reduceMotion ? undefined : { y: [0, -4, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <FolderPlus className="h-6 w-6 text-primary" aria-hidden="true" />
+              </motion.div>
+              <CardTitle>Create your first project</CardTitle>
+              <CardDescription className="max-w-md">
+                Set up a workspace and create a project to begin AI-powered due diligence.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center pb-8">
+              <Button size="lg" asChild>
+                <Link href="/dashboard/projects">Create your first project</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

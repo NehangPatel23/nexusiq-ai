@@ -1,19 +1,18 @@
 "use client";
 
-import { FolderKanban, Pencil, Plus } from "lucide-react";
-import { useState } from "react";
+import { FolderKanban, Plus, Search } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
-import { DeleteWorkspaceButton } from "@/features/workspaces/components/delete-workspace-button";
+import { WorkspaceCard } from "@/features/workspaces/components/workspace-card";
 import {
   WorkspaceFormDialog,
   type WorkspaceFormValues,
 } from "@/features/workspaces/components/workspace-form-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { useListKeyboardShortcuts } from "@/hooks/use-list-keyboard-shortcuts";
 import { easeOut, fadeUp, staggerContainer } from "@/lib/motion";
-import { cn } from "@/lib/utils";
 
 interface TeamOption {
   id: string;
@@ -33,6 +32,7 @@ interface WorkspacesListProps {
   orgId: string;
   workspaces: WorkspaceListItem[];
   teams: TeamOption[];
+  projectCountByWorkspaceId?: Record<string, number>;
   canCreate: boolean;
   canEdit: boolean;
   canDelete: boolean;
@@ -42,13 +42,44 @@ export function WorkspacesList({
   orgId,
   workspaces,
   teams,
+  projectCountByWorkspaceId = {},
   canCreate,
   canEdit,
   canDelete,
 }: WorkspacesListProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [editingWorkspace, setEditingWorkspace] = useState<WorkspaceFormValues | null>(null);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "slug">("name");
+  const searchRef = useRef<HTMLInputElement>(null);
   const reduceMotion = useReducedMotion();
+
+  useListKeyboardShortcuts({
+    onNew: canCreate ? () => setCreateOpen(true) : undefined,
+    onFocusSearch: () => searchRef.current?.focus(),
+  });
+
+  const filteredWorkspaces = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const filtered = workspaces.filter((workspace) => {
+      if (!query) {
+        return true;
+      }
+      return (
+        workspace.name.toLowerCase().includes(query) ||
+        workspace.slug.toLowerCase().includes(query) ||
+        workspace.description?.toLowerCase().includes(query) ||
+        workspace.team?.name.toLowerCase().includes(query)
+      );
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "slug") {
+        return a.slug.localeCompare(b.slug);
+      }
+      return a.name.localeCompare(b.name);
+    });
+  }, [workspaces, search, sortBy]);
 
   if (workspaces.length === 0) {
     return (
@@ -114,81 +145,50 @@ export function WorkspacesList({
         </div>
       </motion.div>
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1 sm:max-w-sm">
+          <Search
+            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            ref={searchRef}
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search workspaces… (/ to focus)"
+            className="border-border/60 bg-card/40 pl-9"
+            aria-label="Search workspaces"
+          />
+        </div>
+        <select
+          value={sortBy}
+          onChange={(event) => setSortBy(event.target.value as "name" | "slug")}
+          className="flex h-10 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+          aria-label="Sort workspaces"
+        >
+          <option value="name">Name A–Z</option>
+          <option value="slug">Slug A–Z</option>
+        </select>
+      </div>
+
       <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" role="list">
-        {workspaces.map((workspace) => (
+        {filteredWorkspaces.map((workspace) => (
           <motion.li key={workspace.id} className="h-full" variants={fadeUp} transition={easeOut}>
-            <Card className="group relative flex h-full flex-col overflow-hidden border-border/60 bg-card/40 backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card/60 hover:shadow-soft">
-              <div
-                className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/0 to-primary/5 opacity-0 transition-opacity group-hover:opacity-100"
-                aria-hidden="true"
-              />
-
-              <div className="relative flex flex-1 flex-col p-5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <p className="truncate font-semibold leading-tight text-foreground">
-                      {workspace.name}
-                    </p>
-                    <p className="truncate font-mono text-xs text-muted-foreground">
-                      /{workspace.slug}
-                    </p>
-                  </div>
-                  {workspace.team && (
-                    <Badge variant="outline" className="shrink-0 text-[10px]">
-                      {workspace.team.name}
-                    </Badge>
-                  )}
-                </div>
-
-                <p
-                  className={cn(
-                    "mt-4 min-h-10 line-clamp-2 text-sm leading-relaxed",
-                    workspace.description ? "text-muted-foreground" : "text-muted-foreground/40",
-                  )}
-                >
-                  {workspace.description ?? "No description"}
-                </p>
-
-                {!canEdit && !canDelete && (
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    View only — you can browse and create workspaces. Ask an admin to edit settings.
-                  </p>
-                )}
-
-                <p className="mt-2 text-xs text-muted-foreground/80">
-                  Projects and data rooms will open from this workspace in a future update.
-                </p>
-
-                <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/40 pt-4">
-                  {canEdit ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setEditingWorkspace({
-                          id: workspace.id,
-                          name: workspace.name,
-                          slug: workspace.slug,
-                          description: workspace.description,
-                          teamId: workspace.teamId,
-                        })
-                      }
-                    >
-                      <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
-                      Edit
-                    </Button>
-                  ) : (
-                    <span />
-                  )}
-                  {canDelete && (
-                    <DeleteWorkspaceButton
-                      workspaceId={workspace.id}
-                      workspaceName={workspace.name}
-                    />
-                  )}
-                </div>
-              </div>
-            </Card>
+            <WorkspaceCard
+              workspace={workspace}
+              projectCount={projectCountByWorkspaceId[workspace.id] ?? 0}
+              canEdit={canEdit}
+              canDelete={canDelete}
+              onEdit={() =>
+                setEditingWorkspace({
+                  id: workspace.id,
+                  name: workspace.name,
+                  slug: workspace.slug,
+                  description: workspace.description,
+                  teamId: workspace.teamId,
+                })
+              }
+            />
           </motion.li>
         ))}
       </ul>
