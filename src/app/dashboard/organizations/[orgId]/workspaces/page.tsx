@@ -18,6 +18,7 @@ import {
   listDeletedOrganizationWorkspaces,
   listOrganizationWorkspaces,
 } from "@/features/workspaces/lib/workspaces";
+import { countProjectsByWorkspaceIds } from "@/features/projects/lib/projects";
 import { PageHeader } from "@/components/layout/page-header";
 import { auth } from "@/lib/auth";
 
@@ -60,6 +61,10 @@ export default async function OrganizationWorkspacesPage({ params }: PageProps) 
     listOrganizationTeams(orgId),
   ]);
 
+  const projectCountByWorkspaceId = await countProjectsByWorkspaceIds(
+    workspaces.map((workspace) => workspace.id),
+  );
+
   return (
     <div className="space-y-8">
       <WorkspacesBreadcrumbs orgId={orgId} orgName={organization.name} />
@@ -88,6 +93,7 @@ export default async function OrganizationWorkspacesPage({ params }: PageProps) 
           deletedAt: workspace.deletedAt!,
         }))}
         teams={teams.map((team) => ({ id: team.id, name: team.name }))}
+        projectCountByWorkspaceId={projectCountByWorkspaceId}
         canCreate={canCreate}
         canEdit={canEdit}
         canManageDeleted={canManageDeleted}

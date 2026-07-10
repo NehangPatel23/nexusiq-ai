@@ -1,6 +1,6 @@
 # Task 04: Projects + Dashboard
 
-**Status:** NOT STARTED | **Slice:** 4/16 | **Depends on:** 03-workspaces
+**Status:** DONE | **Slice:** 4/16 | **Depends on:** 03-workspaces
 
 ## Goal
 Project types + full org dashboard with enterprise widgets.

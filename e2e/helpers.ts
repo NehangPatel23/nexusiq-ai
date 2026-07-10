@@ -39,7 +39,8 @@ export async function registerAndOnboard(
 ) {
   await registerAccount(page, { name, email, password });
   await page.getByLabel("Organization name").fill(orgName);
-  await page.getByRole("button", { name: /create organization/i }).click();
+  await page.getByRole("button", { name: /^continue$/i }).click();
+  await page.getByRole("button", { name: /skip for now/i }).click();
   await expect(page).toHaveURL("/dashboard", { timeout: 30_000 });
 }
 

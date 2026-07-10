@@ -31,6 +31,7 @@ interface WorkspacesTabsProps {
   workspaces: WorkspaceListItem[];
   deletedWorkspaces: DeletedWorkspaceListItem[];
   teams: TeamOption[];
+  projectCountByWorkspaceId?: Record<string, number>;
   canCreate: boolean;
   canEdit: boolean;
   canManageDeleted: boolean;
@@ -213,6 +214,7 @@ export function WorkspacesTabs({
   workspaces,
   deletedWorkspaces,
   teams,
+  projectCountByWorkspaceId = {},
   canCreate,
   canEdit,
   canManageDeleted,
@@ -225,6 +227,7 @@ export function WorkspacesTabs({
         orgId={orgId}
         workspaces={workspaces}
         teams={teams}
+        projectCountByWorkspaceId={projectCountByWorkspaceId}
         canCreate={canCreate}
         canEdit={canEdit}
         canDelete={false}
@@ -291,6 +294,7 @@ export function WorkspacesTabs({
           orgId={orgId}
           workspaces={workspaces}
           teams={teams}
+          projectCountByWorkspaceId={projectCountByWorkspaceId}
           canCreate={canCreate}
           canEdit={canEdit}
           canDelete={canManageDeleted}

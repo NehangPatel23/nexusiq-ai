@@ -21,29 +21,29 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 ## Per-Slice Criteria
 
 ### 00 Foundation
-- [ ] Landing page renders with CTA to register
-- [ ] App shell with sidebar, topbar, command palette skeleton
-- [ ] Dark theme default, design tokens applied
+- [x] Landing page renders with CTA to register
+- [x] App shell with sidebar, topbar, command palette skeleton
+- [x] Dark theme default, design tokens applied
 
 ### 01 Auth
-- [ ] Register, login, logout, forgot password
-- [ ] Profile edit (name, avatar)
-- [ ] Protected routes redirect unauthenticated users
-- [ ] Password bcrypt hashed
+- [x] Register, login, logout, forgot password
+- [x] Profile edit (name, avatar)
+- [x] Protected routes redirect unauthenticated users
+- [x] Password bcrypt hashed
 
 ### 02 Organizations
-- [ ] Org CRUD, teams, roles (Owner/Admin/Analyst/Reviewer/Viewer)
-- [ ] Invites, member management, permissions enforced
-- [ ] In-app notifications created on key events
+- [x] Org CRUD, teams, roles (Owner/Admin/Analyst/Reviewer/Viewer)
+- [x] Invites, member management, permissions enforced
+- [x] In-app notifications created on key events
 
 ### 03 Workspaces
-- [ ] Workspace CRUD, unique slug per org
-- [ ] Optional team assignment
+- [x] Workspace CRUD, unique slug per org
+- [x] Optional team assignment
 
 ### 04 Projects + Dashboard
-- [ ] Project types: M&A, Vendor DD, Audit, Investment, Internal
-- [ ] Dashboard: stats, risk overview, activity, quick actions, recent reports, tasks
-- [ ] Empty states with CTAs
+- [x] Project types: M&A, Vendor DD, Audit, Investment, Internal
+- [x] Dashboard: stats, risk overview, activity, quick actions, recent reports, tasks
+- [x] Empty states with CTAs
 
 ### 05 Data Room
 - [ ] Folder tree, drag-drop, bulk upload

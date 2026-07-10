@@ -25,6 +25,14 @@ enum NotificationType {
   SYSTEM
 }
 
+enum ProjectType {
+  MA
+  VENDOR_DD
+  AUDIT
+  INVESTMENT
+  INTERNAL
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -166,8 +174,32 @@ model Workspace {
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   team         Team?        @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  projects     Project[]
 
   @@unique([organizationId, slug])
   @@index([organizationId, deletedAt])
   @@map("workspaces")
+}
+
+model Project {
+  id            String      @id @default(uuid())
+  workspaceId   String      @map("workspace_id")
+  name          String
+  slug          String
+  description   String?
+  type          ProjectType
+  targetCompany String?     @map("target_company")
+  dealStatus    String?     @map("deal_status")
+  tags          String[]
+  metadata      Json?
+  pinned        Boolean     @default(false)
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+  deletedAt     DateTime?   @map("deleted_at")
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId, deletedAt])
+  @@map("projects")
 }

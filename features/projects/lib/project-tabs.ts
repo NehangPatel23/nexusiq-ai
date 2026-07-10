@@ -1,0 +1,88 @@
+export const PROJECT_TAB_SLICES = {
+  "data-room": {
+    title: "Data Room",
+    description: "Upload, organize, and preview diligence documents with folder trees and version history.",
+    slice: 5,
+    sliceLabel: "Data Room",
+    highlights: ["Folder tree", "Drag-drop upload", "File preview"],
+  },
+  intelligence: {
+    title: "Intelligence",
+    description: "Run Financial, Legal, Compliance, Risk, and Fraud agents with cited findings.",
+    slice: 9,
+    sliceLabel: "Intelligence Agents",
+    highlights: ["Agent score cards", "Findings table", "Consensus engine"],
+  },
+  chat: {
+    title: "Chat",
+    description: "Ask questions about your project with streaming cited answers and confidence badges.",
+    slice: 8,
+    sliceLabel: "Chat",
+    highlights: ["Cited Q&A", "Agent selector", "Chat history"],
+  },
+  reports: {
+    title: "Reports",
+    description: "Generate executive summaries, board memos, and risk registers with export.",
+    slice: 11,
+    sliceLabel: "Reports & Export",
+    highlights: ["Executive reports", "PDF export", "Report history"],
+  },
+  timeline: {
+    title: "Timeline",
+    description: "Visual timeline of key events extracted from your documents with citations.",
+    slice: 12,
+    sliceLabel: "Timeline + Graph",
+    highlights: ["Auto-extract events", "Visual timeline", "Citations"],
+  },
+  graph: {
+    title: "Graph",
+    description: "Force-directed relationship graph connecting entities across documents.",
+    slice: 12,
+    sliceLabel: "Timeline + Graph",
+    highlights: ["Entity relationships", "Interactive graph", "Document links"],
+  },
+  risks: {
+    title: "Risks",
+    description: "Enterprise risk score, category heatmap, and open findings from all agents.",
+    slice: 12,
+    sliceLabel: "Timeline + Graph",
+    highlights: ["Risk score", "Severity heatmap", "Open findings"],
+  },
+  contradictions: {
+    title: "Contradictions",
+    description: "Cross-document contradiction scan with severity ranking and resolution workflow.",
+    slice: 13,
+    sliceLabel: "Contradiction + Missing Info",
+    highlights: ["Cross-doc scan", "Severity ranking", "Status workflow"],
+  },
+  missing: {
+    title: "Missing Information",
+    description: "Detect missing documents by project type and export follow-up requests.",
+    slice: 13,
+    sliceLabel: "Contradiction + Missing Info",
+    highlights: ["Missing doc detection", "Follow-up export", "Status workflow"],
+  },
+  simulator: {
+    title: "Risk Simulator",
+    description: "What-if scenarios showing delta vs baseline scores and recommendations.",
+    slice: 14,
+    sliceLabel: "Simulator + Action Plan",
+    highlights: ["What-if scenarios", "Score deltas", "Recommendations"],
+  },
+  actions: {
+    title: "Action Plan",
+    description: "Kanban board for action items linked to findings with assignees and deadlines.",
+    slice: 14,
+    sliceLabel: "Simulator + Action Plan",
+    highlights: ["Kanban board", "Assignees", "Impact tracking"],
+  },
+  history: {
+    title: "History",
+    description: "Project audit log with filters and comparison views.",
+    slice: 15,
+    sliceLabel: "History + Settings",
+    highlights: ["Audit log", "Activity filters", "Project comparison"],
+  },
+} as const;
+
+export type ProjectTabKey = keyof typeof PROJECT_TAB_SLICES;
