@@ -5,9 +5,9 @@ Deploy NexusIQ-AI to Vercel with **Supabase** (PostgreSQL + Storage) for hackath
 ## Architecture (Vercel + Supabase)
 
 ```text
-Judges → Vercel (Next.js) → Supabase Postgres (auth, orgs, metadata)
-                         → Supabase Storage (sample files, avatars — when wired)
-                         → Placeholder UI (intelligence, data room slices)
+Judges → Vercel (Next.js) → Supabase Postgres (auth, orgs, projects, documents metadata)
+                         → Supabase Storage (document uploads, avatars when configured)
+                         → Placeholder UI (intelligence, chat, reports slices)
 Ollama → local / external only (not on Vercel)
 ```
 
@@ -220,33 +220,35 @@ No Storage required. ~3 minutes.
 6. **Workspaces** — org → Workspaces; create workspace; **View projects** filters by workspace
 7. **Organizations** — Settings → invite a second email (optional); tap **ⓘ** for role permissions
 8. **Sidebar** — Intelligence, Chat, Reports tabs are placeholders inside a project shell
-9. **Pitch** — multi-tenant UX + project scaffolding live; Ollama runs locally by design ($0 API cost)
+9. **Data Room** — upload, folders, preview (see Path B below)
+10. **Pitch** — data room + multi-tenant UX live; Ollama runs locally by design ($0 API cost)
 
-### Path B — Sample data room simulation (recommended narrative)
+### Path B — Data room demo (recommended narrative)
 
-Uses Supabase **Postgres + Storage** for a believable story without running Ollama on Vercel.
+Uses Supabase **Postgres + Storage** for upload, preview, and folder structure — no Ollama required on Vercel.
 
 **Before judging (one-time prep):**
 
 1. Complete Supabase setup above (DB + Storage buckets)
-2. Upload 2–3 sample PDFs to `documents` bucket (see paths above)
-3. Warm the app: open Vercel URL and register once (avoids Supabase cold start delay)
+2. Run migrations (includes `folders`, `documents`, audit/shares tables)
+3. Set `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and bucket env vars on Vercel
+4. Warm the app: open Vercel URL and register once (avoids Supabase cold start delay)
 
 **During judging (~5 minutes):**
 
 | Step | Action | What judges see |
 |------|--------|-----------------|
 | 1 | Register / login | Live auth |
-| 2 | Create org “Target Co DD” | Multi-tenant org |
-| 3 | Dashboard → **Projects** placeholder | “Slice 04 — Projects” + planned capabilities |
-| 4 | **Agents** placeholder | Five-agent story (Financial, Legal, Compliance, Risk, Fraud) |
-| 5 | Describe data room | “Sample files live in Supabase Storage; full upload UI in slice 05” |
-| 6 | Show Supabase dashboard (optional) | Storage bucket with sample PDFs — proves backend |
+| 2 | Create org → workspace → **M&A project** | Multi-tenant flow |
+| 3 | Open project → **Data Room** tab | Folder tree, file table, preview panel |
+| 4 | **Upload** — drag `demo/data-room` folder or sample PDFs | Per-file progress; files in Supabase Storage when configured |
+| 5 | Select file → **preview**; try classification filter | PDF/text/Office inline preview |
+| 6 | **Share** (admin) → copy link → incognito | Read-only external data room |
 | 7 | **Organizations** → members | RBAC, invites, roles |
 
 **Script for judges:**
 
-> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, and produces an explainable consensus report. This deployment uses Supabase for database and document storage, and Vercel for the app. AI inference runs on Ollama locally by design—zero API cost and data stays private. The live demo shows authentication, organizations, and the product shell; sample diligence files are in Supabase Storage; agent and data-room UIs are on the roadmap shown in placeholder pages.”
+> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, and produces an explainable consensus report. This deployment uses Supabase for database and document storage, and Vercel for the app. The live demo shows authentication, organizations, workspaces, projects, and a full data room — upload, folders, preview, and share links. AI inference runs on Ollama locally by design—zero API cost and data stays private. Intelligence agents and document processing are the next slices.”
 
 ### Path C — Two-browser invite demo (optional)
 
@@ -256,16 +258,14 @@ Uses Supabase **Postgres + Storage** for a believable story without running Olla
 
 ---
 
-## Wiring Storage in code (post-hackathon)
+## Wiring Storage in code
 
-Storage env vars are defined now; app code still uses `STORAGE_PATH` locally. To connect Supabase Storage:
+Slice 05 uses `src/lib/storage/`:
 
-1. Add `@supabase/supabase-js` (when implementing slice 05)
-2. Server routes: upload with `SUPABASE_SERVICE_ROLE_KEY`
-3. Store object path in Postgres (`documents.filePath` → `documents/sample/foo.pdf`)
-4. Serve via signed URL or public bucket for avatars
-
-Until then, judges can see files in the **Supabase Storage dashboard** during Path B.
+1. **Local:** `STORAGE_PATH` (default `./storage`) via filesystem adapter
+2. **Production:** When `NEXT_PUBLIC_SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set, uploads go to Supabase Storage bucket `SUPABASE_STORAGE_BUCKET_DOCUMENTS` (default `documents`)
+3. Object keys: `organizations/{orgId}/projects/{projectId}/documents/{documentId}/v{n}/{fileName}`
+4. Downloads/previews use signed URLs on Supabase, or stream from disk locally
 
 ---
 
@@ -281,7 +281,7 @@ Until then, judges can see files in the **Supabase Storage dashboard** during Pa
 | `pnpm db:migrate` hangs | You used **Transaction pooler** (6543) — switch to **Session pooler** (5432) |
 | Connection string blank in UI | Connect panel → set source to **Primary database** |
 | Invite links → localhost | Set `NEXT_PUBLIC_APP_URL` to Vercel URL |
-| Avatars disappear on Vercel | Expected until Storage upload code is wired |
+| Avatars disappear on Vercel | Set Supabase Storage bucket + `SUPABASE_SERVICE_ROLE_KEY`; avatars use same storage adapter |
 | Storage 403 | Check bucket policies and `SUPABASE_SERVICE_ROLE_KEY` on server only |
 
 ---
@@ -304,10 +304,11 @@ Neon does **not** include file storage—you would need a separate service for d
 - Organizations (CRUD, members, invites, teams, notifications)
 - Workspaces (CRUD, soft delete, restore, workspace cards with project counts)
 - Projects (CRUD, types, tags, deal status, pin/duplicate/bulk delete, 13-tab project shell)
-- Placeholder tabs inside projects (Data Room, Intelligence, Chat, Reports, etc.)
+- **Data room** (folders, upload, preview, versions, tags, trash, share links, audit export)
+- Placeholder tabs: Intelligence, Chat, Reports, Timeline, Graph, etc.
 
 ## Deferred
 
-- Supabase Storage integration in upload/avatar code
+- Ollama document processing pipeline (Slice 06 — PENDING → READY worker)
 - Ollama agent execution on cloud
-- Full data room UI and document processing
+- Full-text search across document content (Slice 07)

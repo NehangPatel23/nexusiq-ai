@@ -10,7 +10,7 @@ import {
   Search,
   Upload,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import {
@@ -22,6 +22,7 @@ import {
   CommandList,
   CommandShortcut,
 } from "@/components/ui/command";
+import { dispatchDataRoomUpload } from "@/features/data-room/lib/data-room-events";
 
 const navigationCommands = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -33,15 +34,16 @@ const navigationCommands = [
 ];
 
 const actionCommands = [
-  { label: "Upload documents", href: "/dashboard/projects", icon: Upload, shortcut: "⌘U" },
-  { label: "Run full scan", href: "/dashboard/intelligence", icon: Bot },
-  { label: "New chat", href: "/dashboard/chat", icon: MessageSquare },
-  { label: "Search documents", href: "/dashboard/search", icon: Search },
+  { label: "Upload to data room", icon: Upload, shortcut: "U", action: "upload-data-room" as const },
+  { label: "Run full scan", href: "/dashboard/intelligence", icon: Bot, action: "navigate" as const },
+  { label: "New chat", href: "/dashboard/chat", icon: MessageSquare, action: "navigate" as const },
+  { label: "Search documents", href: "/dashboard/search", icon: Search, action: "navigate" as const },
 ];
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
@@ -59,6 +61,21 @@ export function CommandPalette() {
     setOpen(false);
     router.push(href);
   };
+
+  function handleUploadToDataRoom() {
+    setOpen(false);
+    const projectMatch = pathname.match(/\/dashboard\/projects\/([^/]+)/);
+    if (pathname.includes("/data-room") && projectMatch) {
+      dispatchDataRoomUpload();
+      return;
+    }
+    if (projectMatch) {
+      router.push(`/dashboard/projects/${projectMatch[1]}/data-room`);
+      window.setTimeout(() => dispatchDataRoomUpload(), 300);
+      return;
+    }
+    router.push("/dashboard/projects");
+  }
 
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
@@ -87,7 +104,13 @@ export function CommandPalette() {
               <CommandItem
                 key={command.label}
                 value={command.label}
-                onSelect={() => navigate(command.href)}
+                onSelect={() => {
+                  if (command.action === "upload-data-room") {
+                    handleUploadToDataRoom();
+                  } else if ("href" in command && command.href) {
+                    navigate(command.href);
+                  }
+                }}
               >
                 <Icon className="h-4 w-4" aria-hidden="true" />
                 <span>{command.label}</span>

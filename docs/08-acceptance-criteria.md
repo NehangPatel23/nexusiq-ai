@@ -46,9 +46,9 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Empty states with CTAs
 
 ### 05 Data Room
-- [ ] Folder tree, drag-drop, bulk upload
-- [ ] Version history, file preview
-- [ ] Tags, upload progress per file
+- [x] Folder tree, drag-drop, bulk upload
+- [x] Version history, file preview
+- [x] Tags, upload progress per file
 
 ### 06 Document Processing
 - [ ] Classification, OCR, chunking, embeddings
@@ -118,6 +118,12 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [ ] Health: DB, Ollama, disk
 - [ ] Usage stats, processing queue
 - [ ] Reindex/re-embed (owner only)
+
+### 17 Polish (parallel backlog)
+Optional UX polish — see [tasks/17-polish.md](../tasks/17-polish.md). Not required for MVP complete; track per batch.
+
+- [ ] Backlog maintained in `tasks/17-polish.md`
+- [ ] Each implemented batch: loading/empty/error, a11y, tests, build pass
 
 ---
 

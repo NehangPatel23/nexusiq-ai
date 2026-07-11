@@ -40,7 +40,11 @@ test.describe("organizations flow", () => {
     await expect(ownerPage.getByText("Pending", { exact: true })).toBeVisible();
 
     await inviteePage.getByRole("button", { name: /notifications/i }).click();
-    await inviteePage.getByText(/invitation to/i).click();
+    const inviteNotification = inviteePage
+      .getByRole("menuitem")
+      .filter({ hasText: new RegExp(`Invitation to ${ownerOrgName}`, "i") });
+    await expect(inviteNotification).toBeVisible({ timeout: 15_000 });
+    await inviteNotification.click();
     await expect(inviteePage.getByRole("heading", { name: /you're invited/i })).toBeVisible({
       timeout: 10_000,
     });

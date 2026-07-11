@@ -1,0 +1,13 @@
+Rank,Customer,Industry,ARR USD,% of Total ARR,Contract End,Renewal Risk
+1,Meridian Financial Group,Financial Services,4600000,12.0,2025-03-31,Medium — pricing review
+2,Northwind Logistics,Transportation,2100000,5.5,2024-08-15,High — disputed invoice
+3,Cascade Health Systems,Healthcare,1980000,5.2,2024-11-30,High — past due AR
+4,Brightline Retail Co,Retail,1620000,4.2,2025-06-30,Low
+5,Summit Manufacturing,Industrial,1440000,3.8,2024-04-01,Critical — collections
+6,Harbor Insurance Group,Insurance,1210000,3.2,2025-01-15,Low
+7,Pacific Biotech Ltd,Life Sciences,980000,2.6,2024-09-30,Medium
+8,Vertex Capital Advisors,Financial Services,870000,2.3,2025-12-31,Low
+9,Greenfield Energy Co,Energy,820000,2.1,2024-07-31,Medium
+10,Atlas Education Network,EdTech,790000,2.1,2025-05-15,Low
+11-25,(aggregated),Mixed,9120000,23.8,Various,—
+Total Top 25,,,38300000,100.0,,

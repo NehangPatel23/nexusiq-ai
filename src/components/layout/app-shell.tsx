@@ -1,5 +1,10 @@
+"use client";
+
 import { Sidebar } from "@/components/layout/sidebar";
+import { SidebarProvider, useSidebar } from "@/components/layout/sidebar-context";
 import { Topbar } from "@/components/layout/topbar";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 export interface AppShellUser {
   name?: string | null;
@@ -13,17 +18,34 @@ interface AppShellProps {
   breadcrumbs?: { label: string; href?: string }[];
 }
 
-export function AppShell({ children, user, breadcrumbs }: AppShellProps) {
+function AppShellInner({ children, user, breadcrumbs }: AppShellProps) {
+  const { collapsed } = useSidebar();
+
   return (
     <div className="relative min-h-screen">
       <div className="pointer-events-none absolute inset-0 grid-bg opacity-20" aria-hidden="true" />
       <Sidebar />
-      <div className="relative pl-sidebar">
+      <div
+        className={cn(
+          "relative transition-[padding] duration-300 ease-out",
+          collapsed ? "pl-[4.25rem]" : "pl-sidebar",
+        )}
+      >
         <Topbar user={user} breadcrumbs={breadcrumbs} />
         <main id="main-content" className="page-content">
           {children}
         </main>
       </div>
     </div>
+  );
+}
+
+export function AppShell(props: AppShellProps) {
+  return (
+    <SidebarProvider>
+      <TooltipProvider delayDuration={300} skipDelayDuration={100}>
+        <AppShellInner {...props} />
+      </TooltipProvider>
+    </SidebarProvider>
   );
 }

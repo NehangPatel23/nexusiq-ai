@@ -15,10 +15,10 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/slices-4%2F16_live-6366f1?style=flat-square" alt="Progress" />
+  <img src="https://img.shields.io/badge/slices-5%2F16_live-6366f1?style=flat-square" alt="Progress" />
   <img src="https://img.shields.io/badge/AI-Ollama_local-22c55e?style=flat-square" alt="Ollama" />
   <img src="https://img.shields.io/badge/stack-Next.js_15_·_Prisma_·_PostgreSQL-0ea5e9?style=flat-square" alt="Stack" />
-  <img src="https://img.shields.io/badge/tests-103_unit_·_11_e2e-8b5cf6?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/tests-140_unit_·_14_e2e-8b5cf6?style=flat-square" alt="Tests" />
 </p>
 
 ---
@@ -39,15 +39,15 @@ Built as a **solo, zero-API-cost** stack: Next.js on Vercel, PostgreSQL on Supab
 |---|---|
 | **URL** | [nexusiq-ai-steel.vercel.app](https://nexusiq-ai-steel.vercel.app) |
 | **Try it** | Register → 3-step onboarding (org → workspace → project) → dashboard |
-| **Deep dive** | Projects, workspaces, org settings, members, invites, roles (ⓘ role guide) |
+| **Deep dive** | Projects → **Data Room** tab: folders, upload, preview, tags, versions |
 
-Cloud auth, orgs, workspaces, and projects run on **Supabase + Vercel**. Intelligence agents ship in upcoming slices (project shell + tab placeholders live today).
+Cloud auth, orgs, workspaces, projects, and the **data room** run on **Supabase + Vercel**. Intelligence agents and document processing pipeline ship in slices 06–09 (tab placeholders live today).
 
 ---
 
 ## What's built today
 
-### Shipped (slices 01–04)
+### Shipped (slices 01–05)
 
 | Area | Features |
 |------|----------|
@@ -60,17 +60,36 @@ Cloud auth, orgs, workspaces, and projects run on **Supabase + Vercel**. Intelli
 | **Workspaces** | CRUD per org, unique slug, optional team, soft delete + Deleted tab, workspace cards with project counts |
 | **Projects** | CRUD, five types, tags, deal status, default agent, pin/duplicate/bulk delete, workspace filter via URL |
 | **Dashboard** | Stats row, risk donut, activity feed, quick actions, onboarding nudge, empty states |
-| **Project shell** | 13-tab navigation (Overview live; Data Room, Intelligence, Chat, Reports, etc. as placeholders) |
-| **UI shell** | Premium dark dashboard, sidebar, command palette, keyboard shortcuts (`N`, `/`), responsive layout |
+| **Project shell** | 13-tab navigation (Overview + **Data Room** live; Intelligence, Chat, Reports, etc. as placeholders) |
+| **Data room** | Folder tree, drag-drop upload/move, bulk upload with progress, version history + compare, preview (PDF/image/text/Office/PPTX), tags & classification, filters, trash + retention, audit CSV, read-only share links, processing status bar |
+| **UI shell** | Premium dark dashboard, collapsible sidebar, command palette, keyboard shortcuts (`N`, `/`, `U`), responsive layout |
 
-### Coming soon (slices 05–16)
+### Coming soon (slices 06–16)
 
 | Slice | Focus |
 |-------|--------|
-| 05–06 | Data room + document processing |
+| 06 | Document processing (OCR, chunking, embeddings, auto-classify) |
 | 07–08 | Search + cited chat |
 | 09–11 | Intelligence agents + consensus + reports |
 | 12–16 | Timeline, graph, simulator, action plan, history, admin |
+
+**Slice 17 (Polish)** — parallel UX backlog ([tasks/17-polish.md](./tasks/17-polish.md)); optional, non-blocking.
+
+---
+
+## Demo data room
+
+Synthetic M&A diligence files for bulk-upload demos (Helix Analytics fictional target):
+
+```bash
+pnpm demo:data-room    # regenerate demo/data-room/ (17 files, ~84 KB)
+```
+
+1. Create an **M&A** project → open **Data Room** → **Upload**
+2. Drag the entire `demo/data-room` folder — folder structure is preserved
+3. Preview files, filter by classification, check the completeness checklist
+
+See [demo/data-room/README.md](./demo/data-room/README.md) for the file inventory.
 
 ---
 
@@ -99,7 +118,7 @@ flowchart LR
   UI --> API
   API --> Auth
   API --> PG
-  API -.-> Store
+  API --> Store
   API -.-> Ollama
 ```
 
@@ -108,9 +127,10 @@ flowchart LR
 | Frontend | Next.js 15, React 19, Tailwind, Radix, Framer Motion, Recharts |
 | Auth | Auth.js v5, bcrypt, JWT sessions |
 | Data | Prisma 6, PostgreSQL 16, pgvector |
+| Storage | Local `./storage` (dev) or Supabase Storage (prod) |
 | Deploy | Vercel (app) + Supabase (DB, Storage) |
 | AI (planned) | Ollama — `llama3`, `nomic-embed-text` |
-| Tests | Vitest (103), Playwright (11), Testing Library |
+| Tests | Vitest (140), Playwright (14), Testing Library |
 
 Modular monolith — one repo, feature slices under `features/`. See [docs/01-architecture.md](./docs/01-architecture.md).
 
@@ -136,7 +156,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** → register → complete onboarding → explore **Dashboard** and **Projects**.
+Open **[http://localhost:3000](http://localhost:3000)** → register → complete onboarding → open a project → **Data Room**.
 
 ### Useful commands
 
@@ -146,9 +166,10 @@ Open **[http://localhost:3000](http://localhost:3000)** → register → complet
 | `pnpm build` | Production build |
 | `pnpm lint` | ESLint |
 | `pnpm test` | Unit + integration tests (Vitest) |
-| `pnpm test:e2e` | Playwright end-to-end (11 specs, uses local Docker DB) |
+| `pnpm test:e2e` | Playwright end-to-end (14 specs, uses local Docker DB) |
+| `pnpm demo:data-room` | Generate synthetic diligence files in `demo/data-room/` |
 | `pnpm db:studio` | Prisma Studio |
-| `pnpm db:sync-to-supabase` | Copy local data (incl. projects) → Supabase |
+| `pnpm db:sync-to-supabase` | Copy local data → Supabase |
 | `pnpm db:purge-test-users` | Remove `*@test.com` fixtures |
 
 ---
@@ -159,7 +180,7 @@ Hackathon / judge setup uses **Vercel + Supabase**:
 
 1. **Commit & push** your branch (migrations in `prisma/migrations/`)
 2. **Run migrations** against Supabase (Session pooler, port 5432)
-3. Set env vars on Vercel (`DATABASE_URL` pooler :6543, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`)
+3. Set env vars on Vercel (`DATABASE_URL` pooler :6543, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`, Supabase Storage keys)
 4. Verify `/api/health` returns `ok: true`
 5. **Optional:** `pnpm db:sync-to-supabase` after schema migrate
 
@@ -169,14 +190,15 @@ Full walkthrough: **[docs/deployment.md](./docs/deployment.md)**
 
 ## Judge walkthrough (~5 min)
 
-1. **Register** at `/register` → 3-step onboarding (org → workspace → optional project)
-2. **Dashboard** — stats, risk overview, activity, quick actions (New Project opens create modal)
-3. **Projects** — create M&A project, open overview tab, browse shell tabs
-4. **Workspaces** — create workspace; **View projects** auto-filters projects list
-5. **Organizations** → Settings → invite second email (incognito to accept); **ⓘ** for roles
-6. **Pitch** — multi-tenant UX + project scaffolding live; Ollama local by design (privacy + $0 API)
+1. **Register** at `/register` → 3-step onboarding (org → workspace → project)
+2. **Dashboard** — stats, risk overview, activity, quick actions
+3. **Projects** — create M&A project → open **Data Room** tab
+4. **Upload** — drag `demo/data-room` folder (or single PDF); files appear as PENDING
+5. **Preview** — select a file, expand preview; try filters and completeness checklist
+6. **Workspaces / Organizations** — invite second email (incognito); **ⓘ** for roles
+7. **Pitch** — data room + multi-tenant UX live; Ollama local by design (privacy + $0 API); agents next
 
-Optional: upload sample PDFs to Supabase Storage `documents` bucket for the data-room narrative.
+Optional: **Share** (admin) → copy read-only link → open in incognito.
 
 ---
 
@@ -188,13 +210,15 @@ nexusiq-ai/
 │   ├── auth/
 │   ├── organizations/
 │   ├── workspaces/
-│   └── projects/       # Slice 04: CRUD, dashboard, project shell
+│   ├── projects/
+│   └── data-room/      # Slice 05: folders, upload, preview, shares, audit
 ├── src/app/            # Next.js routes + API
 ├── prisma/             # Schema + migrations
-├── e2e/                # Playwright specs (auth, orgs, workspaces, projects)
-├── scripts/            # db:sync-to-supabase, purge-test-users
+├── demo/data-room/     # Synthetic diligence files for upload demos
+├── e2e/                # Playwright (auth, orgs, workspaces, projects, data-room)
+├── scripts/            # demo:data-room, db:sync-to-supabase, purge-test-users
 ├── docs/               # PRD, architecture, deployment, acceptance criteria
-├── tasks/              # Slice specs 01–16
+├── tasks/              # Slice specs 01–17
 └── .cursor/rules/      # AI coding conventions
 ```
 
@@ -219,11 +243,11 @@ nexusiq-ai/
 
 ```text
  ✅ 01 Auth          ✅ 02 Organizations    ✅ 03 Workspaces
- ✅ 04 Projects      ○ 05 Data Room         ○ 06 Documents
+ ✅ 04 Projects      ✅ 05 Data Room        ○ 06 Documents
  ○ 07 Search         ○ 08 Chat              ○ 09 Agents
  ○ 10 Consensus      ○ 11 Reports           ○ 12 Timeline
  ○ 13 Contradictions ○ 14 Simulator         ○ 15 History
- ○ 16 Admin
+ ○ 16 Admin          ○ 17 Polish (parallel backlog)
 ```
 
 Sequential vertical slices — each ships with tests, loading/empty/error states, and WCAG 2.2 AA targets.

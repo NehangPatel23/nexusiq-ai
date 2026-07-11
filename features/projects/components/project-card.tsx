@@ -30,6 +30,7 @@ export interface ProjectListItem {
   pinned: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;
+  documentCount?: number;
   workspace: {
     id: string;
     name: string;

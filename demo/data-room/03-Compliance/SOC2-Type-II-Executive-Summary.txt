@@ -1,0 +1,26 @@
+HELIX ANALYTICS, INC.
+SOC 2 Type II Report — Executive Summary
+Examination Period: January 1 – December 31, 2023
+Service Auditor: Schellman & Company, LLC
+
+Scope: Helix Cloud Platform (production environment only)
+Trust Services Criteria: Security, Availability, Confidentiality
+
+Overall Opinion: UNQUALIFIED with management letter items
+
+Key Test Results
+- Logical access controls: Effective
+- Change management: Effective with 2 exceptions (emergency changes without retro review)
+- Vulnerability management: Effective
+- Encryption in transit: Effective (TLS 1.2+ enforced)
+
+Exceptions Noted
+1. EX-2023-04: Legacy "Insights Batch" subsystem stores intermediate CSV exports on local
+   disk without AES-256 encryption at rest. Remediation planned Q1 2024.
+2. EX-2023-09: 3 terminated contractor accounts active for 11 days post-offboarding.
+
+Management Response: Both items acknowledged. EX-2023-04 fix ETA March 31, 2024.
+
+Subservice Organizations: AWS (carve-out), SendGrid (inclusive method)
+
+Distribution: Restricted — NDA required

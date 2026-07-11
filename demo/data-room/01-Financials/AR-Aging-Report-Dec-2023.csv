@@ -1,0 +1,13 @@
+Customer,Invoice Bucket,Amount USD,Days Outstanding,Notes
+Meridian Financial Group,Current,142000,18,Annual prepay — renews Apr 2024
+Meridian Financial Group,31-60,0,0,
+Northwind Logistics,Current,89000,12,
+Northwind Logistics,61-90,45000,74,Disputed SOW change order
+Cascade Health Systems,Current,76000,9,
+Cascade Health Systems,91-120,76000,103,Past due — CFO aware per Jan email
+Brightline Retail Co,Current,54000,22,
+Brightline Retail Co,31-60,54000,47,
+Summit Manufacturing,Current,48000,15,
+Summit Manufacturing,121+,96000,138,Collections engaged — no written-off policy
+Helix Internal (Pilot),Current,12000,5,Related party — see board minutes
+Total,,632000,,

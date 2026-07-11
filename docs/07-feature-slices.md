@@ -74,6 +74,10 @@ Audit log, project comparison, settings hub (profile, security, notifications, A
 **Task:** [tasks/16-admin.md](../tasks/16-admin.md)  
 Users, permissions, usage stats, health, reindex.
 
+## Slice 17: Polish (parallel backlog)
+**Task:** [tasks/17-polish.md](../tasks/17-polish.md)  
+Cross-cutting UX and data-room polish. **Does not block core slices 6–16.** All future polish ideas go here unless explicitly requested for immediate implementation. Ship in small opportunistic batches.
+
 ---
 
 ## Slice Completion Checklist
