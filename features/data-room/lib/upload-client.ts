@@ -16,7 +16,7 @@ interface UseDataRoomUploadOptions {
   replaceDocumentId?: string | null;
   preserveStructure?: boolean;
   onItemsChange?: (items: UploadProgressItem[]) => void;
-  onComplete?: () => void;
+  onComplete?: (uploadedCount: number) => void;
 }
 
 export function useDataRoomUpload({
@@ -156,15 +156,15 @@ export function useDataRoomUpload({
 
       updateItems(progressItems);
 
-      let anySuccess = false;
+      let successCount = 0;
       for (let i = 0; i < entries.length; i++) {
         const entry = entries[i]!;
         const itemId = progressItems[i]!.id;
         const ok = await uploadSingle(entry, itemId, options);
-        if (ok) anySuccess = true;
+        if (ok) successCount++;
       }
 
-      if (anySuccess) onComplete?.();
+      if (successCount > 0) onComplete?.(successCount);
     },
     [onComplete, updateItems, uploadSingle],
   );
@@ -178,9 +178,8 @@ export function useDataRoomUpload({
       const item = itemsRef.current.find((i) => i.id === itemId);
       if (!item?.file) return;
       await uploadSingle({ file: item.file, relativePath: item.relativePath }, itemId);
-      if (itemsRef.current.some((i) => i.status === "done")) {
-        onComplete?.();
-      }
+      const successCount = itemsRef.current.filter((i) => i.status === "done").length;
+      if (successCount > 0) onComplete?.(successCount);
     },
     [onComplete, uploadSingle],
   );

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { requireOrgRole } from "@/features/organizations/lib/authorization";
 import {
   buildFolderTree,

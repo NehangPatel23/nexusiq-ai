@@ -153,21 +153,6 @@ export function DataRoomView({
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [, startTransition] = useTransition();
 
-  const { uploadFiles, cancelUpload, retryUpload } = useDataRoomUpload({
-    projectId,
-    folderId: selectedFolderId,
-    replaceDocumentId,
-    preserveStructure,
-    onItemsChange: setUploadTrayItems,
-    onComplete: () => {
-      void refresh();
-    },
-  });
-
-  useEffect(() => {
-    if (renameDoc) setRenameDocName(renameDoc.name);
-  }, [renameDoc]);
-
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -175,9 +160,10 @@ export function DataRoomView({
       const folderQuery = selectedFolderId === null ? "all" : selectedFolderId;
 
       const [foldersRes, docsRes] = await Promise.all([
-        fetch(`/api/projects/${projectId}/folders`),
+        fetch(`/api/projects/${projectId}/folders`, { cache: "no-store" }),
         fetch(
           `/api/projects/${projectId}/documents?folderId=${encodeURIComponent(folderQuery)}`,
+          { cache: "no-store" },
         ),
       ]);
 
@@ -208,10 +194,44 @@ export function DataRoomView({
       setSelectedIds(new Set());
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data room");
+      throw err;
     } finally {
       setLoading(false);
     }
   }, [projectId, selectedFolderId]);
+
+  const handleUploadComplete = useCallback(
+    async (uploadedCount: number) => {
+      try {
+        await refresh();
+        setUploadOpen(false);
+        setReplaceDocumentId(null);
+        toast.success(
+          `Uploaded ${uploadedCount} file${uploadedCount === 1 ? "" : "s"}`,
+        );
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Upload succeeded but refresh failed",
+        );
+      }
+    },
+    [refresh],
+  );
+
+  const { uploadFiles, cancelUpload, retryUpload } = useDataRoomUpload({
+    projectId,
+    folderId: selectedFolderId,
+    replaceDocumentId,
+    preserveStructure,
+    onItemsChange: setUploadTrayItems,
+    onComplete: (count) => {
+      void handleUploadComplete(count);
+    },
+  });
+
+  useEffect(() => {
+    if (renameDoc) setRenameDocName(renameDoc.name);
+  }, [renameDoc]);
 
   const refreshDeleted = useCallback(async () => {
     setDeletedLoading(true);
