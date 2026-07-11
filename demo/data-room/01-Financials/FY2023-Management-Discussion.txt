@@ -1,0 +1,30 @@
+HELIX ANALYTICS, INC.
+Management Discussion & Analysis — Fiscal Year Ended December 31, 2023
+CONFIDENTIAL — DATA ROOM COPY
+
+Executive Summary
+Helix Analytics delivered another year of strong growth in FY2023, ending the period with
+$38.3M in annual recurring revenue (ARR), representing 18.4% year-over-year growth. Gross
+margin remained healthy at 72.1% consolidated, with platform subscription margins above 77%.
+
+The company added 47 net-new enterprise logos and expanded net revenue retention (NRR) to
+112%, driven primarily by seat expansion within financial services and healthcare verticals.
+Management believes the business is well-positioned for a strategic transaction or Series C
+raise in H1 2024.
+
+Revenue Quality
+Approximately 94% of revenue is subscription-based. Professional services revenue is
+non-strategic and management intends to wind down fixed-bid implementations by Q3 2024 in
+favor of partner-led delivery.
+
+Cash & Liquidity
+Cash and equivalents at year-end: $14.2M. Monthly net burn averaged $420K in H2 2023 after
+headcount reductions. Runway exceeds 24 months at current burn without additional financing.
+
+Key Risks (management view)
+- Customer concentration: top 10 customers represent 41% of ARR (improved from 48% in 2022)
+- AWS infrastructure costs rose 22% YoY; renegotiation underway
+- Deferred revenue recognition policy under review with external auditors
+
+Prepared by: Elena Vasquez, CFO
+Date: February 14, 2024

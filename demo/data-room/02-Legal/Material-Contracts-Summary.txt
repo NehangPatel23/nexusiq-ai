@@ -1,0 +1,30 @@
+HELIX ANALYTICS, INC. — MATERIAL CONTRACTS SUMMARY
+As of January 15, 2024 | Prepared by: Morrison & Callahan LLP
+
+1. Amazon Web Services Enterprise Discount Program (EDP)
+   Counterparty: Amazon Web Services, Inc.
+   Effective: March 1, 2022 | Expires: February 28, 2025
+   Commit: $2.4M annual spend | Early termination fee: 35% of remaining commit
+   Notes: Section 8.3 allows AWS to increase unit pricing up to 40% upon renewal.
+   Status: ACTIVE — renewal negotiations not started
+
+2. Meridian Financial Group — Master Subscription Agreement
+   ARR: ~$4.6M (12.0% of total ARR)
+   Term: 36 months from April 1, 2022
+   Auto-renews for successive 12-month periods unless terminated with 90 days notice
+   Most-favored-nation clause on pricing for comparable enterprise tier
+
+3. CEO Employment Agreement — David Chen
+   Base salary: $385,000 | Target bonus: 60%
+   Change-of-control severance: 2x base + bonus + 18 months benefits
+   Non-compete: 12 months (California enforceability uncertain)
+
+4. Office Lease — 2200 Westlake Drive, Austin TX
+   Landlord: Westlake Office Partners LP
+   Expires: September 30, 2027 | Remaining obligation: ~$3.1M
+   No early termination without landlord consent
+
+5. Reseller Agreement — DataBridge Partners (EMEA)
+   Exclusive in UK/DE for embedded analytics SKU
+   Minimum quarterly commit: EUR 180,000
+   Related party: DataBridge CEO is brother-in-law of Helix VP Sales (disclosed)

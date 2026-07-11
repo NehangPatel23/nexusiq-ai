@@ -1,0 +1,23 @@
+HELIX ANALYTICS — CUSTOMER CHURN ANALYSIS FY2023
+Prepared by: Customer Success Leadership
+
+Logo Churn: 6.2% (down from 8.1% in FY2022)
+Dollar Churn (Gross): 4.8%
+Net Revenue Retention: 112%
+
+Notable Churn Events
+- Q2: Lost DataStream Media ($380K ARR) — acquired by competitor QuantaBI
+- Q3: Lost Forge Industrial ($290K ARR) — budget freeze, cited incomplete SOC2 letter
+- Q4: Lost 2 mid-market accounts ($140K combined) — product fit (missing EU data residency)
+
+At-Risk Pipeline (CS flagged, not yet churned)
+- Northwind Logistics — $2.1M ARR — payment dispute + executive sponsor departed
+- Summit Manufacturing — $1.44M ARR — 138 days overdue, legal escalation
+
+Upside
+- Meridian Financial expansion opportunity: +$800K if analytics module adopted (in proposal)
+
+DISCREPANCY NOTE FOR REVIEW
+Sales deck (Nov 2023 investor update) cites 24% YoY ARR growth and 118% NRR.
+Finance MD&A in data room shows 18.4% growth and 112% NRR. CS leadership confirms
+finance figures are accurate for audited reporting.

@@ -1,0 +1,7 @@
+Processing Activity,Legal Basis,Data Categories,Retention,Cross-Border Transfer,Status
+Customer analytics ingestion,Contract Art. 6(1)(b),Usage logs pseudonymized,24 months,US-East-1 via SCCs,Compliant
+Employee HR records,Legal obligation Art. 6(1)(c),PII payroll tax,7 years,None,Compliant
+Marketing email campaigns,Consent Art. 6(1)(a),Email name company,Until opt-out,US via SCCs,Compliant
+Support ticket attachments,Legitimate interest Art. 6(1)(f),Free-text may contain PII,36 months,US-East-1,Review needed
+Legacy backup tapes (2019-2021),Unknown,Full DB snapshots,Indefinite — not purged,US colo decommissioned,NON-COMPLIANT
+Beta feature telemetry,Consent Art. 6(1)(a),Device IDs IP addresses,12 months,US-East-1,Compliant

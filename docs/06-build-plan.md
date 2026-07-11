@@ -85,3 +85,5 @@ pnpm install && pnpm db:migrate && pnpm dev
 
 All 16 slices pass [08-acceptance-criteria.md](./08-acceptance-criteria.md).  
 Full journey: Landing → Auth → Dashboard → Upload → Intelligence → Export works end-to-end.
+
+**Slice 17 (Polish)** is a parallel backlog ([tasks/17-polish.md](../tasks/17-polish.md)) — optional UX improvements; not required for MVP complete.

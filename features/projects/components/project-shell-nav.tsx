@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -38,6 +38,28 @@ export function ProjectShellNav({ projectId }: ProjectShellNavProps) {
   const pathname = usePathname();
   const basePath = `/dashboard/projects/${projectId}`;
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScroll, setCanScroll] = useState(false);
+
+  const checkOverflow = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanScroll(el.scrollWidth > el.clientWidth + 2);
+  }, []);
+
+  useEffect(() => {
+    checkOverflow();
+    const el = scrollRef.current;
+    if (!el) return;
+
+    const observer = new ResizeObserver(checkOverflow);
+    observer.observe(el);
+    window.addEventListener("resize", checkOverflow);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", checkOverflow);
+    };
+  }, [checkOverflow]);
 
   const scrollBy = useCallback((direction: "left" | "right") => {
     scrollRef.current?.scrollBy({
@@ -48,32 +70,39 @@ export function ProjectShellNav({ projectId }: ProjectShellNavProps) {
 
   return (
     <div className="relative rounded-xl border border-border/50 bg-card/30 p-1">
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="absolute left-1 top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 bg-background/80 shadow-sm backdrop-blur-sm sm:flex"
-        aria-label="Scroll tabs left"
-        onClick={() => scrollBy("left")}
-      >
-        <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="absolute right-1 top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 bg-background/80 shadow-sm backdrop-blur-sm sm:flex"
-        aria-label="Scroll tabs right"
-        onClick={() => scrollBy("right")}
-      >
-        <ChevronRight className="h-4 w-4" aria-hidden="true" />
-      </Button>
+      {canScroll && (
+        <>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute left-1 top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 bg-background/80 shadow-sm backdrop-blur-sm sm:flex"
+            aria-label="Scroll tabs left"
+            onClick={() => scrollBy("left")}
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 z-10 hidden h-7 w-7 -translate-y-1/2 bg-background/80 shadow-sm backdrop-blur-sm sm:flex"
+            aria-label="Scroll tabs right"
+            onClick={() => scrollBy("right")}
+          >
+            <ChevronRight className="h-4 w-4" aria-hidden="true" />
+          </Button>
+        </>
+      )}
 
       <nav
         ref={scrollRef}
         aria-label="Project sections"
-        className="scrollbar-nav overflow-x-auto scroll-smooth px-8 sm:px-10"
-        style={{ scrollPaddingInline: "2rem" }}
+        className={cn(
+          "scrollbar-nav overflow-x-auto scroll-smooth",
+          canScroll ? "px-8 sm:px-10" : "px-2 sm:px-3",
+        )}
+        style={canScroll ? { scrollPaddingInline: "2rem" } : undefined}
       >
         <ul className="flex min-w-max gap-1 py-1" role="tablist">
           {PROJECT_TABS.map((tab) => {

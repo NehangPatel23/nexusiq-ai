@@ -25,6 +25,7 @@ Landing, Auth, Dashboard, Data Room, Multi-Agent Intelligence (Financial/Legal/C
 ## Implementation
 
 - One vertical slice per session
+- **Polish:** defer to [tasks/17-polish.md](./tasks/17-polish.md) unless the user asks to implement; add new polish ideas there
 - Complete loading/empty/error states
 - WCAG 2.2 AA, command palette, premium dark UI
 - Tests with every feature

@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronRight, LogOut, Search, Settings, User } from "lucide-react";
+import { ChevronRight, LogOut, PanelLeft, Search, Settings, User } from "lucide-react";
 import Link from "next/link";
 import { useTransition } from "react";
 
 import { signOutUser } from "@/features/auth/actions";
 import { NotificationsBell } from "@/features/organizations/components/notifications-bell";
 import type { AppShellUser } from "@/components/layout/app-shell";
+import { useSidebar } from "@/components/layout/sidebar-context";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export function Topbar({
   breadcrumbs = [{ label: "Dashboard" }],
 }: TopbarProps) {
   const confirm = useConfirm();
+  const { collapsed, toggle } = useSidebar();
   const [isSigningOut, startSignOut] = useTransition();
 
   async function handleSignOut(event: Event) {
@@ -61,8 +63,19 @@ export function Topbar({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex h-topbar items-center justify-between border-b border-border/50 bg-background/60 px-8 backdrop-blur-xl">
-      <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm">
+    <header className="sticky top-0 z-30 flex h-topbar items-center justify-between border-b border-border/50 bg-background/60 px-4 backdrop-blur-xl md:px-8">
+      <div className="flex min-w-0 items-center gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-9 shrink-0 text-muted-foreground lg:hidden"
+          onClick={toggle}
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <PanelLeft className="size-4" />
+        </Button>
+        <nav aria-label="Breadcrumb" className="flex min-w-0 items-center gap-1.5 truncate text-sm">
         {breadcrumbs.map((crumb, index) => (
           <span key={`${crumb.label}-${index}`} className="flex items-center gap-1.5">
             {index > 0 && (
@@ -82,7 +95,8 @@ export function Topbar({
             )}
           </span>
         ))}
-      </nav>
+        </nav>
+      </div>
 
       <div className="flex items-center gap-2">
         <Button

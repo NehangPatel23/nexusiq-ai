@@ -8,9 +8,10 @@ import { ProjectsList } from "@/features/projects/components/projects-list";
 import { buildOrgRoleMap } from "@/features/organizations/lib/org-permissions";
 import { canManageAnyListedProject } from "@/features/projects/lib/roles";
 import {
-  listUserVisibleDeletedProjects,
   listUserProjects,
+  listUserVisibleDeletedProjects,
 } from "@/features/projects/lib/projects";
+import { countDocumentsByProjectIds } from "@/features/data-room/lib/documents";
 import { listUserWorkspaces } from "@/features/projects/lib/user-workspaces";
 import { PageHeader } from "@/components/layout/page-header";
 import { getSession } from "@/lib/session";
@@ -34,6 +35,12 @@ export default async function ProjectsPage() {
 
   const orgRolesByOrgId = buildOrgRoleMap(organizations);
   const canManageDeleted = canManageAnyListedProject(orgRolesByOrgId, deletedProjects);
+
+  const docCounts = await countDocumentsByProjectIds(projects.map((p) => p.id));
+  const projectsWithCounts = projects.map((project) => ({
+    ...project,
+    documentCount: docCounts[project.id] ?? 0,
+  }));
 
   const workspaceOptions = workspaces.map((workspace) => ({
     id: workspace.id,
@@ -67,7 +74,7 @@ export default async function ProjectsPage() {
             }
           >
             <ProjectsList
-              projects={projects}
+              projects={projectsWithCounts}
               workspaces={workspaceOptions}
               organizations={orgOptions}
               orgRolesByOrgId={orgRolesByOrgId}

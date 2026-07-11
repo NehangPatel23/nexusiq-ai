@@ -555,6 +555,7 @@ export function ProjectsList({
                 canDelete={permissions.canDelete && !bulkMode}
                 canEdit={permissions.canEdit}
                 processingPercent={0}
+                documentCount={project.documentCount ?? 0}
                 bulkMode={bulkMode && permissions.canDelete}
                 selected={selectedIds.has(project.id)}
                 onSelectChange={(selected) => toggleSelection(project, selected)}

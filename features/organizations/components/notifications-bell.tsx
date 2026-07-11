@@ -80,7 +80,7 @@ export function NotificationsBell() {
 
   function handleOpenChange(nextOpen: boolean) {
     setOpen(nextOpen);
-    if (nextOpen && !hasFetchedRef.current) {
+    if (nextOpen) {
       void fetchNotifications();
     }
   }

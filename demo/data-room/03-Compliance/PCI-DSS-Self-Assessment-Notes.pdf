@@ -1,0 +1,62 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [4 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+4 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 5 0 R /Resources << /Font << /F1 3 0 R >> >> >>
+endobj
+5 0 obj
+<< /Length 1109 >>
+stream
+BT
+/F1 10 Tf
+1 0 0 1 54 740 Tm
+(HELIX ANALYTICS, INC.) Tj
+1 0 0 1 54 727 Tm
+(PCI DSS SAQ-A EP — Internal Assessment Notes) Tj
+1 0 0 1 54 714 Tm
+(Assessment Date: November 2023) Tj
+1 0 0 1 54 693 Tm
+(Scope: Helix billing portal \(payments handled by Stripe — SAQ A eligible\)) Tj
+1 0 0 1 54 672 Tm
+(Requirement 2 — Do not use vendor defaults) Tj
+1 0 0 1 54 659 Tm
+(Status: PASS — hardened AMIs, SSH key-only access) Tj
+1 0 0 1 54 638 Tm
+(Requirement 6 — Develop secure systems) Tj
+1 0 0 1 54 625 Tm
+(Status: PASS with observation — dependency scanning not enforced in CI for) Tj
+1 0 0 1 54 612 Tm
+(legacy monolith repo \(scheduled for Q1 2024 migration\)) Tj
+1 0 0 1 54 591 Tm
+(Requirement 10 — Track and monitor access) Tj
+1 0 0 1 54 578 Tm
+(Status: PARTIAL — CloudTrail enabled; log retention 90 days only \(PCI recommends 1 yr\)) Tj
+1 0 0 1 54 557 Tm
+(Requirement 12 — Information security policy) Tj
+1 0 0 1 54 544 Tm
+(Status: PASS — policy last updated September 2023) Tj
+1 0 0 1 54 523 Tm
+(Overall: Merchant attestation pending QSA review. No card data stored on Helix systems.) Tj
+ET
+endstream
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000185 00000 n 
+0000000311 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+1472
+%%EOF

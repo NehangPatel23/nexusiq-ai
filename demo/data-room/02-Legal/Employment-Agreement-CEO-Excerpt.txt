@@ -1,0 +1,21 @@
+EMPLOYMENT AGREEMENT EXCERPT
+David Chen, Chief Executive Officer
+Helix Analytics, Inc.
+
+Section 5 — Compensation
+Base Salary: $385,000 per annum, reviewed annually by the Board.
+Target Annual Bonus: 60% of base salary based on company performance metrics.
+
+Section 9 — Change in Control
+Upon a Change in Control (as defined), if Executive's employment is terminated without
+Cause or Executive resigns for Good Reason within 12 months:
+  (a) Cash severance equal to 2.0x (Base Salary + Target Bonus)
+  (b) COBRA premiums for 18 months
+  (c) Full acceleration of 75% of unvested equity awards
+
+Section 12 — Restrictive Covenants
+Non-solicitation of employees: 18 months post-termination
+Non-compete: 12 months within North American enterprise analytics market
+  * California counsel opinion (Dec 2023): non-compete likely unenforceable
+
+Signed: March 15, 2021

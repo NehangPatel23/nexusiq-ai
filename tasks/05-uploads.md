@@ -1,6 +1,6 @@
 # Task 05: Data Room
 
-**Status:** NOT STARTED | **Slice:** 5/16 | **Depends on:** 04-projects
+**Status:** DONE | **Slice:** 5/16 | **Depends on:** 04-projects
 
 ## Goal
 Enterprise data room: folders, bulk upload, versions, preview, tags.

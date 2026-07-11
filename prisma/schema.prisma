@@ -33,6 +33,53 @@ enum ProjectType {
   INTERNAL
 }
 
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum DocumentType {
+  PDF
+  DOCX
+  XLSX
+  CSV
+  PPTX
+  TXT
+  IMAGE
+  OTHER
+}
+
+enum DocumentClassification {
+  FINANCIAL
+  LEGAL
+  TAX
+  HR
+  OPERATIONAL
+  COMPLIANCE
+  CONTRACT
+  CORRESPONDENCE
+  OTHER
+}
+
+enum DataRoomAuditAction {
+  UPLOADED
+  SOFT_DELETED
+  RESTORED
+  PERMANENTLY_DELETED
+  REPROCESSED
+  RENAMED
+  MOVED
+  SHARE_CREATED
+  SHARE_REVOKED
+}
+
+enum DataRoomResourceType {
+  DOCUMENT
+  FOLDER
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -48,6 +95,9 @@ model User {
   organizationMembers OrganizationMember[]
   teamMembers         TeamMember[]
   notifications       Notification[]
+  documentVersions    DocumentVersion[]
+  dataRoomAuditEvents DataRoomAuditEvent[]
+  dataRoomShares      DataRoomShare[]
 
   @@map("users")
 }
@@ -198,8 +248,123 @@ model Project {
   deletedAt     DateTime?   @map("deleted_at")
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  folders   Folder[]
+  documents Document[]
+  auditEvents DataRoomAuditEvent[]
+  shares    DataRoomShare[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, deletedAt])
   @@map("projects")
+}
+
+model Folder {
+  id        String    @id @default(uuid())
+  projectId String    @map("project_id")
+  parentId  String?   @map("parent_id")
+  name      String
+  path      String
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  deletedAt DateTime? @map("deleted_at")
+
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent    Folder?    @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children  Folder[]   @relation("FolderTree")
+  documents Document[]
+
+  @@index([projectId, deletedAt])
+  @@index([parentId])
+  @@map("folders")
+}
+
+model Document {
+  id                String                  @id @default(uuid())
+  projectId         String                  @map("project_id")
+  folderId          String?                 @map("folder_id")
+  name              String
+  originalName      String                  @map("original_name")
+  mimeType          String                  @map("mime_type")
+  type              DocumentType
+  classification    DocumentClassification?
+  filePath          String                  @map("file_path")
+  fileSize          Int                     @map("file_size")
+  pageCount         Int?                    @map("page_count")
+  status            DocumentStatus          @default(PENDING)
+  version           Int                     @default(1)
+  previousVersionId String?                 @map("previous_version_id")
+  contentHash       String?                 @map("content_hash")
+  duplicateOfId     String?                 @map("duplicate_of_id")
+  tags              String[]
+  errorMessage      String?                 @map("error_message")
+  processedAt       DateTime?               @map("processed_at")
+  createdAt         DateTime                @default(now()) @map("created_at")
+  updatedAt         DateTime                @updatedAt @map("updated_at")
+  deletedAt         DateTime?               @map("deleted_at")
+
+  project         Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  folder          Folder?           @relation(fields: [folderId], references: [id], onDelete: SetNull)
+  previousVersion Document?         @relation("DocumentVersions", fields: [previousVersionId], references: [id], onDelete: SetNull)
+  nextVersions    Document[]        @relation("DocumentVersions")
+  duplicateOf     Document?         @relation("DocumentDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates      Document[]        @relation("DocumentDuplicates")
+  versions        DocumentVersion[]
+
+  @@index([projectId, folderId, deletedAt])
+  @@index([projectId, deletedAt])
+  @@index([status])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id           String   @id @default(uuid())
+  documentId   String   @map("document_id")
+  version      Int
+  filePath     String   @map("file_path")
+  fileSize     Int      @map("file_size")
+  uploadedById String   @map("uploaded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  document   Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  uploadedBy User     @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@index([uploadedById])
+  @@map("document_versions")
+}
+
+model DataRoomAuditEvent {
+  id           String               @id @default(uuid())
+  projectId    String               @map("project_id")
+  actorId      String?              @map("actor_id")
+  action       DataRoomAuditAction
+  resourceType DataRoomResourceType @map("resource_type")
+  resourceId   String               @map("resource_id")
+  resourceName String               @map("resource_name")
+  metadata     Json?
+  createdAt    DateTime             @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  actor   User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@map("data_room_audit_events")
+}
+
+model DataRoomShare {
+  id          String    @id @default(uuid())
+  projectId   String    @map("project_id")
+  token       String    @unique
+  label       String?
+  expiresAt   DateTime? @map("expires_at")
+  createdById String    @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  revokedAt   DateTime? @map("revoked_at")
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User    @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("data_room_shares")
 }
