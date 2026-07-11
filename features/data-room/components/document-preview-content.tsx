@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
+import { getDocumentTypeLabel } from "../lib/mime";
 import { formatPreviewLabel, getPreviewMode, parseCsvPreview, type PreviewMode } from "../lib/preview";
 import type { DataRoomDocument } from "../lib/types";
 
@@ -221,7 +222,7 @@ export function DocumentPreviewContent({
     >
       <FileText className="size-12 text-muted-foreground/50" aria-hidden />
       <p className="text-sm text-muted-foreground">
-        Inline preview is not available for {document.type} files.
+        Inline preview is not available for {getDocumentTypeLabel(document)} files.
       </p>
       <Button type="button" size="sm" onClick={onDownload}>
         Download to view

@@ -5,8 +5,10 @@ import {
 } from "@/lib/storage";
 
 import {
+  getDocumentTypeLabel,
   isAllowedMimeType,
   mimeTypeToDocumentType,
+  resolveDocumentType,
   resolveMimeType,
   validateUploadFile,
   MAX_UPLOAD_BYTES,
@@ -46,6 +48,42 @@ describe("mime validation", () => {
     expect(mimeTypeToDocumentType("application/pdf")).toBe("PDF");
     expect(mimeTypeToDocumentType("image/jpeg")).toBe("IMAGE");
     expect(mimeTypeToDocumentType("text/csv")).toBe("CSV");
+    expect(mimeTypeToDocumentType("text/markdown")).toBe("MD");
+  });
+
+  it("resolves markdown from file name even when browser sends text/plain", () => {
+    expect(resolveDocumentType("README.md", "text/plain")).toBe("MD");
+    expect(
+      validateUploadFile({
+        fileName: "README.md",
+        mimeType: "text/plain",
+        size: 100,
+      }),
+    ).toEqual({ ok: true, mimeType: "text/markdown", type: "MD" });
+  });
+
+  it("labels legacy TXT markdown rows as MD in the UI", () => {
+    expect(
+      getDocumentTypeLabel({
+        type: "TXT",
+        mimeType: "text/plain",
+        name: "README.md",
+      }),
+    ).toBe("MD");
+    expect(
+      getDocumentTypeLabel({
+        type: "MD",
+        mimeType: "text/markdown",
+        name: "README.md",
+      }),
+    ).toBe("MD");
+    expect(
+      getDocumentTypeLabel({
+        type: "TXT",
+        mimeType: "text/plain",
+        name: "notes.txt",
+      }),
+    ).toBe("TXT");
   });
 
   it("resolves MIME from extension when type is missing", () => {
@@ -213,6 +251,51 @@ describe("table utils", () => {
     expect(filtered[0]?.id).toBe("a");
   });
 
+  it("filters markdown by MD type including legacy TXT rows", () => {
+    const docs = [
+      ...sampleDocs,
+      {
+        id: "md",
+        projectId: "p",
+        folderId: null,
+        name: "README.md",
+        originalName: "README.md",
+        mimeType: "text/plain",
+        type: "TXT" as const,
+        classification: null,
+        filePath: "z",
+        fileSize: 50,
+        status: "READY" as const,
+        version: 1,
+        tags: [],
+        contentHash: "hash-md",
+        createdAt: "2026-01-03",
+        updatedAt: "2026-01-03",
+        folder: null,
+      },
+    ];
+
+    expect(
+      filterDocuments(docs, {
+        query: "",
+        status: "all",
+        type: "MD",
+        classification: "all",
+        tag: "",
+      }),
+    ).toHaveLength(1);
+
+    expect(
+      filterDocuments(docs, {
+        query: "",
+        status: "all",
+        type: "TXT",
+        classification: "all",
+        tag: "",
+      }),
+    ).toHaveLength(0);
+  });
+
   it("sorts documents by name", () => {
     const sorted = sortDocuments(sampleDocs, "name", "desc");
     expect(sorted[0]?.name).toBe("Beta.pdf");
@@ -244,6 +327,14 @@ describe("preview helpers", () => {
       getPreviewMode({
         type: "TXT",
         mimeType: "text/plain",
+        name: "README.md",
+      } as never),
+    ).toBe("markdown");
+
+    expect(
+      getPreviewMode({
+        type: "MD",
+        mimeType: "text/markdown",
         name: "README.md",
       } as never),
     ).toBe("markdown");

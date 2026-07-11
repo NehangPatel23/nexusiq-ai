@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { requireOrgRole } from "@/features/organizations/lib/authorization";
 import { listDocuments } from "@/features/data-room/lib/documents";
 import { DATA_ROOM_VIEW_MIN_ROLE } from "@/features/data-room/lib/roles";

@@ -47,6 +47,7 @@ enum DocumentType {
   CSV
   PPTX
   TXT
+  MD
   IMAGE
   OTHER
 }

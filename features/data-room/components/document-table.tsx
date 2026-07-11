@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { getDocumentTypeLabel } from "../lib/mime";
 
 import { FileNameTooltip } from "@/components/ui/truncate-tooltip";
 
@@ -215,7 +216,7 @@ export function DocumentTable({
                     </div>
                   )}
                 </td>
-                <td className="px-3 py-2.5 text-muted-foreground">{doc.type}</td>
+                <td className="px-3 py-2.5 text-muted-foreground">{getDocumentTypeLabel(doc)}</td>
                 <td className="px-3 py-2.5">
                   <ClassificationBadge classification={doc.classification} />
                 </td>

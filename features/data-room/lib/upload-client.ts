@@ -16,7 +16,7 @@ interface UseDataRoomUploadOptions {
   replaceDocumentId?: string | null;
   preserveStructure?: boolean;
   onItemsChange?: (items: UploadProgressItem[]) => void;
-  onComplete?: () => void;
+  onBatchComplete?: (result: { successCount: number; failCount: number }) => void;
 }
 
 export function useDataRoomUpload({
@@ -25,7 +25,7 @@ export function useDataRoomUpload({
   replaceDocumentId,
   preserveStructure = true,
   onItemsChange,
-  onComplete,
+  onBatchComplete,
 }: UseDataRoomUploadOptions) {
   const abortControllers = useRef(new Map<string, AbortController>());
   const itemsRef = useRef<UploadProgressItem[]>([]);
@@ -156,17 +156,19 @@ export function useDataRoomUpload({
 
       updateItems(progressItems);
 
-      let anySuccess = false;
+      let successCount = 0;
+      let failCount = 0;
       for (let i = 0; i < entries.length; i++) {
         const entry = entries[i]!;
         const itemId = progressItems[i]!.id;
         const ok = await uploadSingle(entry, itemId, options);
-        if (ok) anySuccess = true;
+        if (ok) successCount++;
+        else failCount++;
       }
 
-      if (anySuccess) onComplete?.();
+      onBatchComplete?.({ successCount, failCount });
     },
-    [onComplete, updateItems, uploadSingle],
+    [onBatchComplete, updateItems, uploadSingle],
   );
 
   const cancelUpload = useCallback((itemId: string) => {
@@ -177,12 +179,12 @@ export function useDataRoomUpload({
     async (itemId: string) => {
       const item = itemsRef.current.find((i) => i.id === itemId);
       if (!item?.file) return;
-      await uploadSingle({ file: item.file, relativePath: item.relativePath }, itemId);
-      if (itemsRef.current.some((i) => i.status === "done")) {
-        onComplete?.();
+      const ok = await uploadSingle({ file: item.file, relativePath: item.relativePath }, itemId);
+      if (ok) {
+        onBatchComplete?.({ successCount: 1, failCount: 0 });
       }
     },
-    [onComplete, uploadSingle],
+    [onBatchComplete, uploadSingle],
   );
 
   return { uploadFiles, cancelUpload, retryUpload, updateItems };

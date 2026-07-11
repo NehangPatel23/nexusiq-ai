@@ -54,9 +54,15 @@ export function UploadDropzone({
     if (entry.isDirectory) {
       const dirEntry = entry as FileSystemDirectoryEntry;
       const reader = dirEntry.createReader();
-      const children = await new Promise<FileSystemEntry[]>((resolve, reject) => {
-        reader.readEntries(resolve, reject);
-      });
+      const children: FileSystemEntry[] = [];
+      // readEntries returns batches (often max 100); loop until empty.
+      for (;;) {
+        const batch = await new Promise<FileSystemEntry[]>((resolve, reject) => {
+          reader.readEntries(resolve, reject);
+        });
+        if (batch.length === 0) break;
+        children.push(...batch);
+      }
       const nextPrefix = pathPrefix ? `${pathPrefix}/${entry.name}` : entry.name;
       const nested: FileEntry[] = [];
       for (const child of children) {
