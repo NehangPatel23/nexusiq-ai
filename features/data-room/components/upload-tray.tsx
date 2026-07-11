@@ -20,6 +20,16 @@ export function UploadTray({ items, onDismiss, onCancel, onRetry }: UploadTrayPr
   const active = items.some(
     (i) => i.status === "uploading" || i.status === "pending",
   );
+  const failedCount = items.filter((i) => i.status === "error").length;
+  const doneCount = items.filter((i) => i.status === "done").length;
+
+  const title = active
+    ? "Uploading…"
+    : failedCount > 0 && doneCount === 0
+      ? "Upload failed"
+      : failedCount > 0
+        ? "Upload finished with errors"
+        : "Upload complete";
 
   return (
     <div
@@ -29,9 +39,7 @@ export function UploadTray({ items, onDismiss, onCancel, onRetry }: UploadTrayPr
       aria-live="polite"
     >
       <div className="mb-2 flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">
-          {active ? "Uploading…" : "Upload complete"}
-        </p>
+        <p className="text-sm font-medium">{title}</p>
         {!active && (
           <Button type="button" variant="ghost" size="icon" className="size-7" onClick={onDismiss}>
             <X className="size-4" />

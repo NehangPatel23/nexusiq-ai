@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 import { DocumentPreviewContent } from "./document-preview-content";
 import { DocumentStatusBadge } from "./document-status-badge";
-import { formatFileSize } from "../lib/mime";
+import { formatFileSize, getDocumentTypeLabel } from "../lib/mime";
 import type { DataRoomDocument, DataRoomFolderNode } from "../lib/types";
 
 function flattenFolders(tree: DataRoomFolderNode[]): DataRoomFolderNode[] {
@@ -160,7 +160,7 @@ export function SharedDataRoomView({
                       onClick={() => setSelectedDoc(doc)}
                     >
                       <td className="max-w-[240px] truncate px-2 py-2 font-medium">{doc.name}</td>
-                      <td className="px-2 py-2 text-muted-foreground">{doc.type}</td>
+                      <td className="px-2 py-2 text-muted-foreground">{getDocumentTypeLabel(doc)}</td>
                       <td className="px-2 py-2 tabular-nums text-muted-foreground">
                         {formatFileSize(doc.fileSize)}
                       </td>

@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { cn } from "@/lib/utils";
 
-import { formatFileSize } from "../lib/mime";
+import { formatFileSize, getDocumentTypeLabel } from "../lib/mime";
 import type { DataRoomDocument } from "../lib/types";
 
 export type DeletedDocument = DataRoomDocument & { deletedAt: string };
@@ -146,7 +146,7 @@ export function DeletedDocumentsPanel({
                     </td>
                   )}
                   <td className="max-w-[280px] truncate px-3 py-2.5 font-medium">{doc.name}</td>
-                  <td className="px-3 py-2.5 text-muted-foreground">{doc.type}</td>
+                  <td className="px-3 py-2.5 text-muted-foreground">{getDocumentTypeLabel(doc)}</td>
                   <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
                     {formatFileSize(doc.fileSize)}
                   </td>

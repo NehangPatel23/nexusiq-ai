@@ -11,7 +11,7 @@ import { TagsInput } from "@/features/projects/components/tags-input";
 import { cn } from "@/lib/utils";
 
 import { DOCUMENT_CLASSIFICATIONS, getClassificationLabel } from "../lib/classifications";
-import { formatFileSize } from "../lib/mime";
+import { formatFileSize, getDocumentTypeLabel } from "../lib/mime";
 import type { DataRoomDocument } from "../lib/types";
 import { DocumentPreviewContent } from "./document-preview-content";
 import { DocumentStatusBadge } from "./document-status-badge";
@@ -95,7 +95,7 @@ export function DocumentPreview({
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <DocumentStatusBadge status={document.status} />
             <span className="text-xs text-muted-foreground">
-              {document.type} · v{document.version} · {formatFileSize(document.fileSize)}
+              {getDocumentTypeLabel(document)} · v{document.version} · {formatFileSize(document.fileSize)}
             </span>
           </div>
         </div>

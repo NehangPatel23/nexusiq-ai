@@ -1,5 +1,6 @@
 import type { DocumentClassification, DocumentStatus, DocumentType } from "@prisma/client";
 
+import { getDocumentTypeLabel } from "./mime";
 import type { DataRoomDocument } from "./types";
 
 export type DocumentSortKey = "name" | "type" | "status" | "version" | "size" | "uploaded";
@@ -21,7 +22,16 @@ export function filterDocuments(
 
   return documents.filter((doc) => {
     if (filters.status !== "all" && doc.status !== filters.status) return false;
-    if (filters.type !== "all" && doc.type !== filters.type) return false;
+    if (filters.type !== "all") {
+      if (filters.type === "MD") {
+        if (getDocumentTypeLabel(doc) !== "MD") return false;
+      } else if (
+        doc.type !== filters.type ||
+        (filters.type === "TXT" && getDocumentTypeLabel(doc) === "MD")
+      ) {
+        return false;
+      }
+    }
     if (filters.classification === "unclassified" && doc.classification) return false;
     if (
       filters.classification !== "all" &&
@@ -109,7 +119,7 @@ export function exportDocumentsCsv(documents: DataRoomDocument[]): string {
   const headers = ["Name", "Type", "Classification", "Status", "Version", "Size", "Folder", "Tags", "Uploaded"];
   const rows = documents.map((doc) => [
     doc.name,
-    doc.type,
+    getDocumentTypeLabel(doc),
     doc.classification ?? "",
     doc.status,
     String(doc.version),

@@ -200,18 +200,34 @@ export function DataRoomView({
     }
   }, [projectId, selectedFolderId]);
 
-  const handleUploadComplete = useCallback(
-    async (uploadedCount: number) => {
-      try {
-        await refresh();
-        setUploadOpen(false);
-        setReplaceDocumentId(null);
-        toast.success(
-          `Uploaded ${uploadedCount} file${uploadedCount === 1 ? "" : "s"}`,
-        );
-      } catch (err) {
+  const handleUploadBatchComplete = useCallback(
+    async ({ successCount, failCount }: { successCount: number; failCount: number }) => {
+      setUploadOpen(false);
+      setReplaceDocumentId(null);
+
+      if (successCount > 0) {
+        try {
+          await refresh();
+          if (failCount === 0) {
+            toast.success(
+              `Uploaded ${successCount} file${successCount === 1 ? "" : "s"}`,
+            );
+          } else {
+            toast.warning(
+              `Uploaded ${successCount} file${successCount === 1 ? "" : "s"}; ${failCount} failed`,
+            );
+          }
+        } catch (err) {
+          toast.error(
+            err instanceof Error ? err.message : "Upload succeeded but refresh failed",
+          );
+        }
+        return;
+      }
+
+      if (failCount > 0) {
         toast.error(
-          err instanceof Error ? err.message : "Upload succeeded but refresh failed",
+          `${failCount} upload${failCount === 1 ? "" : "s"} failed. Check the progress panel for details.`,
         );
       }
     },
@@ -224,8 +240,8 @@ export function DataRoomView({
     replaceDocumentId,
     preserveStructure,
     onItemsChange: setUploadTrayItems,
-    onComplete: (count) => {
-      void handleUploadComplete(count);
+    onBatchComplete: (result) => {
+      void handleUploadBatchComplete(result);
     },
   });
 

@@ -156,6 +156,7 @@ export function DataRoomToolbar({
           <option value="XLSX">XLSX</option>
           <option value="CSV">CSV</option>
           <option value="PPTX">PPTX</option>
+          <option value="MD">MD</option>
           <option value="TXT">TXT</option>
           <option value="IMAGE">Image</option>
         </select>

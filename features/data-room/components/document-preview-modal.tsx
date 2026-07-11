@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 import { fadeIn, scaleIn, springSoft } from "@/lib/motion";
 
 import { DOCUMENT_CLASSIFICATIONS, getClassificationLabel } from "../lib/classifications";
-import { formatFileSize } from "../lib/mime";
+import { formatFileSize, getDocumentTypeLabel } from "../lib/mime";
 import { formatPreviewLabel, getPreviewMode } from "../lib/preview";
 import type { DataRoomDocument } from "../lib/types";
 import { DocumentPreviewContent } from "./document-preview-content";
@@ -188,7 +188,7 @@ export function DocumentPreviewModal({
                   {document.name}
                 </h2>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {document.type} · v{document.version} · {formatFileSize(document.fileSize)} · Uploaded{" "}
+                  {getDocumentTypeLabel(document)} · v{document.version} · {formatFileSize(document.fileSize)} · Uploaded{" "}
                   {formatDateTime(document.createdAt)}
                 </p>
               </div>

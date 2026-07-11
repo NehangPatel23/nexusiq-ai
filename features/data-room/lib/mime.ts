@@ -26,7 +26,7 @@ const MIME_TO_DOCUMENT_TYPE: Record<string, DocumentType> = {
   "application/csv": "CSV",
   "application/vnd.openxmlformats-officedocument.presentationml.presentation": "PPTX",
   "text/plain": "TXT",
-  "text/markdown": "TXT",
+  "text/markdown": "MD",
   "image/png": "IMAGE",
   "image/jpeg": "IMAGE",
 };
@@ -53,6 +53,36 @@ export function mimeTypeToDocumentType(mimeType: string): DocumentType {
   return MIME_TO_DOCUMENT_TYPE[mimeType] ?? "OTHER";
 }
 
+const MARKDOWN_EXTENSIONS = new Set([".md", ".markdown", ".mdown"]);
+
+export function isMarkdownFileName(fileName: string): boolean {
+  return MARKDOWN_EXTENSIONS.has(extensionFromFileName(fileName));
+}
+
+/** Resolve stored document type; prefer .md extension over generic text/plain from the browser. */
+export function resolveDocumentType(fileName: string, mimeType: string): DocumentType {
+  if (isMarkdownFileName(fileName) || mimeType === "text/markdown") {
+    return "MD";
+  }
+  return mimeTypeToDocumentType(mimeType);
+}
+
+/** Display label — treats legacy TXT rows with markdown mime/name as MD. */
+export function getDocumentTypeLabel(doc: {
+  type: DocumentType;
+  mimeType: string;
+  name: string;
+}): string {
+  if (doc.type === "MD") return "MD";
+  if (
+    doc.type === "TXT" &&
+    (doc.mimeType === "text/markdown" || isMarkdownFileName(doc.name))
+  ) {
+    return "MD";
+  }
+  return doc.type;
+}
+
 export function extensionFromFileName(fileName: string): string {
   const idx = fileName.lastIndexOf(".");
   if (idx < 0) return "";
@@ -60,11 +90,16 @@ export function extensionFromFileName(fileName: string): string {
 }
 
 export function resolveMimeType(fileName: string, providedMime?: string | null): string | null {
+  const ext = extensionFromFileName(fileName);
+  const extMime = EXTENSION_TO_MIME[ext];
+
   if (providedMime && isAllowedMimeType(providedMime)) {
+    if (providedMime === "text/plain" && extMime === "text/markdown") {
+      return extMime;
+    }
     return providedMime;
   }
-  const ext = extensionFromFileName(fileName);
-  return EXTENSION_TO_MIME[ext] ?? null;
+  return extMime ?? null;
 }
 
 export function validateUploadFile(params: {
@@ -90,7 +125,7 @@ export function validateUploadFile(params: {
   return {
     ok: true,
     mimeType,
-    type: mimeTypeToDocumentType(mimeType),
+    type: resolveDocumentType(params.fileName, mimeType),
   };
 }
 

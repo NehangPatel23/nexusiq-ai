@@ -36,6 +36,26 @@
 
   * {
     @apply border-border;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.28);
+    border-radius: 9999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.45);
   }
 
   html {
@@ -115,7 +135,7 @@
   }
 
   .page-content {
-    @apply scrollbar-premium mx-auto w-full max-w-6xl overflow-y-auto px-6 py-10 transition-[max-width,padding] duration-300 ease-out md:px-10 md:py-12 lg:px-12;
+    @apply mx-auto w-full max-w-6xl overflow-y-auto px-6 py-10 transition-[max-width,padding] duration-300 ease-out md:px-10 md:py-12 lg:px-12;
   }
 
   html[data-sidebar-collapsed="true"] .page-content {
@@ -176,27 +196,10 @@
     animation: marquee linear infinite;
   }
 
+  /* Alias — global base styles apply everywhere; kept for explicit markup */
   .scrollbar-premium {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
-  }
-
-  .scrollbar-premium::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .scrollbar-premium::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-premium::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.28);
-    border-radius: 9999px;
-  }
-
-  .scrollbar-premium::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.45);
   }
 
   .scrollbar-nav {
@@ -205,12 +208,12 @@
   }
 
   .scrollbar-nav::-webkit-scrollbar {
+    width: 6px;
     height: 4px;
   }
 
   .scrollbar-nav::-webkit-scrollbar-track {
     margin: 0 0.5rem;
-    background: transparent;
   }
 
   .scrollbar-nav::-webkit-scrollbar-thumb {
@@ -221,6 +224,15 @@
       hsl(var(--primary) / 0.15)
     );
     border-radius: 9999px;
+  }
+
+  .scrollbar-nav::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary) / 0.25),
+      hsl(var(--primary) / 0.55),
+      hsl(var(--primary) / 0.25)
+    );
   }
 
   .scroll-fade-x {

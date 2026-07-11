@@ -48,6 +48,8 @@ export function getPreviewMode(document: DataRoomDocument): PreviewMode {
   const lowerName = document.name.toLowerCase();
 
   if (
+    document.type === "MD" ||
+    document.mimeType === "text/markdown" ||
     [".md", ".markdown", ".mdown"].includes(ext) ||
     lowerName.includes("readme") ||
     lowerName.endsWith(".md")

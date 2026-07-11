@@ -150,6 +150,25 @@ describe("data-room integration", () => {
     expect(listed.some((d) => d.id === result.document.id)).toBe(true);
   });
 
+  it("uploads markdown files as MD type", async () => {
+    const buffer = Buffer.from("# Demo\n\nMarkdown readme.");
+    const result = await uploadDocument({
+      organizationId,
+      projectId,
+      uploadedById: ownerId,
+      fileName: "README.md",
+      mimeType: "text/plain",
+      buffer,
+      folderId: null,
+    });
+
+    expect("document" in result).toBe(true);
+    if (!("document" in result)) return;
+
+    expect(result.document.type).toBe("MD");
+    expect(result.document.mimeType).toBe("text/markdown");
+  });
+
   it("creates a new version when re-uploading the same name", async () => {
     const folders = await listFolders(projectId);
     const folder = folders.find((f) => f.path === "/Finance/Q1");
