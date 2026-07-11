@@ -42,8 +42,8 @@ blob-report/
 test-results/
 playwright/.cache/
 
-# storage & uploads (local avatars/documents)
-storage/
+# storage & uploads (local avatars/documents — repo root only)
+/storage/
 
 # local DB exports (use pnpm db:sync-to-supabase instead)
 local_data.sql
