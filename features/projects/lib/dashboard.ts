@@ -18,6 +18,7 @@ export interface DashboardData {
   stats: {
     projectCount: number;
     documentsProcessed: number;
+    documentsProcessing: number;
     openRisks: number;
     pendingTasks: number;
   };
@@ -44,7 +45,8 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
-  const [projectCount, projects, notifications, orgList, workspaces] = await Promise.all([
+  const [projectCount, projects, notifications, orgList, workspaces, documentsProcessed, documentsProcessing] =
+    await Promise.all([
     countUserProjects(userId),
     listUserProjects(userId),
     prisma.notification.findMany({
@@ -54,6 +56,38 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     }),
     listUserOrganizations(userId),
     listUserWorkspaces(userId),
+    prisma.document.count({
+      where: {
+        deletedAt: null,
+        status: "READY",
+        project: {
+          deletedAt: null,
+          workspace: {
+            deletedAt: null,
+            organization: {
+              deletedAt: null,
+              members: { some: { userId } },
+            },
+          },
+        },
+      },
+    }),
+    prisma.document.count({
+      where: {
+        deletedAt: null,
+        status: { in: ["PENDING", "PROCESSING"] },
+        project: {
+          deletedAt: null,
+          workspace: {
+            deletedAt: null,
+            organization: {
+              deletedAt: null,
+              members: { some: { userId } },
+            },
+          },
+        },
+      },
+    }),
   ]);
 
   const primaryOrg = orgList[0] ?? null;
@@ -61,7 +95,8 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
   return {
     stats: {
       projectCount,
-      documentsProcessed: 0,
+      documentsProcessed,
+      documentsProcessing,
       openRisks: 0,
       pendingTasks: 0,
     },

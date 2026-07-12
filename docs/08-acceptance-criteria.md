@@ -51,15 +51,15 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Tags, upload progress per file
 
 ### 06 Document Processing
-- [ ] Classification, OCR, chunking, embeddings
-- [ ] NER, relationship extraction, duplicate detection
-- [ ] Auto-folder suggestions, cross-doc linking
-- [ ] Status: pending → processing → ready/failed
+- [x] Classification, OCR, chunking, embeddings
+- [x] NER, relationship extraction, duplicate detection
+- [x] Auto-folder suggestions, cross-doc linking
+- [x] Status: pending → processing → ready/failed
 
 ### 07 Smart Search
-- [ ] Hybrid NL + keyword + semantic search
-- [ ] Filters, tags, saved searches
-- [ ] Highlighted snippets, < 2s p95
+- [x] Hybrid NL + keyword + semantic search
+- [x] Filters, tags, saved searches
+- [x] Highlighted snippets, < 2s p95
 
 ### 08 Chat
 - [ ] Streaming cited Q&A, confidence badges

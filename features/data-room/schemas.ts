@@ -42,6 +42,21 @@ export const bulkDocumentTagsSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(50)).max(20),
 });
 
+export const bulkDocumentClassificationSchema = z.object({
+  documentIds: z.array(z.string().uuid()).min(1).max(100),
+  classification: z.enum([
+    "FINANCIAL",
+    "LEGAL",
+    "TAX",
+    "HR",
+    "OPERATIONAL",
+    "COMPLIANCE",
+    "CONTRACT",
+    "CORRESPONDENCE",
+    "OTHER",
+  ]),
+});
+
 export const listDocumentsQuerySchema = z.object({
   folderId: z
     .union([z.string().uuid(), z.literal("root"), z.literal("all")])

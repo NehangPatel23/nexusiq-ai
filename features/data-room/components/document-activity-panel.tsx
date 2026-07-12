@@ -9,7 +9,7 @@ import type { DataRoomDocument } from "../lib/types";
 
 type ActivityEvent = {
   id: string;
-  type: "uploaded" | "version" | "updated";
+  type: "uploaded" | "version" | "updated" | "processing" | "reprocessed" | "failed";
   label: string;
   detail: string;
   at: string;
@@ -31,8 +31,9 @@ function formatWhen(iso: string) {
 }
 
 function EventIcon({ type }: { type: ActivityEvent["type"] }) {
-  if (type === "version") return <RefreshCw className="size-3.5" aria-hidden />;
-  if (type === "updated") return <Clock className="size-3.5" aria-hidden />;
+  if (type === "version" || type === "reprocessed") return <RefreshCw className="size-3.5" aria-hidden />;
+  if (type === "updated" || type === "processing") return <Clock className="size-3.5" aria-hidden />;
+  if (type === "failed") return <Clock className="size-3.5 text-destructive" aria-hidden />;
   return <FileUp className="size-3.5" aria-hidden />;
 }
 

@@ -8,11 +8,20 @@ export type SortDirection = "asc" | "desc";
 
 export type DocumentFilters = {
   query: string;
-  status: DocumentStatus | "all";
+  status: DocumentStatus | "all" | "needs_attention";
   type: DocumentType | "all";
   classification: DocumentClassification | "all" | "unclassified";
   tag: string;
 };
+
+export function documentNeedsAttention(doc: DataRoomDocument): boolean {
+  return (
+    doc.status === "PENDING" ||
+    doc.status === "PROCESSING" ||
+    doc.status === "FAILED" ||
+    !doc.classification
+  );
+}
 
 export function filterDocuments(
   documents: DataRoomDocument[],
@@ -21,7 +30,10 @@ export function filterDocuments(
   const q = filters.query.trim().toLowerCase();
 
   return documents.filter((doc) => {
-    if (filters.status !== "all" && doc.status !== filters.status) return false;
+    if (filters.status === "needs_attention" && !documentNeedsAttention(doc)) return false;
+    if (filters.status !== "all" && filters.status !== "needs_attention" && doc.status !== filters.status) {
+      return false;
+    }
     if (filters.type !== "all") {
       if (filters.type === "MD") {
         if (getDocumentTypeLabel(doc) !== "MD") return false;
@@ -87,8 +99,17 @@ export function sortDocuments(
 }
 
 export function buildDuplicateMap(documents: DataRoomDocument[]) {
+  const duplicateOf = new Map<string, { id: string; name: string }>();
+
+  for (const doc of documents) {
+    if (doc.duplicateOf) {
+      duplicateOf.set(doc.id, doc.duplicateOf);
+    }
+  }
+
   const byHash = new Map<string, DataRoomDocument[]>();
   for (const doc of documents) {
+    if (duplicateOf.has(doc.id)) continue;
     const hash = doc.contentHash;
     if (!hash) continue;
     const list = byHash.get(hash) ?? [];
@@ -96,7 +117,6 @@ export function buildDuplicateMap(documents: DataRoomDocument[]) {
     byHash.set(hash, list);
   }
 
-  const duplicateOf = new Map<string, { id: string; name: string }>();
   for (const group of byHash.values()) {
     if (group.length < 2) continue;
     const primary = group[0]!;

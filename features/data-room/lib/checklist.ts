@@ -88,11 +88,20 @@ function docMatchesItem(doc: DataRoomDocument, item: ChecklistItem): boolean {
 export function computeChecklistProgress(documents: DataRoomDocument[]) {
   const items = DATA_ROOM_CHECKLIST.map((item) => {
     const matched = documents.filter((doc) => docMatchesItem(doc, item));
+    const ready = matched.filter((doc) => doc.status === "READY");
+    const processing = matched.filter(
+      (doc) => doc.status === "PENDING" || doc.status === "PROCESSING",
+    );
+    const failed = matched.filter((doc) => doc.status === "FAILED");
+
     return {
       ...item,
-      complete: matched.length > 0,
+      complete: ready.length > 0,
       count: matched.length,
-      documentNames: matched.slice(0, 3).map((d) => d.name),
+      readyCount: ready.length,
+      processingCount: processing.length,
+      failedCount: failed.length,
+      documentNames: ready.slice(0, 3).map((d) => d.name),
     };
   });
 

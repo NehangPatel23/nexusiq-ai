@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 
 import { DataRoomView } from "@/features/data-room/components/data-room-view";
-import { listDocuments } from "@/features/data-room/lib/documents";
+import { listDocuments, mapDocumentForApi } from "@/features/data-room/lib/documents";
 import { buildFolderTree, listFolders } from "@/features/data-room/lib/folders";
 import {
   canDeleteDocuments,
@@ -28,7 +28,9 @@ function toClientFolders(
 function toClientDocuments(
   documents: Awaited<ReturnType<typeof listDocuments>>,
 ): DataRoomDocument[] {
-  return JSON.parse(JSON.stringify(documents)) as DataRoomDocument[];
+  return documents.map((doc) =>
+    JSON.parse(JSON.stringify(mapDocumentForApi(doc))),
+  ) as DataRoomDocument[];
 }
 
 export default async function DataRoomPage({ params }: PageProps) {
@@ -81,6 +83,7 @@ export default async function DataRoomPage({ params }: PageProps) {
         canDelete={canDeleteDocuments(membership.role)}
         canManageDeleted={canManageDeleted}
         retentionDays={retentionDays}
+        workerMode={process.env.ENABLE_INLINE_PROCESSING !== "true"}
       />
     </Suspense>
   );

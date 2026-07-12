@@ -13,3 +13,10 @@ Project-scoped cited Q&A with streaming, suggested questions, agent selector.
 
 ## Acceptance
 docs/08-acceptance-criteria.md § 08
+
+## Deferred — OCI / public Ollama (production)
+
+Chat can ship on localhost with local Ollama immediately.
+
+- [ ] **OCI worker** — [00-oci-worker-vps.md](./00-oci-worker-vps.md) § 1–5 (documents must be `READY` in prod)
+- [ ] **Public Ollama HTTPS** — same file § 6 (Vercel cannot call `localhost:11434`; needs proxy + `OLLAMA_API_KEY`)

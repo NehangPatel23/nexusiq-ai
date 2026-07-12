@@ -53,6 +53,9 @@ interface DocumentTableProps {
   onMove?: (doc: DataRoomDocument) => void;
   onRename?: (doc: DataRoomDocument) => void;
   onDelete?: (doc: DataRoomDocument) => void;
+  onViewDuplicateOriginal?: (documentId: string) => void;
+  onDismissDuplicate?: (doc: DataRoomDocument) => void;
+  onMarkIntentionalDuplicate?: (doc: DataRoomDocument) => void;
   canDelete: boolean;
   canUpload: boolean;
   draggable?: boolean;
@@ -111,6 +114,9 @@ export function DocumentTable({
   onMove,
   onRename,
   onDelete,
+  onViewDuplicateOriginal,
+  onDismissDuplicate,
+  onMarkIntentionalDuplicate,
   canDelete,
   canUpload,
   draggable = false,
@@ -144,6 +150,7 @@ export function DocumentTable({
             <th scope="col" className="px-3 py-2.5">
               <SortHeader label="Status" column="status" sortKey={sortKey} sortDirection={sortDirection} onSort={onSort} />
             </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">Pages</th>
             <th scope="col" className="px-3 py-2.5">
               <SortHeader label="Ver" column="version" sortKey={sortKey} sortDirection={sortDirection} onSort={onSort} />
             </th>
@@ -201,10 +208,47 @@ export function DocumentTable({
                     </button>
                   </FileNameTooltip>
                   {dup && (
-                    <p className="mt-1 flex items-center gap-1 text-xs text-warning">
-                      <Copy className="size-3" aria-hidden />
-                      Duplicate of {dup.name}
-                    </p>
+                    <div className="mt-1 space-y-1">
+                      <p className="flex items-center gap-1 text-xs text-warning">
+                        <Copy className="size-3" aria-hidden />
+                        Duplicate of {dup.name}
+                      </p>
+                      <div className="flex flex-wrap gap-1">
+                        {onViewDuplicateOriginal && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => onViewDuplicateOriginal(dup.id)}
+                          >
+                            View original
+                          </Button>
+                        )}
+                        {canUpload && onMarkIntentionalDuplicate && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => onMarkIntentionalDuplicate(doc)}
+                          >
+                            Mark intentional
+                          </Button>
+                        )}
+                        {canUpload && onDismissDuplicate && (
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => onDismissDuplicate(doc)}
+                          >
+                            Dismiss
+                          </Button>
+                        )}
+                      </div>
+                    </div>
                   )}
                   {doc.tags.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
@@ -221,7 +265,17 @@ export function DocumentTable({
                   <ClassificationBadge classification={doc.classification} />
                 </td>
                 <td className="px-3 py-2.5">
-                  <DocumentStatusBadge status={doc.status} />
+                  <div className="flex flex-col gap-0.5">
+                    <DocumentStatusBadge status={doc.status} errorMessage={doc.errorMessage} />
+                    {doc.status === "READY" && (doc.chunkCount ?? 0) > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {doc.chunkCount} chunk{(doc.chunkCount ?? 0) === 1 ? "" : "s"}
+                      </span>
+                    )}
+                  </div>
+                </td>
+                <td className="px-3 py-2.5 tabular-nums text-muted-foreground">
+                  {doc.pageCount && doc.pageCount > 0 ? doc.pageCount : "—"}
                 </td>
                 <td className="px-3 py-2.5 tabular-nums text-muted-foreground">v{doc.version}</td>
                 <td className="px-3 py-2.5 tabular-nums text-muted-foreground">

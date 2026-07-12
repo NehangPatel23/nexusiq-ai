@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { requireOrgRole } from "@/features/organizations/lib/authorization";
-import { listDocuments } from "@/features/data-room/lib/documents";
+import { listDocuments, mapDocumentForApi } from "@/features/data-room/lib/documents";
 import { DATA_ROOM_VIEW_MIN_ROLE } from "@/features/data-room/lib/roles";
 import { listDocumentsQuerySchema } from "@/features/data-room/schemas";
 import { getProjectById } from "@/features/projects/lib/projects";
@@ -37,7 +37,10 @@ export async function GET(request: Request, context: RouteContext) {
     }
 
     const documents = await listDocuments(projectId, { folderId: parsed.data.folderId });
-    return apiSuccess({ items: documents, total: documents.length });
+    return apiSuccess({
+      items: documents.map(mapDocumentForApi),
+      total: documents.length,
+    });
   } catch (error) {
     return handleApiError(error);
   }

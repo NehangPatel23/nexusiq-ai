@@ -8,6 +8,8 @@ import { buildDocumentStorageKey, getStorage } from "@/lib/storage";
 import { validateUploadFile } from "./mime";
 import { ensureFolderPath, getFolderById } from "./folders";
 import { splitRelativeUploadPath } from "./paths";
+import { scheduleDocumentProcessing } from "@/lib/ai/processing/inline";
+import { resetDocumentForReprocess } from "@/lib/ai/processing/pipeline";
 
 export type DocumentErrorCode = "NOT_FOUND" | "VALIDATION_ERROR" | "CONFLICT";
 
@@ -20,9 +22,23 @@ const documentInclude = {
   folder: {
     select: { id: true, name: true, path: true },
   },
+  duplicateOf: {
+    select: { id: true, name: true },
+  },
+  _count: {
+    select: { chunks: true },
+  },
 } as const;
 
 export type DocumentWithFolder = Prisma.DocumentGetPayload<{ include: typeof documentInclude }>;
+
+export function mapDocumentForApi(document: DocumentWithFolder) {
+  const { _count, ...rest } = document;
+  return {
+    ...rest,
+    chunkCount: _count?.chunks ?? 0,
+  };
+}
 
 export async function getDocumentById(documentId: string) {
   return prisma.document.findFirst({
@@ -175,16 +191,17 @@ export async function bulkReprocessDocuments(
     return { updated: 0 };
   }
 
-  const result = await prisma.document.updateMany({
+  const docs = await prisma.document.findMany({
     where: { id: { in: documentIds }, deletedAt: null },
-    data: {
-      status: "PENDING",
-      errorMessage: null,
-      processedAt: null,
-    },
+    select: { id: true },
   });
 
-  return { updated: result.count };
+  for (const doc of docs) {
+    await resetDocumentForReprocess(doc.id);
+    scheduleDocumentProcessing(doc.id);
+  }
+
+  return { updated: docs.length };
 }
 
 export async function bulkUpdateDocumentTags(
@@ -345,6 +362,7 @@ export async function uploadDocument(
       return created;
     });
 
+    scheduleDocumentProcessing(document.id);
     return { document };
   } catch (error) {
     await storage.deleteObject(storageKey).catch(() => undefined);
@@ -417,6 +435,7 @@ async function createDocumentVersion(params: {
       return updated;
     });
 
+    scheduleDocumentProcessing(document.id);
     return { document };
   } catch (error) {
     await storage.deleteObject(storageKey).catch(() => undefined);
@@ -556,7 +575,7 @@ export async function getDocumentProcessingSummary(projectId: string) {
         deletedAt: null,
         status: { in: ["PENDING", "PROCESSING", "FAILED"] },
       },
-      select: { id: true, name: true, status: true, updatedAt: true },
+      select: { id: true, name: true, status: true, errorMessage: true, updatedAt: true },
       orderBy: { updatedAt: "desc" },
       take: 20,
     }),
@@ -611,15 +630,121 @@ export async function reprocessDocument(
     return { error: "NOT_FOUND", message: "Document not found" };
   }
 
+  await resetDocumentForReprocess(documentId);
+  scheduleDocumentProcessing(documentId);
+
+  const updated = await getDocumentById(documentId);
+  if (!updated) {
+    return { error: "NOT_FOUND", message: "Document not found" };
+  }
+
+  return { document: updated };
+}
+
+export async function bulkUpdateDocumentClassification(
+  documentIds: string[],
+  classification: DocumentClassification,
+): Promise<{ updated: number }> {
+  if (documentIds.length === 0) return { updated: 0 };
+
+  const result = await prisma.document.updateMany({
+    where: { id: { in: documentIds }, deletedAt: null },
+    data: { classification },
+  });
+
+  return { updated: result.count };
+}
+
+export async function dismissDuplicateFlag(
+  documentId: string,
+): Promise<{ document: DocumentWithFolder } | DocumentServiceError> {
+  const document = await getDocumentById(documentId);
+  if (!document) {
+    return { error: "NOT_FOUND", message: "Document not found" };
+  }
+
   const updated = await prisma.document.update({
     where: { id: documentId },
-    data: {
-      status: "PENDING",
-      errorMessage: null,
-      processedAt: null,
-    },
+    data: { duplicateOfId: null },
     include: documentInclude,
   });
 
   return { document: updated };
+}
+
+export async function markIntentionalDuplicate(
+  documentId: string,
+): Promise<{ document: DocumentWithFolder } | DocumentServiceError> {
+  const document = await getDocumentById(documentId);
+  if (!document) {
+    return { error: "NOT_FOUND", message: "Document not found" };
+  }
+
+  const tags = document.tags.includes("intentional-duplicate")
+    ? document.tags
+    : [...document.tags, "intentional-duplicate"];
+
+  const updated = await prisma.document.update({
+    where: { id: documentId },
+    data: { duplicateOfId: null, tags },
+    include: documentInclude,
+  });
+
+  return { document: updated };
+}
+
+export async function retryFailedDocuments(
+  projectId: string,
+): Promise<{ updated: number }> {
+  const failed = await prisma.document.findMany({
+    where: { projectId, deletedAt: null, status: "FAILED" },
+    select: { id: true },
+  });
+
+  for (const doc of failed) {
+    await resetDocumentForReprocess(doc.id);
+    scheduleDocumentProcessing(doc.id);
+  }
+
+  return { updated: failed.length };
+}
+
+export async function getDocumentEntities(documentId: string) {
+  const chunkIds = (
+    await prisma.documentChunk.findMany({
+      where: { documentId },
+      select: { id: true },
+    })
+  ).map((chunk) => chunk.id);
+
+  if (chunkIds.length === 0) {
+    return { entities: [], relations: [] };
+  }
+
+  const relations = await prisma.entityRelation.findMany({
+    where: { sourceChunkId: { in: chunkIds } },
+    include: {
+      sourceEntity: { select: { id: true, name: true, type: true } },
+      targetEntity: { select: { id: true, name: true, type: true } },
+    },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+  });
+
+  const entityMap = new Map<string, { id: string; name: string; type: string }>();
+  for (const relation of relations) {
+    entityMap.set(relation.sourceEntity.id, relation.sourceEntity);
+    entityMap.set(relation.targetEntity.id, relation.targetEntity);
+  }
+
+  return {
+    entities: Array.from(entityMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
+    relations: relations.map((relation) => ({
+      id: relation.id,
+      relationType: relation.relationType,
+      confidence: relation.confidence,
+      source: relation.sourceEntity,
+      target: relation.targetEntity,
+    })),
+  };
 }

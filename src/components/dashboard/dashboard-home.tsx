@@ -49,6 +49,11 @@ export function DashboardHome({ data }: DashboardHomeProps) {
   const stats = [
     { label: "Projects", value: data.stats.projectCount, icon: FolderPlus },
     { label: "Documents processed", value: data.stats.documentsProcessed, icon: FileStack },
+    {
+      label: "Documents processing",
+      value: data.stats.documentsProcessing,
+      icon: Scan,
+    },
     { label: "Open risks", value: data.stats.openRisks, icon: AlertCircle },
     { label: "Pending tasks", value: data.stats.pendingTasks, icon: CheckSquare },
   ];
@@ -85,7 +90,7 @@ export function DashboardHome({ data }: DashboardHomeProps) {
         </div>
       </motion.div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {stats.map((stat, i) => (
           <StatCard key={stat.label} {...stat} delay={0.1 + i * 0.06} />
         ))}

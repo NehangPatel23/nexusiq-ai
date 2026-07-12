@@ -1,6 +1,6 @@
 # Task 06: Document Processing
 
-**Status:** NOT STARTED | **Slice:** 6/16 | **Depends on:** 05-data-room
+**Status:** DONE | **Slice:** 6/16 | **Depends on:** 05-data-room
 
 ## Goal
 Full AI document pipeline: classify, extract, chunk, embed, NER, graph, duplicates.
@@ -18,3 +18,10 @@ Full AI document pipeline: classify, extract, chunk, embed, NER, graph, duplicat
 
 ## Acceptance
 docs/08-acceptance-criteria.md § 06
+
+## Deferred — OCI worker (production)
+
+Local pipeline and UX are **DONE**. Cloud processing on Vercel is blocked until an OCI VPS runs the worker.
+
+- [ ] Complete [00-oci-worker-vps.md](./00-oci-worker-vps.md) when Oracle instance is available
+- Until then: localhost with `ENABLE_INLINE_PROCESSING=true` or `pnpm worker:process`

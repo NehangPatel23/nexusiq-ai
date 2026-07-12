@@ -48,8 +48,6 @@ Cross-cutting UX, enterprise data-room polish, and quality-of-life improvements 
 - [ ] **Bulk restore / bulk permanent delete (deleted folders)** — Parity with deleted files tab
 - [ ] **Duplicate resolution UI** — Compare/dismiss when `duplicateOf` is set; merge or mark intentional
 
----
-
 ## P2 — External access & collaboration
 
 - [ ] **Share link analytics** — View count, last accessed, optional download log
@@ -93,6 +91,9 @@ These were delivered in Slice 05 / follow-up sessions; listed so they are not du
 - Tags, manual classification, filters, sort, search-by-name, CSV export, bulk ZIP download
 - Trash: deleted files + folders, restore, permanent delete, retention auto-purge
 - Audit log CSV export, share links (whole project), processing status polling bar
+- Processing queue panel, per-doc ready/failed toasts, worker setup banner, retry failed
+- Actionable processing errors, preview processing metadata, extracted entities panel
+- Duplicate resolution actions, needs-attention filter, bulk classify, dashboard processing stat
 - Checklist widget, version compare, deep links, keyboard nav, command palette upload
 - Upload cancel/retry, duplicate hash indicator, document activity panel (per doc)
 

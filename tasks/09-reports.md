@@ -21,3 +21,10 @@ Five specialist agents with scores, findings, citations, run UI.
 
 ## Acceptance
 docs/08-acceptance-criteria.md § 09
+
+## Deferred — OCI / public Ollama (production)
+
+Agent runs on localhost with local Ollama; Vercel prod requires processed docs + public Ollama.
+
+- [ ] OCI worker — [00-oci-worker-vps.md](./00-oci-worker-vps.md) § 1–5
+- [ ] Public Ollama HTTPS — same file § 6 (agent execution from Vercel)

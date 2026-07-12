@@ -377,6 +377,7 @@ describe("checklist", () => {
         name: "Board-Minutes-2023.pdf",
         classification: "LEGAL",
         type: "PDF",
+        status: "READY",
         tags: [],
       } as never,
       {
@@ -384,6 +385,7 @@ describe("checklist", () => {
         name: "Financial-Statements.xlsx",
         classification: "FINANCIAL",
         type: "XLSX",
+        status: "READY",
         tags: [],
       } as never,
     ]);
