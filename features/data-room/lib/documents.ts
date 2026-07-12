@@ -9,7 +9,7 @@ import { validateUploadFile } from "./mime";
 import { ensureFolderPath, getFolderById } from "./folders";
 import { splitRelativeUploadPath } from "./paths";
 import { scheduleDocumentProcessing } from "@/lib/ai/processing/inline";
-import { resetDocumentForReprocess } from "@/lib/ai/processing/pipeline";
+import { resetDocumentForReprocess } from "@/lib/ai/processing/reprocess";
 
 export type DocumentErrorCode = "NOT_FOUND" | "VALIDATION_ERROR" | "CONFLICT";
 
