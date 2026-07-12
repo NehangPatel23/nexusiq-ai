@@ -33,15 +33,16 @@ const navigationCommands = [
   { label: "History", href: "/dashboard/history", icon: BarChart3 },
 ];
 
-const actionCommands = [
+const actionCommands = (projectSearchHref: string) => [
   { label: "Upload to data room", icon: Upload, shortcut: "U", action: "upload-data-room" as const },
   { label: "Run full scan", href: "/dashboard/intelligence", icon: Bot, action: "navigate" as const },
   { label: "New chat", href: "/dashboard/chat", icon: MessageSquare, action: "navigate" as const },
-  { label: "Search documents", href: "/dashboard/search", icon: Search, action: "navigate" as const },
+  { label: "Search documents", href: projectSearchHref, icon: Search, action: "navigate" as const },
 ];
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [paletteQuery, setPaletteQuery] = useState("");
   const router = useRouter();
   const pathname = usePathname();
 
@@ -57,14 +58,28 @@ export function CommandPalette() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    if (!open) {
+      setPaletteQuery("");
+    }
+  }, [open]);
+
   const navigate = (href: string) => {
     setOpen(false);
     router.push(href);
   };
 
+  const projectMatch = pathname.match(/\/dashboard\/projects\/([^/]+)/);
+  const projectId = projectMatch?.[1];
+  const projectSearchHref = projectId
+    ? `/dashboard/projects/${projectId}/search`
+    : "/dashboard/search";
+
+  const trimmedQuery = paletteQuery.trim();
+  const showQuerySearch = trimmedQuery.length >= 2 && Boolean(projectId);
+
   function handleUploadToDataRoom() {
     setOpen(false);
-    const projectMatch = pathname.match(/\/dashboard\/projects\/([^/]+)/);
     if (pathname.includes("/data-room") && projectMatch) {
       dispatchDataRoomUpload();
       return;
@@ -77,11 +92,34 @@ export function CommandPalette() {
     router.push("/dashboard/projects");
   }
 
+  function handleSearchWithQuery() {
+    if (!projectId || !trimmedQuery) return;
+    const params = new URLSearchParams({ q: trimmedQuery });
+    navigate(`/dashboard/projects/${projectId}/search?${params.toString()}`);
+  }
+
   return (
     <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput placeholder="Search commands, pages, actions…" aria-label="Command search" />
+      <CommandInput
+        placeholder="Search commands, pages, or documents…"
+        aria-label="Command search"
+        value={paletteQuery}
+        onValueChange={setPaletteQuery}
+      />
       <CommandList>
         <CommandEmpty>No results found.</CommandEmpty>
+
+        {showQuerySearch && (
+          <CommandGroup heading="Search documents">
+            <CommandItem value={`search-query-${trimmedQuery}`} onSelect={handleSearchWithQuery}>
+              <Search className="h-4 w-4" aria-hidden="true" />
+              <span>
+                Search &ldquo;{trimmedQuery}&rdquo; in this project
+              </span>
+            </CommandItem>
+          </CommandGroup>
+        )}
+
         <CommandGroup heading="Navigate">
           {navigationCommands.map((command) => {
             const Icon = command.icon;
@@ -98,8 +136,13 @@ export function CommandPalette() {
           })}
         </CommandGroup>
         <CommandGroup heading="Actions">
-          {actionCommands.map((command) => {
+          {actionCommands(projectSearchHref).map((command) => {
             const Icon = command.icon;
+            const href =
+              command.label === "Search documents" && trimmedQuery && projectId
+                ? `${projectSearchHref}?q=${encodeURIComponent(trimmedQuery)}`
+                : command.href;
+
             return (
               <CommandItem
                 key={command.label}
@@ -107,8 +150,8 @@ export function CommandPalette() {
                 onSelect={() => {
                   if (command.action === "upload-data-room") {
                     handleUploadToDataRoom();
-                  } else if ("href" in command && command.href) {
-                    navigate(command.href);
+                  } else if (href) {
+                    navigate(href);
                   }
                 }}
               >

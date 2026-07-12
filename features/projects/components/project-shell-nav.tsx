@@ -17,6 +17,7 @@ export interface ProjectTab {
 export const PROJECT_TABS: ProjectTab[] = [
   { label: "Overview", href: "", segment: "" },
   { label: "Data Room", href: "/data-room", segment: "data-room" },
+  { label: "Search", href: "/search", segment: "search" },
   { label: "Intelligence", href: "/intelligence", segment: "intelligence" },
   { label: "Chat", href: "/chat", segment: "chat" },
   { label: "Reports", href: "/reports", segment: "reports" },
