@@ -15,6 +15,8 @@ import { findDuplicateDocument } from "./duplicates";
 import { extractDocumentText } from "./extractors";
 import { extractEntitiesAndRelations, persistEntitiesAndRelations } from "./ner";
 
+export { resetDocumentForReprocess } from "./reprocess";
+
 export type ProcessingResult =
   | { ok: true; documentId: string; chunkCount: number }
   | { ok: false; documentId: string; error: string };
@@ -269,16 +271,3 @@ export async function markDocumentProcessing(documentId: string): Promise<boolea
   return result.count === 1;
 }
 
-export async function resetDocumentForReprocess(documentId: string): Promise<void> {
-  await prisma.documentChunk.deleteMany({ where: { documentId } });
-  await prisma.document.update({
-    where: { id: documentId },
-    data: {
-      status: "PENDING",
-      errorMessage: null,
-      processedAt: null,
-      classification: null,
-      duplicateOfId: null,
-    },
-  });
-}
