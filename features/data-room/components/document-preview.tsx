@@ -14,6 +14,7 @@ import { DOCUMENT_CLASSIFICATIONS, getClassificationLabel } from "../lib/classif
 import { formatFileSize, getDocumentTypeLabel } from "../lib/mime";
 import type { DataRoomDocument } from "../lib/types";
 import { DocumentPreviewContent } from "./document-preview-content";
+import { DocumentEntitiesPanel } from "./document-entities-panel";
 import { DocumentStatusBadge } from "./document-status-badge";
 
 interface DocumentPreviewProps {
@@ -26,6 +27,7 @@ interface DocumentPreviewProps {
   onTagsChange: (doc: DataRoomDocument, tags: string[]) => Promise<void>;
   onClassificationChange?: (doc: DataRoomDocument, classification: DocumentClassification | null) => Promise<void>;
   onRename?: (doc: DataRoomDocument, name: string) => Promise<void>;
+  onViewDuplicateOriginal?: (documentId: string) => void;
   className?: string;
 }
 
@@ -39,6 +41,7 @@ export function DocumentPreview({
   onTagsChange,
   onClassificationChange,
   onRename,
+  onViewDuplicateOriginal,
   className,
 }: DocumentPreviewProps) {
   const [tags, setTags] = useState<string[]>([]);
@@ -93,11 +96,16 @@ export function DocumentPreview({
         <div className="min-w-0">
           <h2 className="truncate text-sm font-semibold">{document.name}</h2>
           <div className="mt-1 flex flex-wrap items-center gap-2">
-            <DocumentStatusBadge status={document.status} />
+            <DocumentStatusBadge status={document.status} errorMessage={document.errorMessage} />
             <span className="text-xs text-muted-foreground">
               {getDocumentTypeLabel(document)} · v{document.version} · {formatFileSize(document.fileSize)}
             </span>
           </div>
+          {document.status === "READY" && document.classification && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Auto-classified as {getClassificationLabel(document.classification as DocumentClassification)}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 gap-1">
           {onExpand && (
@@ -144,6 +152,50 @@ export function DocumentPreview({
       </div>
 
       <div className="space-y-3 border-t border-border/60 p-3">
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          {(document.chunkCount ?? 0) > 0 && (
+            <div>
+              <p className="text-muted-foreground">Chunks</p>
+              <p className="font-medium">{document.chunkCount}</p>
+            </div>
+          )}
+          {document.pageCount != null && document.pageCount > 0 && (
+            <div>
+              <p className="text-muted-foreground">Pages</p>
+              <p className="font-medium">{document.pageCount}</p>
+            </div>
+          )}
+          {document.processedAt && (
+            <div className="col-span-2">
+              <p className="text-muted-foreground">Processed</p>
+              <p className="font-medium">
+                {new Date(document.processedAt).toLocaleString(undefined, {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {document.duplicateOf && onViewDuplicateOriginal && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onViewDuplicateOriginal(document.duplicateOf!.id)}
+          >
+            View original duplicate
+          </Button>
+        )}
+
+        {document.status === "READY" && (
+          <DocumentEntitiesPanel documentId={document.id} />
+        )}
+
         {canEdit && onClassificationChange && (
           <div>
             <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">

@@ -87,3 +87,5 @@ All 16 slices pass [08-acceptance-criteria.md](./08-acceptance-criteria.md).
 Full journey: Landing → Auth → Dashboard → Upload → Intelligence → Export works end-to-end.
 
 **Slice 17 (Polish)** is a parallel backlog ([tasks/17-polish.md](../tasks/17-polish.md)) — optional UX improvements; not required for MVP complete.
+
+**OCI worker VPS** is deferred until Oracle Cloud instance provisioning succeeds — develop on localhost until then ([tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md)).

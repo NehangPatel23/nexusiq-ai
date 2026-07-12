@@ -3,6 +3,7 @@ import {
   getDocumentById,
   listDocumentVersions,
 } from "@/features/data-room/lib/documents";
+import { listDataRoomAuditEvents } from "@/features/data-room/lib/audit";
 import { DATA_ROOM_VIEW_MIN_ROLE } from "@/features/data-room/lib/roles";
 import { getProjectById } from "@/features/projects/lib/projects";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api";
@@ -27,18 +28,21 @@ export async function GET(_request: Request, context: RouteContext) {
 
     await requireOrgRole(project.workspace.organizationId, DATA_ROOM_VIEW_MIN_ROLE);
 
-    const versions = await listDocumentVersions(documentId);
+    const [versions, auditEvents] = await Promise.all([
+      listDocumentVersions(documentId),
+      listDataRoomAuditEvents(document.projectId, { limit: 100 }),
+    ]);
 
     const events: Array<{
       id: string;
-      type: "uploaded" | "version" | "updated";
+      type: "uploaded" | "version" | "updated" | "processing" | "reprocessed" | "failed";
       label: string;
       detail: string;
       at: string;
     }> = [
       {
         id: `created-${document.id}`,
-        type: "uploaded" as const,
+        type: "uploaded",
         label: "Document uploaded",
         detail: `Version ${document.version}`,
         at: document.createdAt.toISOString(),
@@ -52,10 +56,43 @@ export async function GET(_request: Request, context: RouteContext) {
       })),
     ];
 
+    if (document.processedAt) {
+      events.push({
+        id: `processed-${document.id}`,
+        type: document.status === "FAILED" ? "failed" : "processing",
+        label: document.status === "FAILED" ? "Processing failed" : "Processing completed",
+        detail:
+          document.status === "FAILED"
+            ? document.errorMessage ?? "Unknown error"
+            : document.classification
+              ? `Classified as ${document.classification}`
+              : "Document indexed",
+        at: document.processedAt.toISOString(),
+      });
+    }
+
+    for (const audit of auditEvents.filter((event) => event.resourceId === documentId)) {
+      if (audit.action === "REPROCESSED") {
+        const metadata = audit.metadata as { event?: string } | null;
+        events.push({
+          id: audit.id,
+          type: metadata?.event === "processing_failed" ? "failed" : "reprocessed",
+          label:
+            metadata?.event === "processing_failed"
+              ? "Processing failed"
+              : metadata?.event === "processing_completed"
+                ? "Processing completed"
+                : "Reprocess queued",
+          detail: audit.resourceName,
+          at: audit.createdAt.toISOString(),
+        });
+      }
+    }
+
     if (document.updatedAt.getTime() - document.createdAt.getTime() > 1000) {
       events.push({
         id: `updated-${document.id}`,
-        type: "updated" as const,
+        type: "updated",
         label: "Metadata updated",
         detail: document.classification
           ? `Classification: ${document.classification}`

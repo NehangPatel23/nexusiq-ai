@@ -81,6 +81,12 @@ enum DataRoomResourceType {
   FOLDER
 }
 
+enum SearchMode {
+  HYBRID
+  SEMANTIC
+  KEYWORD
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -99,6 +105,7 @@ model User {
   documentVersions    DocumentVersion[]
   dataRoomAuditEvents DataRoomAuditEvent[]
   dataRoomShares      DataRoomShare[]
+  savedSearches       SavedSearch[]
 
   @@map("users")
 }
@@ -249,10 +256,13 @@ model Project {
   deletedAt     DateTime?   @map("deleted_at")
 
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  folders   Folder[]
-  documents Document[]
-  auditEvents DataRoomAuditEvent[]
-  shares    DataRoomShare[]
+  folders         Folder[]
+  documents       Document[]
+  auditEvents     DataRoomAuditEvent[]
+  shares          DataRoomShare[]
+  entities        Entity[]
+  entityRelations EntityRelation[]
+  savedSearches   SavedSearch[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, deletedAt])
@@ -310,6 +320,7 @@ model Document {
   duplicateOf     Document?         @relation("DocumentDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
   duplicates      Document[]        @relation("DocumentDuplicates")
   versions        DocumentVersion[]
+  chunks          DocumentChunk[]
 
   @@index([projectId, folderId, deletedAt])
   @@index([projectId, deletedAt])
@@ -368,4 +379,81 @@ model DataRoomShare {
 
   @@index([projectId])
   @@map("data_room_shares")
+}
+
+model DocumentChunk {
+  id           String                      @id @default(uuid())
+  documentId   String                      @map("document_id")
+  chunkIndex   Int                         @map("chunk_index")
+  content      String
+  tokenCount   Int                         @map("token_count")
+  embedding    Unsupported("vector(768)")?
+  searchVector Unsupported("tsvector")?    @map("search_vector")
+  pageNumber   Int?                        @map("page_number")
+  sectionTitle String?                     @map("section_title")
+  metadata     Json?
+  createdAt    DateTime                    @default(now()) @map("created_at")
+
+  document          Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  sourceRelations   EntityRelation[] @relation("SourceChunk")
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId])
+  @@map("document_chunks")
+}
+
+model Entity {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  name      String
+  type      String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project        Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceRelations EntityRelation[] @relation("SourceEntity")
+  targetRelations EntityRelation[] @relation("TargetEntity")
+
+  @@index([projectId, name, type])
+  @@map("entities")
+}
+
+model EntityRelation {
+  id             String   @id @default(uuid())
+  projectId      String   @map("project_id")
+  sourceEntityId String   @map("source_entity_id")
+  targetEntityId String   @map("target_entity_id")
+  relationType   String   @map("relation_type")
+  confidence     Float
+  sourceChunkId  String?  @map("source_chunk_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  project      Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceEntity Entity         @relation("SourceEntity", fields: [sourceEntityId], references: [id], onDelete: Cascade)
+  targetEntity Entity         @relation("TargetEntity", fields: [targetEntityId], references: [id], onDelete: Cascade)
+  sourceChunk  DocumentChunk? @relation("SourceChunk", fields: [sourceChunkId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([sourceEntityId])
+  @@index([targetEntityId])
+  @@map("entity_relations")
+}
+
+model SavedSearch {
+  id        String     @id @default(uuid())
+  projectId String     @map("project_id")
+  userId    String     @map("user_id")
+  name      String
+  query     String
+  filters   Json       @default("{}")
+  mode      SearchMode @default(HYBRID)
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([userId])
+  @@map("saved_searches")
 }

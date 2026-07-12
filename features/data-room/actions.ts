@@ -12,12 +12,16 @@ import {
   bulkRestoreDocuments,
   bulkSoftDeleteDocuments,
   bulkReprocessDocuments,
+  bulkUpdateDocumentClassification,
   bulkUpdateDocumentTags,
+  dismissDuplicateFlag,
   getDeletedDocumentById,
   getDocumentById,
+  markIntentionalDuplicate,
   permanentlyDeleteDocument,
   reprocessDocument,
   restoreDocument,
+  retryFailedDocuments,
   softDeleteDocument,
   updateDocument,
   updateDocumentTags,
@@ -42,6 +46,7 @@ import {
 } from "./lib/roles";
 import {
   bulkDocumentIdsSchema,
+  bulkDocumentClassificationSchema,
   bulkDocumentTagsSchema,
   createFolderSchema,
   updateDocumentSchema,
@@ -347,6 +352,88 @@ export async function bulkUpdateDocumentTagsAction(
 
     revalidatePath(`/dashboard/projects/${projectId}/data-room`);
     return { success: true, data: { updated: result.updated } };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return actionError(error.code, error.message);
+    }
+    throw error;
+  }
+}
+
+export async function bulkUpdateDocumentClassificationAction(
+  projectId: string,
+  input: unknown,
+): Promise<ActionResult<{ updated: number }>> {
+  try {
+    await requireProjectAccess(projectId, DATA_ROOM_UPLOAD_MIN_ROLE);
+    const parsed = bulkDocumentClassificationSchema.safeParse(input);
+    if (!parsed.success) {
+      return validationError(parsed.error.flatten().fieldErrors);
+    }
+
+    const result = await bulkUpdateDocumentClassification(
+      parsed.data.documentIds,
+      parsed.data.classification,
+    );
+
+    revalidatePath(`/dashboard/projects/${projectId}/data-room`);
+    return { success: true, data: { updated: result.updated } };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return actionError(error.code, error.message);
+    }
+    throw error;
+  }
+}
+
+export async function retryFailedDocumentsAction(
+  projectId: string,
+): Promise<ActionResult<{ updated: number }>> {
+  try {
+    await requireProjectAccess(projectId, DATA_ROOM_UPLOAD_MIN_ROLE);
+    const result = await retryFailedDocuments(projectId);
+    revalidatePath(`/dashboard/projects/${projectId}/data-room`);
+    return { success: true, data: { updated: result.updated } };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return actionError(error.code, error.message);
+    }
+    throw error;
+  }
+}
+
+export async function dismissDuplicateAction(
+  projectId: string,
+  documentId: string,
+): Promise<ActionResult> {
+  try {
+    await requireProjectAccess(projectId, DATA_ROOM_UPLOAD_MIN_ROLE);
+    const result = await dismissDuplicateFlag(documentId);
+    if ("error" in result) {
+      return actionError(result.error, result.message);
+    }
+    revalidatePath(`/dashboard/projects/${projectId}/data-room`);
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return actionError(error.code, error.message);
+    }
+    throw error;
+  }
+}
+
+export async function markIntentionalDuplicateAction(
+  projectId: string,
+  documentId: string,
+): Promise<ActionResult> {
+  try {
+    await requireProjectAccess(projectId, DATA_ROOM_UPLOAD_MIN_ROLE);
+    const result = await markIntentionalDuplicate(documentId);
+    if ("error" in result) {
+      return actionError(result.error, result.message);
+    }
+    revalidatePath(`/dashboard/projects/${projectId}/data-room`);
+    return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
       return actionError(error.code, error.message);

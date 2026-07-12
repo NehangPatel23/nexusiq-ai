@@ -15,6 +15,7 @@ export type ProcessingSummary = {
     id: string;
     name: string;
     status: string;
+    errorMessage?: string | null;
     updatedAt: string;
   }>;
 };

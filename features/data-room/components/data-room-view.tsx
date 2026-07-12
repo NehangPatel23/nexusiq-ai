@@ -23,14 +23,18 @@ import {
   bulkPermanentlyDeleteDocumentsAction,
   bulkReprocessDocumentsAction,
   bulkRestoreDocumentsAction,
+  bulkUpdateDocumentClassificationAction,
   createFolderAction,
   deleteDocumentAction,
   deleteFolderAction,
+  dismissDuplicateAction,
+  markIntentionalDuplicateAction,
   permanentlyDeleteDocumentAction,
   permanentlyDeleteFolderAction,
   reprocessDocumentAction,
   restoreDocumentAction,
   restoreFolderAction,
+  retryFailedDocumentsAction,
   updateDocumentAction,
   updateDocumentTagsAction,
   updateFolderAction,
@@ -44,6 +48,11 @@ import {
   type DocumentSortKey,
   type SortDirection,
 } from "../lib/table-utils";
+import {
+  detectDocumentTransitions,
+  snapshotDocuments,
+} from "../lib/document-transitions";
+import { getProcessingErrorHint } from "../lib/processing-errors";
 import { DATA_ROOM_UPLOAD_EVENT } from "../lib/data-room-events";
 import { useDataRoomUpload } from "../lib/upload-client";
 import type { DataRoomDocument, DataRoomFolderNode, UploadProgressItem } from "../lib/types";
@@ -56,7 +65,9 @@ import { DocumentPreviewModal } from "./document-preview-modal";
 import { DocumentTable } from "./document-table";
 import { FolderTree } from "./folder-tree";
 import { MoveDocumentDialog } from "./move-document-dialog";
+import { ProcessingQueuePanel } from "./processing-queue-panel";
 import { ProcessingStatusBar, type ProcessingSummary } from "./processing-status-bar";
+import { WorkerSetupBanner } from "./worker-setup-banner";
 import { RenameFolderDialog } from "./rename-folder-dialog";
 import { ShareLinksDialog } from "./share-links-dialog";
 import { UploadDropzone } from "./upload-dropzone";
@@ -77,6 +88,18 @@ function flattenFolders(tree: DataRoomFolderNode[]): DataRoomFolderNode[] {
   return out;
 }
 
+function formatProcessingDescription(summary: ProcessingSummary) {
+  const parts = [
+    `${summary.processing} processing`,
+    `${summary.pending} pending`,
+    `${summary.ready} ready`,
+  ];
+  if (summary.failed > 0) {
+    parts.push(`${summary.failed} failed`);
+  }
+  return parts.join(" · ");
+}
+
 interface DataRoomViewProps {
   projectId: string;
   initialFolders: DataRoomFolderNode[];
@@ -85,6 +108,7 @@ interface DataRoomViewProps {
   canDelete: boolean;
   canManageDeleted?: boolean;
   retentionDays?: number;
+  workerMode?: boolean;
 }
 
 type DataRoomViewMode = "active" | "deleted";
@@ -98,10 +122,14 @@ export function DataRoomView({
   canDelete,
   canManageDeleted = canDelete,
   retentionDays = 30,
+  workerMode = false,
 }: DataRoomViewProps) {
   const { canEdit } = useProjectShell();
   const searchParams = useSearchParams();
   const deepLinkHandled = useRef(false);
+  const processingWasActiveRef = useRef(false);
+  const processingToastIdRef = useRef<string | number | null>(null);
+  const documentSnapshotRef = useRef(snapshotDocuments(initialDocuments));
   const tableRef = useRef<HTMLDivElement>(null);
   const [tree, setTree] = useState(initialFolders);
   const [documents, setDocuments] = useState(initialDocuments);
@@ -130,7 +158,7 @@ export function DataRoomView({
   const [folderPanelOpen, setFolderPanelOpen] = useState(true);
   const [previewPanelOpen, setPreviewPanelOpen] = useState(true);
   const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<DocumentStatus | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<DocumentStatus | "all" | "needs_attention">("all");
   const [typeFilter, setTypeFilter] = useState<DocumentType | "all">("all");
   const [classificationFilter, setClassificationFilter] = useState<
     DocumentClassification | "all" | "unclassified"
@@ -152,6 +180,26 @@ export function DataRoomView({
   const [processingLoading, setProcessingLoading] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [, startTransition] = useTransition();
+
+  const applyDocumentTransitions = useCallback((items: DataRoomDocument[]) => {
+    const transitions = detectDocumentTransitions(documentSnapshotRef.current, items);
+    for (const transition of transitions) {
+      if (transition.type === "ready") {
+        toast.success(`${transition.doc.name} is ready`, {
+          description: `${transition.doc.chunkCount ?? 0} chunk${(transition.doc.chunkCount ?? 0) === 1 ? "" : "s"}`,
+        });
+      } else if (transition.type === "failed") {
+        toast.error(`${transition.doc.name} failed`, {
+          description: getProcessingErrorHint(transition.doc.errorMessage),
+        });
+      } else if (transition.type === "auto-folder") {
+        toast.message(`Moved ${transition.doc.name}`, {
+          description: `Auto-filed to ${transition.folderPath} based on classification`,
+        });
+      }
+    }
+    documentSnapshotRef.current = snapshotDocuments(items);
+  }, []);
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -187,6 +235,7 @@ export function DataRoomView({
 
       setTree(serializeDates(foldersJson.data?.tree ?? []));
       const items = serializeDates(docsJson.data?.items ?? []);
+      applyDocumentTransitions(items);
       setDocuments(items);
       setSelectedDoc((current) =>
         current ? items.find((d) => d.id === current.id) ?? null : null,
@@ -198,7 +247,7 @@ export function DataRoomView({
     } finally {
       setLoading(false);
     }
-  }, [projectId, selectedFolderId]);
+  }, [projectId, selectedFolderId, applyDocumentTransitions]);
 
   const handleUploadBatchComplete = useCallback(
     async ({ successCount, failCount }: { successCount: number; failCount: number }) => {
@@ -290,6 +339,39 @@ export function DataRoomView({
     }
   }, [projectId]);
 
+  const showProcessingToast = useCallback((summary: ProcessingSummary) => {
+    if (summary.active > 0) {
+      processingToastIdRef.current = toast.message("Document processing", {
+        id: processingToastIdRef.current ?? "document-processing-status",
+        description: formatProcessingDescription(summary),
+        duration: 4500,
+      });
+      return;
+    }
+
+    if (!processingWasActiveRef.current) {
+      return;
+    }
+
+    if (summary.failed > 0) {
+      processingToastIdRef.current = toast.error(
+        `${summary.failed} document${summary.failed === 1 ? "" : "s"} failed processing`,
+        {
+          id: processingToastIdRef.current ?? "document-processing-status",
+          description: `${summary.ready} ready · ${summary.failed} failed`,
+          duration: 6000,
+        },
+      );
+      return;
+    }
+
+    processingToastIdRef.current = toast.success("Document processing complete", {
+      id: processingToastIdRef.current ?? "document-processing-status",
+      description: `${summary.ready} document${summary.ready === 1 ? "" : "s"} ready`,
+      duration: 4500,
+    });
+  }, []);
+
   const refreshProcessingStatus = useCallback(async () => {
     setProcessingLoading(true);
     try {
@@ -302,7 +384,11 @@ export function DataRoomView({
       if (!res.ok || !json.success) {
         throw new Error(json.error?.message ?? "Failed to load processing status");
       }
-      setProcessingSummary(serializeDates(json.data ?? null));
+      const summary = serializeDates(json.data ?? null);
+      setProcessingSummary(summary);
+      if (summary) {
+        showProcessingToast(summary);
+      }
       if (json.data && json.data.active === 0 && json.data.failed === 0) {
         return false;
       }
@@ -312,7 +398,7 @@ export function DataRoomView({
     } finally {
       setProcessingLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, showProcessingToast]);
 
   useEffect(() => {
     void refresh();
@@ -332,6 +418,10 @@ export function DataRoomView({
     async function poll() {
       const shouldContinue = await refreshProcessingStatus();
       if (cancelled) return;
+      if (processingWasActiveRef.current && !shouldContinue) {
+        await refresh();
+      }
+      processingWasActiveRef.current = shouldContinue;
       if (shouldContinue) {
         timer = setTimeout(() => void poll(), 3000);
       }
@@ -389,10 +479,74 @@ export function DataRoomView({
   const stats = useMemo(
     () => ({
       total: documents.length,
-      pending: documents.filter((d) => d.status === "PENDING").length,
+      pending: documents.filter((d) => d.status === "PENDING" || d.status === "PROCESSING").length,
+      failed: documents.filter((d) => d.status === "FAILED").length,
       folders: flattenFolders(tree).length,
     }),
     [documents, tree],
+  );
+
+  const handleViewDuplicateOriginal = useCallback(
+    (documentId: string) => {
+      const doc = documents.find((item) => item.id === documentId);
+      if (!doc) return;
+      setSelectedDoc(doc);
+      setPreviewPanelOpen(true);
+    },
+    [documents],
+  );
+
+  const handleDismissDuplicate = useCallback(
+    async (doc: DataRoomDocument) => {
+      const result = await dismissDuplicateAction(projectId, doc.id);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success("Duplicate flag dismissed");
+      await refresh();
+    },
+    [projectId, refresh],
+  );
+
+  const handleMarkIntentionalDuplicate = useCallback(
+    async (doc: DataRoomDocument) => {
+      const result = await markIntentionalDuplicateAction(projectId, doc.id);
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success("Marked as intentional duplicate");
+      await refresh();
+    },
+    [projectId, refresh],
+  );
+
+  const handleRetryFailed = useCallback(async () => {
+    const result = await retryFailedDocumentsAction(projectId);
+    if (!result.success) {
+      toast.error(result.error.message);
+      return;
+    }
+    toast.success(`Queued ${result.data?.updated ?? 0} failed documents`);
+    await refresh();
+    void refreshProcessingStatus();
+  }, [projectId, refresh, refreshProcessingStatus]);
+
+  const handleBulkClassification = useCallback(
+    async (classification: DocumentClassification) => {
+      const result = await bulkUpdateDocumentClassificationAction(projectId, {
+        documentIds: Array.from(selectedIds),
+        classification,
+      });
+      if (!result.success) {
+        toast.error(result.error.message);
+        return;
+      }
+      toast.success(`Updated classification on ${result.data?.updated ?? 0} documents`);
+      await refresh();
+    },
+    [projectId, selectedIds, refresh],
   );
 
   const duplicateOf = useMemo(() => buildDuplicateMap(documents), [documents]);
@@ -816,7 +970,31 @@ export function DataRoomView({
       </div>
 
       {viewMode === "active" && (
-        <ProcessingStatusBar summary={processingSummary} loading={processingLoading} />
+        <>
+          <WorkerSetupBanner
+            visible={
+              workerMode &&
+              (processingSummary?.active ?? 0) > 0 &&
+              (processingSummary?.pending ?? 0) > 0
+            }
+          />
+          <ProcessingStatusBar summary={processingSummary} loading={processingLoading} />
+          <ProcessingQueuePanel
+            summary={processingSummary}
+            loading={processingLoading}
+            canUpload={canUpload}
+            onReprocess={(documentId) => {
+              void reprocessDocumentAction(projectId, documentId).then((result) => {
+                if (!result.success) {
+                  toast.error(result.error.message);
+                  return;
+                }
+                toast.success("Queued for reprocessing");
+                void refresh();
+              });
+            }}
+          />
+        </>
       )}
 
       {viewMode === "active" && (
@@ -864,6 +1042,12 @@ export function DataRoomView({
             : undefined
         }
         onBulkDownloadZip={handleBulkDownloadZip}
+        onRetryFailed={canUpload ? () => void handleRetryFailed() : undefined}
+        onApplyBulkClassification={
+          canUpload && selectedIds.size > 0
+            ? (classification) => void handleBulkClassification(classification)
+            : undefined
+        }
         onExportCsv={handleExportCsv}
         folderPanelOpen={folderPanelOpen}
         previewPanelOpen={previewPanelOpen}
@@ -999,6 +1183,9 @@ export function DataRoomView({
                   ? (doc) => setDeleteTarget({ type: "document", doc })
                   : undefined
               }
+              onViewDuplicateOriginal={handleViewDuplicateOriginal}
+              onDismissDuplicate={canUpload ? handleDismissDuplicate : undefined}
+              onMarkIntentionalDuplicate={canUpload ? handleMarkIntentionalDuplicate : undefined}
               canDelete={canDelete}
               canUpload={canUpload}
             />
@@ -1051,6 +1238,7 @@ export function DataRoomView({
                 toast.success("Document renamed");
                 await refresh();
               }}
+              onViewDuplicateOriginal={handleViewDuplicateOriginal}
               className="h-full min-h-[320px] bg-background shadow-lg lg:min-h-0 lg:bg-card/40 lg:shadow-none"
             />
           </div>

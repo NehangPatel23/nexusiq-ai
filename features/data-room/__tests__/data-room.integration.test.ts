@@ -38,6 +38,7 @@ describe("data-room integration", () => {
   beforeAll(async () => {
     storageDir = await mkdtemp(path.join(os.tmpdir(), "nexusiq-storage-"));
     process.env.STORAGE_PATH = storageDir;
+    process.env.ENABLE_INLINE_PROCESSING = "false";
     delete process.env.NEXT_PUBLIC_SUPABASE_URL;
     delete process.env.SUPABASE_SERVICE_ROLE_KEY;
     resetStorageAdapter();
@@ -71,6 +72,9 @@ describe("data-room integration", () => {
   });
 
   afterAll(async () => {
+    await prisma.documentChunk.deleteMany({
+      where: { document: { projectId } },
+    });
     await prisma.documentVersion.deleteMany({
       where: { document: { projectId } },
     });
@@ -217,7 +221,7 @@ describe("data-room integration", () => {
     expect(folders.some((f) => f.path === "/Ops/Metrics")).toBe(true);
   });
 
-  it("stubs reprocess by setting status to PENDING", async () => {
+  it("queues reprocess by resetting status to PENDING", async () => {
     const docs = await listDocuments(projectId);
     const doc = docs[0];
     expect(doc).toBeTruthy();

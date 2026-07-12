@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 
+import {
+  getOllamaClient,
+  getOllamaHostOnly,
+  isOllamaConfigured,
+} from "@/lib/ai/ollama-client";
 import { prisma } from "@/lib/db";
 
 export async function GET() {
@@ -20,23 +25,54 @@ export async function GET() {
     );
   }
 
+  let dbStatus: "connected" | "error" = "connected";
+  let dbError: string | undefined;
+
   try {
     await prisma.$queryRaw`SELECT 1`;
-    return NextResponse.json({
-      ok: true,
-      checks,
-      db: "connected",
-    });
   } catch (error) {
+    dbStatus = "error";
+    dbError = error instanceof Error ? error.message : "Database connection failed";
     console.error("[health] database check failed", error);
     return NextResponse.json(
       {
         ok: false,
         checks,
-        db: "error",
-        error: error instanceof Error ? error.message : "Database connection failed",
+        db: dbStatus,
+        error: dbError,
       },
       { status: 503 },
     );
   }
+
+  let ollamaPayload:
+    | { ollama: "not_configured" }
+    | { ollama: "connected"; ollamaUrl: string }
+    | { ollama: "unreachable"; ollamaError: string };
+
+  if (!isOllamaConfigured()) {
+    ollamaPayload = { ollama: "not_configured" };
+  } else {
+    const client = getOllamaClient();
+    const health = await client.healthCheck();
+    const baseUrl = client.getConfig().baseUrl;
+    if (health.ok) {
+      ollamaPayload = {
+        ollama: "connected",
+        ollamaUrl: getOllamaHostOnly(baseUrl),
+      };
+    } else {
+      ollamaPayload = {
+        ollama: "unreachable",
+        ollamaError: health.error,
+      };
+    }
+  }
+
+  return NextResponse.json({
+    ok: true,
+    checks,
+    db: dbStatus,
+    ...ollamaPayload,
+  });
 }

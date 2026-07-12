@@ -2,24 +2,123 @@
 
 Deploy NexusIQ-AI to Vercel with **Supabase** (PostgreSQL + Storage) for hackathon judging and cloud demos.
 
-## Architecture (Vercel + Supabase)
+## Architecture (B+C: Vercel + Supabase + VPS Worker)
+
+Production document processing uses **three roles** — never run the pipeline inline on Vercel.
 
 ```text
-Judges → Vercel (Next.js) → Supabase Postgres (auth, orgs, projects, documents metadata)
-                         → Supabase Storage (document uploads, avatars when configured)
-                         → Placeholder UI (intelligence, chat, reports slices)
-Ollama → local / external only (not on Vercel)
+Users → Vercel (Next.js UI + API)
+          → Supabase Postgres (metadata, chunks, vectors, FTS)
+          → Supabase Storage (uploaded files)
+          → Public Ollama HTTPS (chat/agents on Vercel — slices 08+)
+
+Worker VPS (or Mac during dev) → polls PENDING documents
+          → downloads from Supabase Storage
+          → Ollama on localhost:11434 (embed + classify + NER)
+          → writes chunks → READY / FAILED
 ```
 
-| Component | Provider | Hackathon demo |
-|-----------|----------|----------------|
-| Web app | Vercel | Required |
-| Database | Supabase Postgres + pgvector | Required |
-| File storage | Supabase Storage | Optional (sample files) |
-| Auth | NextAuth (Credentials) | Keep as-is — **do not** use Supabase Auth |
-| AI (Ollama) | Local / VPS | Simulated via placeholders + pitch |
+| Environment | `OLLAMA_BASE_URL` | Processing |
+|-------------|-------------------|------------|
+| Local dev (Mac) | `http://localhost:11434` | `ENABLE_INLINE_PROCESSING=true` (fire-and-forget after upload) **or** `pnpm worker:process` |
+| Vercel prod | `https://ollama.yourdomain.com` + `OLLAMA_API_KEY` | Upload → `PENDING` only; worker on VPS processes |
+| Worker VPS | `http://127.0.0.1:11434` | `pnpm worker:process` polls queue |
 
-Local development still uses Docker Compose (`docker compose up -d db`) and `./storage/`.
+| Component | Provider | Role |
+|-----------|----------|------|
+| Web app | Vercel | UI, auth, uploads, API routes — **never** inline processing |
+| Database | Supabase Postgres + pgvector + FTS | Document queue, chunks, entities |
+| File storage | Supabase Storage | Document bytes |
+| AI (Ollama) | Local / VPS / public HTTPS | Embeddings, classification, NER |
+| Document worker | VPS or Mac (`scripts/processing-worker.ts`) | Poll `PENDING` → `PROCESSING` → pipeline |
+
+**Health check:** `GET /api/health` reports `ollama: connected | unreachable | not_configured` (non-fatal — DB is primary).
+
+**Smart search (slice 07):** Keyword mode works without Ollama (Postgres FTS). Semantic and hybrid modes require `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel) to embed the query; if Ollama is down, hybrid auto-falls back to keyword with a warning.
+
+**Worker env (VPS):**
+
+```bash
+DATABASE_URL="postgresql://postgres.[ref]:[password]@...pooler.supabase.com:5432/postgres"  # Session pooler, NOT :6543
+OLLAMA_BASE_URL="http://127.0.0.1:11434"
+ENABLE_INLINE_PROCESSING="false"
+WORKER_POLL_INTERVAL_MS="5000"
+WORKER_CONCURRENCY="1"
+SUPABASE_SERVICE_ROLE_KEY="..."  # if using Supabase Storage
+```
+
+Run worker: `pnpm worker:process`
+
+Local development still uses Docker Compose (`docker compose up -d db`) and `./storage/` when Supabase is not configured.
+
+---
+
+## OCI Worker VPS (deferred)
+
+**Status:** Blocked on Oracle Cloud instance provisioning. Track checklist in [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md).
+
+Until OCI is live, use **localhost**: `ENABLE_INLINE_PROCESSING=true` or `pnpm worker:process` with local Ollama. Vercel uploads stay `PENDING` without a worker.
+
+### Recommended shape (Always Free)
+
+| Resource | Suggestion |
+|----------|------------|
+| Shape | `VM.Standard.A1.Flex` (Ampere) |
+| OCPU / RAM | 4 OCPU, 24 GB (adjust down if quota tight) |
+| OS | Ubuntu 22.04 or 24.04 |
+| Region | Retry if “Out of host capacity” |
+
+### Bootstrap (summary)
+
+```bash
+# On the OCI VM after SSH
+sudo apt update && sudo apt install -y curl git tesseract-ocr libreoffice
+curl -fsSL https://ollama.com/install.sh | sh
+ollama pull llama3 && ollama pull nomic-embed-text
+
+# Node 20 + pnpm (fnm/nvm or nodesource — pick one)
+git clone <repo> && cd nexusiq-ai && pnpm install
+# Copy .env — see tasks/00-oci-worker-vps.md § 4
+pnpm worker:process   # verify once, then systemd
+```
+
+### systemd example
+
+```ini
+# /etc/systemd/system/nexusiq-worker.service
+[Unit]
+Description=NexusIQ document processing worker
+After=network-online.target ollama.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/nexusiq-ai
+EnvironmentFile=/home/ubuntu/nexusiq-ai/.env
+ExecStart=/usr/bin/pnpm worker:process
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable: `sudo systemctl enable --now nexusiq-worker`
+
+### Public Ollama for Vercel (slices 08+)
+
+The worker uses Ollama on `127.0.0.1`. **Chat and agents on Vercel** need a separate **HTTPS** endpoint:
+
+- Reverse proxy (Caddy/nginx) + TLS certificate
+- `OLLAMA_API_KEY` on proxy and Vercel
+- Vercel: `OLLAMA_BASE_URL=https://ollama.yourdomain.com`
+
+Details: [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md) § 6.
+
+---
+
+## Architecture (Vercel + Supabase) — legacy summary
 
 ---
 
@@ -309,6 +408,6 @@ Neon does **not** include file storage—you would need a separate service for d
 
 ## Deferred
 
-- Ollama document processing pipeline (Slice 06 — PENDING → READY worker)
-- Ollama agent execution on cloud
-- Full-text search across document content (Slice 07)
+- **OCI worker VPS** — document processing on Vercel (Slice 06 prod path). Checklist: [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md)
+- **Public Ollama HTTPS** — chat/agents on Vercel (slices 08+)
+- Full-text search across document content (Slice 07 — in progress on localhost)

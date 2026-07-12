@@ -26,7 +26,7 @@ export default defineConfig({
   webServer: {
     command: `pnpm dev --port ${E2E_PORT}`,
     url: E2E_BASE_URL,
-    reuseExistingServer: false,
+    reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
       ...process.env,
@@ -35,6 +35,7 @@ export default defineConfig({
       // Never run e2e against Supabase — tests create @test.com users every run.
       DATABASE_URL: LOCAL_DATABASE_URL,
       NEXT_PUBLIC_APP_URL: E2E_BASE_URL,
+      ENABLE_INLINE_PROCESSING: "false",
     },
   },
 });

@@ -67,6 +67,12 @@ export function DataRoomChecklist({ documents, className }: DataRoomChecklistPro
               <p className="font-medium">{item.label}</p>
               {item.complete && item.documentNames.length > 0 ? (
                 <p className="truncate text-muted-foreground">{item.documentNames.join(", ")}</p>
+              ) : item.processingCount > 0 || item.failedCount > 0 ? (
+                <p className="text-muted-foreground">
+                  {item.processingCount > 0 && `${item.processingCount} processing`}
+                  {item.processingCount > 0 && item.failedCount > 0 && " · "}
+                  {item.failedCount > 0 && `${item.failedCount} failed`}
+                </p>
               ) : (
                 <p className="text-muted-foreground">{item.description}</p>
               )}

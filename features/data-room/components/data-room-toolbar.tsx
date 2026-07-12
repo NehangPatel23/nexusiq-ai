@@ -21,11 +21,11 @@ import { DOCUMENT_CLASSIFICATIONS, getClassificationLabel } from "../lib/classif
 import type { DocumentSortKey, SortDirection } from "../lib/table-utils";
 
 interface DataRoomToolbarProps {
-  stats: { total: number; pending: number; folders: number };
+  stats: { total: number; pending: number; folders: number; failed?: number };
   query: string;
   onQueryChange: (value: string) => void;
-  statusFilter: DocumentStatus | "all";
-  onStatusFilterChange: (value: DocumentStatus | "all") => void;
+  statusFilter: DocumentStatus | "all" | "needs_attention";
+  onStatusFilterChange: (value: DocumentStatus | "all" | "needs_attention") => void;
   typeFilter: DocumentType | "all";
   onTypeFilterChange: (value: DocumentType | "all") => void;
   classificationFilter: DocumentClassification | "all" | "unclassified";
@@ -42,6 +42,8 @@ interface DataRoomToolbarProps {
   onBulkDelete?: () => void;
   onBulkReprocess?: () => void;
   onBulkDownloadZip?: () => void;
+  onRetryFailed?: () => void;
+  onApplyBulkClassification?: (classification: DocumentClassification) => void;
   onExportCsv: () => void;
   folderPanelOpen: boolean;
   previewPanelOpen: boolean;
@@ -81,6 +83,8 @@ export function DataRoomToolbar({
   onBulkDelete,
   onBulkReprocess,
   onBulkDownloadZip,
+  onRetryFailed,
+  onApplyBulkClassification,
   onExportCsv,
   folderPanelOpen,
   previewPanelOpen,
@@ -97,6 +101,11 @@ export function DataRoomToolbar({
         <span>
           <strong className="text-foreground">{stats.pending}</strong> pending
         </span>
+        {(stats.failed ?? 0) > 0 && (
+          <span>
+            <strong className="text-destructive">{stats.failed}</strong> failed
+          </span>
+        )}
         <span>
           <strong className="text-foreground">{stats.folders}</strong> folders
         </span>
@@ -133,16 +142,25 @@ export function DataRoomToolbar({
 
         <select
           value={statusFilter}
-          onChange={(e) => onStatusFilterChange(e.target.value as DocumentStatus | "all")}
+          onChange={(e) =>
+            onStatusFilterChange(e.target.value as DocumentStatus | "all" | "needs_attention")
+          }
           className="h-9 rounded-md border border-input bg-background px-2 text-sm"
           aria-label="Filter by status"
         >
           <option value="all">All statuses</option>
+          <option value="needs_attention">Needs attention</option>
           <option value="PENDING">Pending</option>
           <option value="PROCESSING">Processing</option>
           <option value="READY">Ready</option>
           <option value="FAILED">Failed</option>
         </select>
+
+        {(stats.failed ?? 0) > 0 && onRetryFailed && (
+          <Button type="button" variant="outline" size="sm" onClick={onRetryFailed}>
+            Retry failed ({stats.failed})
+          </Button>
+        )}
 
         <select
           value={typeFilter}
@@ -257,6 +275,28 @@ export function DataRoomToolbar({
             <Button type="button" size="sm" variant="outline" onClick={onBulkReprocess}>
               Reprocess
             </Button>
+          )}
+          {canUpload && onApplyBulkClassification && (
+            <div className="flex items-center gap-2">
+              <select
+                id="bulk-classification"
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                defaultValue=""
+                aria-label="Bulk classification"
+                onChange={(e) => {
+                  const value = e.target.value as DocumentClassification;
+                  if (value) onApplyBulkClassification(value);
+                  e.target.value = "";
+                }}
+              >
+                <option value="">Classify as…</option>
+                {DOCUMENT_CLASSIFICATIONS.map((c) => (
+                  <option key={c} value={c}>
+                    {getClassificationLabel(c)}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
           {canDelete && onBulkDelete && (
             <Button type="button" size="sm" variant="destructive" onClick={onBulkDelete}>

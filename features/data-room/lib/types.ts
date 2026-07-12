@@ -29,6 +29,12 @@ export type DataRoomDocument = {
   version: number;
   tags: string[];
   contentHash?: string | null;
+  errorMessage?: string | null;
+  chunkCount?: number;
+  pageCount?: number | null;
+  processedAt?: string | null;
+  duplicateOfId?: string | null;
+  duplicateOf?: { id: string; name: string } | null;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;

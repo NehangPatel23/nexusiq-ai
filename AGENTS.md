@@ -10,6 +10,8 @@ You are building **NexusIQ-AI** — an enterprise decision intelligence platform
 4. `tasks/<current>.md` + relevant `prompts/`
 5. Existing `features/` code
 
+**Production infra (deferred):** OCI worker VPS — [tasks/00-oci-worker-vps.md](./tasks/00-oci-worker-vps.md). Build slices on localhost until the Oracle instance is provisioned.
+
 ## Product Scope
 
 Full enterprise MVP — no placeholder pages:

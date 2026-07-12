@@ -26,7 +26,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <Toaster
           theme="dark"
           position="bottom-right"
+          duration={4500}
           toastOptions={{
+            duration: 4500,
             classNames: {
               toast:
                 "surface-elevated border-border/60 text-foreground shadow-soft font-sans",
