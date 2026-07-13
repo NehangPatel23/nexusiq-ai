@@ -106,4 +106,36 @@ describe("ollama-client", () => {
       "ollama.yourdomain.com",
     );
   });
+
+  it("chat throws OllamaTimeoutError when the request aborts on timeout", async () => {
+    const { OllamaTimeoutError } = await import("../ollama-client");
+    const fetchImpl = vi.fn().mockImplementation((_url: string, init?: RequestInit) => {
+      return new Promise((_resolve, reject) => {
+        const signal = init?.signal;
+        if (!signal) {
+          reject(new Error("missing signal"));
+          return;
+        }
+        signal.addEventListener("abort", () => {
+          const error = new Error("aborted");
+          error.name = "AbortError";
+          reject(error);
+        });
+      });
+    });
+
+    const client = new OllamaClient({
+      config: {
+        baseUrl: "https://ollama.example.com",
+        chatModel: "llama3",
+        embedModel: "nomic-embed-text",
+        chatTimeoutMs: 20,
+      },
+      fetchImpl,
+    });
+
+    await expect(client.chat([{ role: "user", content: "hi" }])).rejects.toBeInstanceOf(
+      OllamaTimeoutError,
+    );
+  });
 });

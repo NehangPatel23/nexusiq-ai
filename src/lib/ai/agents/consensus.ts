@@ -13,7 +13,7 @@ import {
   validateConsensusCitations,
 } from "./consensus-schema";
 import { loadConsensusSystemPrompt } from "./prompts";
-import { OllamaUnavailableError } from "./run-agent";
+import { OllamaUnavailableError, rethrowOllamaChatFailure } from "./run-agent";
 import type { SpecialistAgentType } from "./types";
 
 export class ConsensusPrerequisiteError extends Error {
@@ -106,8 +106,8 @@ async function requestConsensusOutput(
   let rawContent: string;
   try {
     rawContent = await ollama.chat(messages, { format: "json", maxTokens: 3000 });
-  } catch {
-    throw new OllamaUnavailableError();
+  } catch (error) {
+    rethrowOllamaChatFailure(error);
   }
 
   const firstAttempt = parseConsensusJsonResult(rawContent);
@@ -124,8 +124,8 @@ async function requestConsensusOutput(
   let retryContent: string;
   try {
     retryContent = await ollama.chat(retryMessages, { format: "json", maxTokens: 3000 });
-  } catch {
-    throw new OllamaUnavailableError();
+  } catch (error) {
+    rethrowOllamaChatFailure(error);
   }
 
   const secondAttempt = parseConsensusJsonResult(retryContent);

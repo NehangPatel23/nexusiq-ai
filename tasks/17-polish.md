@@ -89,6 +89,7 @@ _Add new polish ideas here. Move to P0–P4 when prioritized._
 - [ ] Pin specific AgentRun IDs from Consensus history UI (“re-run with these opinions”)
 - [ ] Diff two ConsensusRuns side-by-side
 - [ ] Overview widget: sparkline of enterprise risk over time
+- [ ] Server-side full-analysis job worker (survives browser close / hard refresh; pairs with OCI worker VPS)
 
 ---
 

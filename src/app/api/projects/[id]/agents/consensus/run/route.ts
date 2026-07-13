@@ -1,11 +1,11 @@
 export const dynamic = "force-dynamic";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 import { requireProjectIntelligenceAccess } from "@/features/intelligence/lib/authorization";
 import { executeConsensusRun } from "@/features/intelligence/lib/execute-consensus-run";
 import { runConsensusBodySchema } from "@/features/intelligence/schemas";
 import { ConsensusPrerequisiteError } from "@/lib/ai/agents/consensus";
-import { OllamaUnavailableError } from "@/lib/ai/agents/run-agent";
+import { OllamaTimeoutError, OllamaUnavailableError } from "@/lib/ai/agents/run-agent";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api";
 
 interface RouteContext {
@@ -32,6 +32,9 @@ export async function POST(request: Request, context: RouteContext) {
   } catch (error) {
     if (error instanceof OllamaUnavailableError) {
       return apiError(error.code, error.message, 503);
+    }
+    if (error instanceof OllamaTimeoutError) {
+      return apiError(error.code, error.message, 504);
     }
     if (error instanceof ConsensusPrerequisiteError) {
       return apiError(error.code, error.message, 400, { missingAgents: error.missingAgents });

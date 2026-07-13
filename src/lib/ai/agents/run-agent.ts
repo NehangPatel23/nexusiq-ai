@@ -2,7 +2,12 @@ import type { ConfidenceLevel } from "@prisma/client";
 import type { z } from "zod";
 
 import { buildContext } from "@/lib/ai/chat/rag-chat";
-import { getOllamaClient, type ChatMessage, type OllamaClient } from "@/lib/ai/ollama-client";
+import {
+  getOllamaClient,
+  OllamaTimeoutError,
+  type ChatMessage,
+  type OllamaClient,
+} from "@/lib/ai/ollama-client";
 
 import {
   extractCitationsFromOutput,
@@ -29,6 +34,27 @@ export class OllamaUnavailableError extends Error {
     super(message);
     this.name = "OllamaUnavailableError";
   }
+}
+
+export { OllamaTimeoutError };
+
+/** Map Ollama client failures: timeouts stay retryable step failures; connectivity is 503. */
+export function rethrowOllamaChatFailure(error: unknown): never {
+  if (error instanceof OllamaTimeoutError || error instanceof OllamaUnavailableError) {
+    throw error;
+  }
+  const message = error instanceof Error ? error.message : String(error);
+  if (/timed out|AbortError/i.test(message) || (error instanceof Error && error.name === "AbortError")) {
+    throw new OllamaTimeoutError(message);
+  }
+  if (
+    /ECONNREFUSED|ENOTFOUND|EAI_AGAIN|fetch failed|network|unreachable|OLLAMA_BASE_URL is not set|Ollama chat failed \(5\d\d\)/i.test(
+      message,
+    )
+  ) {
+    throw new OllamaUnavailableError();
+  }
+  throw error instanceof Error ? error : new Error(message);
 }
 
 type RunAgentDependencies = {
@@ -84,8 +110,8 @@ async function requestAgentOutput<T extends SpecialistAgentType>(
   let rawContent: string;
   try {
     rawContent = await ollama.chat(messages, { format: "json", maxTokens: 2500 });
-  } catch {
-    throw new OllamaUnavailableError();
+  } catch (error) {
+    rethrowOllamaChatFailure(error);
   }
 
   const firstAttempt = parseAgentJsonResult(agentType, rawContent);
@@ -105,8 +131,8 @@ async function requestAgentOutput<T extends SpecialistAgentType>(
   let retryContent: string;
   try {
     retryContent = await ollama.chat(retryMessages, { format: "json", maxTokens: 2500 });
-  } catch {
-    throw new OllamaUnavailableError();
+  } catch (error) {
+    rethrowOllamaChatFailure(error);
   }
 
   const secondAttempt = parseAgentJsonResult(agentType, retryContent);

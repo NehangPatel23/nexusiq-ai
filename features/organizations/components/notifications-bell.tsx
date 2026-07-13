@@ -71,10 +71,17 @@ export function NotificationsBell() {
       }
     }, POLL_INTERVAL_MS);
 
+    function onNotificationsChanged() {
+      void fetchNotifications();
+    }
+
+    window.addEventListener("nexusiq:notifications-changed", onNotificationsChanged);
+
     return () => {
       cancelled = true;
       window.clearTimeout(deferredId);
       window.clearInterval(interval);
+      window.removeEventListener("nexusiq:notifications-changed", onNotificationsChanged);
     };
   }, [fetchNotifications]);
 

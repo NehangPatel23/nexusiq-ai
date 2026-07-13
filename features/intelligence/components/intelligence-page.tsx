@@ -9,7 +9,15 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useBackgroundAnalysis } from "@/features/intelligence/hooks/use-background-analysis";
 import type { AgentRunDetail, AgentRunSummary } from "@/features/intelligence/lib/agent-runs";
+import {
+  BACKGROUND_FULL_ANALYSIS_STEPS,
+  getBackgroundAnalysisSnapshot,
+  startBackgroundFullAnalysis,
+  startBackgroundSpecialistsScan,
+  subscribeBackgroundAnalysis,
+} from "@/features/intelligence/lib/background-analysis-runner";
 import type {
   ConsensusRunApiResponse,
   ConsensusRunDetail,
@@ -75,7 +83,7 @@ const API_SEGMENTS: Record<AgentType, string> = {
   EXECUTIVE: "executive",
 };
 
-const FULL_ANALYSIS_TOTAL_STEPS = SPECIALIST_AGENT_TYPES.length + 2;
+const FULL_ANALYSIS_TOTAL_STEPS = BACKGROUND_FULL_ANALYSIS_STEPS;
 
 function confidenceBadgeVariant(confidence: ConfidenceLevel | null) {
   if (confidence === "HIGH") return "secondary";
@@ -187,23 +195,26 @@ export function IntelligencePage({
 }: IntelligencePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const backgroundAnalysis = useBackgroundAnalysis(projectId);
   const [activeTab, setActiveTab] = useState<IntelligenceTab>("FINANCIAL");
   const [runs, setRuns] = useState(initialRuns);
   const [details, setDetails] = useState(initialDetails);
   const [scanningAgents, setScanningAgents] = useState<Set<AgentType>>(() => new Set());
-  const [runningAll, setRunningAll] = useState(false);
-  const [runningFullAnalysis, setRunningFullAnalysis] = useState(false);
-  const [runAllProgress, setRunAllProgress] = useState(0);
-  const [fullAnalysisProgress, setFullAnalysisProgress] = useState(0);
-  const [consensusRunning, setConsensusRunning] = useState(false);
-  const [consensus, setConsensus] = useState<ConsensusRunApiResponse | null>(
-    initialConsensus ? detailToConsensusApi(initialConsensus) : null,
-  );
-  const [consensusHistory, setConsensusHistory] = useState(initialConsensusHistory);
+  const [consensusRunningLocal, setConsensusRunningLocal] = useState(false);
   const [ollamaUnavailable, setOllamaUnavailable] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const runAllTriggeredRef = useRef(false);
   const fullAnalysisTriggeredRef = useRef(false);
+
+  const runningAll = backgroundAnalysis.status === "running" && backgroundAnalysis.mode === "specialists";
+  const runningFullAnalysis = backgroundAnalysis.status === "running" && backgroundAnalysis.mode === "full";
+  const runAllProgress = backgroundAnalysis.mode === "specialists" ? backgroundAnalysis.progress : 0;
+  const fullAnalysisProgress = backgroundAnalysis.mode === "full" ? backgroundAnalysis.progress : 0;
+  const consensusRunning = consensusRunningLocal || backgroundAnalysis.consensusRunning;
+  const [consensus, setConsensus] = useState<ConsensusRunApiResponse | null>(
+    initialConsensus ? detailToConsensusApi(initialConsensus) : null,
+  );
+  const [consensusHistory, setConsensusHistory] = useState(initialConsensusHistory);
 
   const completedSpecialists = useMemo(() => {
     const latest = new Map<SpecialistAgentType, AgentRunSummary>();
@@ -223,8 +234,9 @@ export function IntelligencePage({
   );
 
   const isAgentScanning = useCallback(
-    (agentType: AgentType) => scanningAgents.has(agentType),
-    [scanningAgents],
+    (agentType: AgentType) =>
+      scanningAgents.has(agentType) || backgroundAnalysis.scanningAgents.includes(agentType),
+    [scanningAgents, backgroundAnalysis.scanningAgents],
   );
 
   const isSpecialistTab = SPECIALIST_AGENT_TYPES.includes(activeTab as SpecialistAgentType);
@@ -358,7 +370,7 @@ export function IntelligencePage({
       force = false,
       options?: { skipRouterRefresh?: boolean },
     ): Promise<"completed" | "failed" | "ollama_unavailable"> => {
-      setConsensusRunning(true);
+      setConsensusRunningLocal(true);
       setOllamaUnavailable(false);
       try {
         const response = await fetch(`/api/projects/${projectId}/agents/consensus/run`, {
@@ -389,125 +401,156 @@ export function IntelligencePage({
         toast.error("Consensus could not be started.");
         return "failed";
       } finally {
-        setConsensusRunning(false);
+        setConsensusRunningLocal(false);
       }
     },
     [projectId, refreshConsensusHistory, router],
   );
 
-  const runAllAgents = useCallback(async () => {
-    setRunningAll(true);
-    setRunAllProgress(0);
+  const runAllAgents = useCallback(() => {
+    if (backgroundAnalysis.status === "running") return;
     setDetails({});
     setOllamaUnavailable(false);
+    startBackgroundSpecialistsScan(projectId);
+  }, [backgroundAnalysis.status, projectId]);
 
-    let completed = 0;
-    for (let index = 0; index < INTELLIGENCE_AGENT_TYPES.length; index += 1) {
-      const agentType = INTELLIGENCE_AGENT_TYPES[index];
-      setActiveTab(agentType);
-      const result = await runAgent(agentType, true, { skipRouterRefresh: true });
-      setRunAllProgress(index + 1);
-      if (result !== "completed") break;
-      completed += 1;
-    }
-
-    setRunningAll(false);
-    if (completed > 0) {
-      router.refresh();
-    }
-    if (completed === INTELLIGENCE_AGENT_TYPES.length) {
-      toast.success("Specialist intelligence scan finished.");
-    } else if (completed > 0) {
-      toast.message("Specialist scan stopped early. Completed agents were updated.");
-    }
-  }, [runAgent, router]);
-
-  const runFullAnalysis = useCallback(async () => {
-    setRunningFullAnalysis(true);
-    setFullAnalysisProgress(0);
+  const runFullAnalysis = useCallback(() => {
+    if (backgroundAnalysis.status === "running") return;
     setDetails({});
     setConsensus(null);
     setOllamaUnavailable(false);
+    startBackgroundFullAnalysis(projectId);
+  }, [backgroundAnalysis.status, projectId]);
 
-    let step = 0;
-    let specialistsCompleted = 0;
-    let stoppedForOllama = false;
-    const failedAgents: string[] = [];
-
-    // Run all 5 specialists even if one fails — consensus only needs ≥3.
-    for (const agentType of SPECIALIST_AGENT_TYPES) {
-      setActiveTab(agentType);
-      const result = await runAgent(agentType, true, { skipRouterRefresh: true });
-      step += 1;
-      setFullAnalysisProgress(step);
-      if (result === "completed") {
-        specialistsCompleted += 1;
-      } else if (result === "ollama_unavailable") {
-        stoppedForOllama = true;
-        break;
-      } else {
-        failedAgents.push(AGENT_TYPE_LABELS[agentType]);
+  useEffect(() => {
+    const onUpdate = (
+      snapshot: ReturnType<typeof getBackgroundAnalysisSnapshot>,
+      event: Parameters<Parameters<typeof subscribeBackgroundAnalysis>[1]>[1],
+    ) => {
+      if (snapshot.ollamaUnavailable) {
+        setOllamaUnavailable(true);
       }
-    }
 
-    let consensusOk = false;
-    let executiveOk = false;
-    let consensusFailed = false;
-    let executiveFailed = false;
-
-    if (!stoppedForOllama && specialistsCompleted >= 3) {
-      setActiveTab("CONSENSUS");
-      const consensusResult = await runConsensus(true, { skipRouterRefresh: true });
-      step += 1;
-      setFullAnalysisProgress(step);
-      consensusOk = consensusResult === "completed";
-      if (consensusResult === "failed") consensusFailed = true;
-      if (consensusResult === "ollama_unavailable") stoppedForOllama = true;
-
-      if (consensusOk) {
-        setActiveTab("EXECUTIVE");
-        const executiveResult = await runAgent("EXECUTIVE", true, { skipRouterRefresh: true });
-        step += 1;
-        setFullAnalysisProgress(step);
-        executiveOk = executiveResult === "completed";
-        if (executiveResult === "failed") executiveFailed = true;
+      if (snapshot.suggestedTab && snapshot.status === "running") {
+        setActiveTab(snapshot.suggestedTab);
       }
-    } else if (!stoppedForOllama && specialistsCompleted > 0) {
-      toast.message(
-        `Only ${specialistsCompleted} specialist scan(s) completed${
-          failedAgents.length ? ` (failed: ${failedAgents.join(", ")})` : ""
-        }. Consensus needs at least 3 — re-run failed agents, then Full analysis or Consensus.`,
-      );
-      setActiveTab("CONSENSUS");
-    }
 
-    setRunningFullAnalysis(false);
-    router.refresh();
-    if (specialistsCompleted === SPECIALIST_AGENT_TYPES.length && consensusOk && executiveOk) {
-      toast.success("Full analysis finished.");
-    } else if (stoppedForOllama) {
-      toast.error("Full analysis stopped — Ollama is unavailable.");
-    } else if (consensusFailed) {
-      toast.message(
-        `Specialists finished, but consensus failed${failedAgents.length ? ` (also failed: ${failedAgents.join(", ")})` : ""}. Re-run Consensus from its tab.`,
-      );
-    } else if (executiveFailed) {
-      toast.message("Consensus completed, but the executive package failed. Re-run Executive from its tab.");
-    } else if (step > 0 && (consensusOk || specialistsCompleted > 0)) {
-      toast.message(
-        `Full analysis finished with some steps skipped or failed${
-          failedAgents.length ? ` (${failedAgents.join(", ")})` : ""
-        }. Completed work was saved.`,
-      );
-    }
-  }, [runAgent, runConsensus, router]);
+      if (!event) {
+        if (snapshot.status === "running") {
+          void refreshRuns();
+          for (const [agentType, runId] of Object.entries(snapshot.completedRuns) as Array<
+            [AgentType, string]
+          >) {
+            void loadRunDetail(runId, agentType);
+          }
+          if (snapshot.consensus) {
+            setConsensus(snapshot.consensus);
+          }
+        }
+        return;
+      }
+
+      if (event.type === "started") {
+        setDetails({});
+        if (event.mode === "full") setConsensus(null);
+        setOllamaUnavailable(false);
+        return;
+      }
+
+      if (event.type === "agent_started") {
+        beginAgentScan(event.agentType);
+        setActiveTab(event.agentType);
+        return;
+      }
+
+      if (event.type === "agent_completed") {
+        endAgentScan(event.agentType);
+        void refreshRuns().then(() => loadRunDetail(event.runId, event.agentType));
+        toast.success(`${AGENT_TYPE_LABELS[event.agentType]} scan completed.`);
+        return;
+      }
+
+      if (event.type === "agent_failed") {
+        endAgentScan(event.agentType);
+        if (event.ollama) {
+          setOllamaUnavailable(true);
+          toast.error("Ollama is unavailable.");
+          return;
+        }
+        toast.error(`${AGENT_TYPE_LABELS[event.agentType]} scan failed.`);
+        if (event.runId) {
+          void refreshRuns().then(async (latestRuns) => {
+            const previousCompleted = latestRuns?.find(
+              (run) =>
+                run.agentType === event.agentType &&
+                run.status === "COMPLETED" &&
+                run.id !== event.runId,
+            );
+            await loadRunDetail(previousCompleted?.id ?? event.runId!, event.agentType);
+          });
+        } else {
+          void refreshRuns();
+        }
+        return;
+      }
+
+      if (event.type === "consensus_started") {
+        setActiveTab("CONSENSUS");
+        return;
+      }
+
+      if (event.type === "consensus_completed") {
+        setConsensus(event.data);
+        void refreshConsensusHistory();
+        toast.success("Consensus synthesis completed.");
+        return;
+      }
+
+      if (event.type === "consensus_failed") {
+        if (event.ollama) {
+          setOllamaUnavailable(true);
+          toast.error("Ollama is unavailable.");
+        } else {
+          toast.error("Consensus could not be completed.");
+        }
+        return;
+      }
+
+      if (event.type === "finished") {
+        void refreshRuns();
+        void refreshConsensusHistory();
+        router.refresh();
+        for (const [agentType, runId] of Object.entries(snapshot.completedRuns) as Array<
+          [AgentType, string]
+        >) {
+          void loadRunDetail(runId, agentType);
+        }
+        if (snapshot.consensus) {
+          setConsensus(snapshot.consensus);
+        }
+      }
+    };
+
+    const unsubscribe = subscribeBackgroundAnalysis(projectId, onUpdate);
+    // Initial sync after subscribe (must not run inside subscribe — breaks useSyncExternalStore).
+    onUpdate(getBackgroundAnalysisSnapshot(projectId), null);
+    return unsubscribe;
+  }, [
+    projectId,
+    beginAgentScan,
+    endAgentScan,
+    refreshRuns,
+    loadRunDetail,
+    refreshConsensusHistory,
+    router,
+  ]);
 
   useEffect(() => {
     const fullAnalysis = searchParams.get("fullAnalysis");
     if (fullAnalysis === "1" && !fullAnalysisTriggeredRef.current) {
       fullAnalysisTriggeredRef.current = true;
       router.replace(`/dashboard/projects/${projectId}/intelligence`);
-      void runFullAnalysis();
+      runFullAnalysis();
       return;
     }
 
@@ -515,7 +558,7 @@ export function IntelligencePage({
     if (runAll !== "1" || runAllTriggeredRef.current) return;
     runAllTriggeredRef.current = true;
     router.replace(`/dashboard/projects/${projectId}/intelligence`);
-    void runAllAgents();
+    runAllAgents();
   }, [searchParams, runAllAgents, runFullAnalysis, router, projectId]);
 
   useEffect(() => {
@@ -540,7 +583,11 @@ export function IntelligencePage({
   }, [searchParams, loadConsensusDetail]);
 
   const anyScanInProgress =
-    scanningAgents.size > 0 || runningAll || runningFullAnalysis || consensusRunning;
+    scanningAgents.size > 0 ||
+    backgroundAnalysis.scanningAgents.length > 0 ||
+    runningAll ||
+    runningFullAnalysis ||
+    consensusRunning;
 
   const riskSummary = useMemo(() => {
     const detailList = INTELLIGENCE_AGENT_TYPES.map((agent) => details[agent]);
@@ -573,6 +620,9 @@ export function IntelligencePage({
   const currentConfidence = showResults ? (activeDetail?.confidence ?? null) : null;
 
   const fullAnalysisStepLabel = useMemo(() => {
+    if (runningFullAnalysis && backgroundAnalysis.currentStepLabel) {
+      return backgroundAnalysis.currentStepLabel;
+    }
     if (fullAnalysisProgress < SPECIALIST_AGENT_TYPES.length) {
       return AGENT_TYPE_LABELS[
         SPECIALIST_AGENT_TYPES[Math.min(fullAnalysisProgress, SPECIALIST_AGENT_TYPES.length - 1)] ??
@@ -581,7 +631,7 @@ export function IntelligencePage({
     }
     if (fullAnalysisProgress === SPECIALIST_AGENT_TYPES.length) return "Consensus";
     return "Executive";
-  }, [fullAnalysisProgress]);
+  }, [fullAnalysisProgress, runningFullAnalysis, backgroundAnalysis.currentStepLabel]);
 
   return (
     <div className="space-y-6">

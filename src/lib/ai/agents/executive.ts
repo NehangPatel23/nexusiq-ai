@@ -12,7 +12,7 @@ import {
 } from "./executive-parser";
 import { loadExecutiveSystemPrompt } from "./prompts";
 import { retrieveForAgent } from "./retrieval";
-import { OllamaUnavailableError } from "./run-agent";
+import { OllamaUnavailableError, rethrowOllamaChatFailure } from "./run-agent";
 import type { AgentRunResult, ExecutiveAgentOutput, NormalizedFinding } from "./types";
 import { SPECIALIST_AGENT_TYPES } from "./types";
 
@@ -134,8 +134,8 @@ export async function runExecutiveAgent(
   let rawMarkdown: string;
   try {
     rawMarkdown = await dependencies.ollama.chat(messages, { maxTokens: 3500 });
-  } catch {
-    throw new OllamaUnavailableError();
+  } catch (error) {
+    rethrowOllamaChatFailure(error);
   }
 
   const parsed = parseExecutiveMarkdown(rawMarkdown);
