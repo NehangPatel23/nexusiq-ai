@@ -33,10 +33,10 @@ const navigationCommands = [
   { label: "History", href: "/dashboard/history", icon: BarChart3 },
 ];
 
-const actionCommands = (projectSearchHref: string) => [
+const actionCommands = (projectSearchHref: string, projectChatHref: string) => [
   { label: "Upload to data room", icon: Upload, shortcut: "U", action: "upload-data-room" as const },
   { label: "Run full scan", href: "/dashboard/intelligence", icon: Bot, action: "navigate" as const },
-  { label: "New chat", href: "/dashboard/chat", icon: MessageSquare, action: "navigate" as const },
+  { label: "New chat", href: projectChatHref, icon: MessageSquare, action: "navigate" as const },
   { label: "Search documents", href: projectSearchHref, icon: Search, action: "navigate" as const },
 ];
 
@@ -74,6 +74,9 @@ export function CommandPalette() {
   const projectSearchHref = projectId
     ? `/dashboard/projects/${projectId}/search`
     : "/dashboard/search";
+  const projectChatHref = projectId
+    ? `/dashboard/projects/${projectId}/chat?new=1`
+    : "/dashboard/chat";
 
   const trimmedQuery = paletteQuery.trim();
   const showQuerySearch = trimmedQuery.length >= 2 && Boolean(projectId);
@@ -136,7 +139,7 @@ export function CommandPalette() {
           })}
         </CommandGroup>
         <CommandGroup heading="Actions">
-          {actionCommands(projectSearchHref).map((command) => {
+          {actionCommands(projectSearchHref, projectChatHref).map((command) => {
             const Icon = command.icon;
             const href =
               command.label === "Search documents" && trimmedQuery && projectId

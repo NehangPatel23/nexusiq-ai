@@ -51,9 +51,16 @@ export function ProjectTabPlaceholder({
         </div>
       )}
 
-      <Button variant="outline" asChild>
-        <Link href={`/dashboard/projects/${projectId}`}>Back to overview</Link>
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/projects/${projectId}/chat?q=${encodeURIComponent(`Summarize ${title.toLowerCase()} findings for this project`)}`}>
+            Ask in chat
+          </Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href={`/dashboard/projects/${projectId}`}>Back to overview</Link>
+        </Button>
+      </div>
     </div>
   );
 }

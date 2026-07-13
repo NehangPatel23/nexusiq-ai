@@ -10,6 +10,7 @@ import { createOrganizationAction } from "@/features/organizations/actions";
 import { createProjectAction } from "@/features/projects/actions";
 import { PROJECT_TYPES, PROJECT_TYPE_LABELS } from "@/features/projects/lib/project-types";
 import { createWorkspaceAction } from "@/features/workspaces/actions";
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -313,18 +314,16 @@ export function OnboardingForm() {
 
           <div className="space-y-2">
             <Label htmlFor="onboarding-project-type">Project type</Label>
-            <select
+            <AppSelect
               id="onboarding-project-type"
               value={projectType}
-              onChange={(event) => setProjectType(event.target.value as ProjectType)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              {PROJECT_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {PROJECT_TYPE_LABELS[type]}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => setProjectType(value as ProjectType)}
+              triggerClassName="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              options={PROJECT_TYPES.map((type) => ({
+                value: type,
+                label: PROJECT_TYPE_LABELS[type],
+              }))}
+            />
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">

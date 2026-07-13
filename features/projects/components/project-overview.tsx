@@ -17,6 +17,7 @@ import {
 import { COMMON_DEAL_STATUSES } from "@/features/projects/lib/deal-statuses";
 import { PROJECT_TYPES, PROJECT_TYPE_LABELS } from "@/features/projects/lib/project-types";
 import { getSnapshotDefaultAgent } from "@/features/projects/lib/project-snapshot";
+import { AppSelect } from "@/components/ui/app-select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,9 @@ const AGENT_PLACEHOLDERS = [
   { name: "Risk", score: "—" },
   { name: "Fraud", score: "—" },
 ];
+
+const OVERVIEW_SELECT_TRIGGER_CLASS =
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
 export function ProjectOverview() {
   const { project, setProject, canEdit } = useProjectShell();
@@ -132,18 +136,16 @@ export function ProjectOverview() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="overview-type">Type</Label>
-                  <select
+                  <AppSelect
                     id="overview-type"
                     value={type}
-                    onChange={(event) => setType(event.target.value as ProjectType)}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    {PROJECT_TYPES.map((projectType) => (
-                      <option key={projectType} value={projectType}>
-                        {PROJECT_TYPE_LABELS[projectType]}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(value) => setType(value as ProjectType)}
+                    triggerClassName={OVERVIEW_SELECT_TRIGGER_CLASS}
+                    options={PROJECT_TYPES.map((projectType) => ({
+                      value: projectType,
+                      label: PROJECT_TYPE_LABELS[projectType],
+                    }))}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="overview-target">Target company</Label>
@@ -170,19 +172,19 @@ export function ProjectOverview() {
                 </div>
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="overview-default-agent">Default agent</Label>
-                  <select
+                  <AppSelect
                     id="overview-default-agent"
                     value={defaultAgent}
-                    onChange={(event) => setDefaultAgent(event.target.value as DefaultAgent | "")}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  >
-                    <option value="">No default — choose per session</option>
-                    {DEFAULT_AGENTS.map((agent) => (
-                      <option key={agent} value={agent}>
-                        {DEFAULT_AGENT_LABELS[agent]}
-                      </option>
-                    ))}
-                  </select>
+                    onValueChange={(value) => setDefaultAgent(value as DefaultAgent | "")}
+                    triggerClassName={OVERVIEW_SELECT_TRIGGER_CLASS}
+                    options={[
+                      { value: "", label: "No default — choose per session" },
+                      ...DEFAULT_AGENTS.map((agent) => ({
+                        value: agent,
+                        label: DEFAULT_AGENT_LABELS[agent],
+                      })),
+                    ]}
+                  />
                 </div>
               </div>
               <div className="space-y-2">

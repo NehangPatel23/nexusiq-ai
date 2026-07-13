@@ -7,6 +7,7 @@ import {
   FileSearch,
   FileText,
   Loader2,
+  MessageSquare,
   SearchX,
 } from "lucide-react";
 import Link from "next/link";
@@ -47,7 +48,8 @@ function SearchResultCard({
   projectId: string;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const dataRoomHref = `/dashboard/projects/${projectId}/data-room?doc=${result.documentId}`;
+  const dataRoomHref = `/dashboard/projects/${projectId}/data-room?doc=${result.documentId}&chunk=${result.chunkId}&highlight=${encodeURIComponent(result.snippet.replace(/<[^>]+>/g, "").slice(0, 120))}`;
+  const chatHref = `/dashboard/projects/${projectId}/chat?q=${encodeURIComponent(`Explain this excerpt from ${result.documentName}`)}&context=${encodeURIComponent(result.content.slice(0, 500))}`;
   const plainContent = result.content.trim();
   const canExpand = plainContent.length > SNIPPET_COLLAPSE_CHARS;
 
@@ -131,6 +133,12 @@ function SearchResultCard({
                 {expanded ? "Show less" : "Show more context"}
               </Button>
             )}
+            <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-primary" asChild>
+              <Link href={chatHref}>
+                <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
+                Ask in chat
+              </Link>
+            </Button>
             <Button variant="ghost" size="sm" className="h-8 gap-1.5 px-2 text-primary" asChild>
               <Link href={dataRoomHref}>
                 Open in data room

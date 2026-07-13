@@ -23,6 +23,13 @@ export type OllamaEmbedResult = {
   embeddings: number[][];
 };
 
+export type OllamaChatOptions = {
+  model?: string;
+  format?: "json";
+  maxTokens?: number;
+  signal?: AbortSignal;
+};
+
 function readConfig(): OllamaConfig {
   const baseUrl = (process.env.OLLAMA_BASE_URL ?? "").replace(/\/$/, "");
   return {
@@ -105,7 +112,7 @@ export class OllamaClient {
     }
   }
 
-  async chat(messages: ChatMessage[], options?: { model?: string; format?: "json" }): Promise<string> {
+  async chat(messages: ChatMessage[], options?: OllamaChatOptions): Promise<string> {
     if (!this.config.baseUrl) {
       throw new Error("OLLAMA_BASE_URL is not set");
     }
@@ -118,7 +125,9 @@ export class OllamaClient {
         messages,
         stream: false,
         ...(options?.format === "json" ? { format: "json" } : {}),
+        ...(options?.maxTokens ? { options: { num_predict: options.maxTokens } } : {}),
       }),
+      signal: options?.signal,
     });
 
     if (!response.ok) {
@@ -128,6 +137,72 @@ export class OllamaClient {
 
     const data = (await response.json()) as OllamaChatResult;
     return data.message?.content ?? "";
+  }
+
+  async chatStream(
+    messages: ChatMessage[],
+    onToken: (delta: string) => void | Promise<void>,
+    options?: OllamaChatOptions,
+  ): Promise<string> {
+    if (!this.config.baseUrl) {
+      throw new Error("OLLAMA_BASE_URL is not set");
+    }
+
+    const response = await this.fetchImpl(`${this.config.baseUrl}/api/chat`, {
+      method: "POST",
+      headers: buildHeaders(this.config.apiKey),
+      body: JSON.stringify({
+        model: options?.model ?? this.config.chatModel,
+        messages,
+        stream: true,
+        ...(options?.format === "json" ? { format: "json" } : {}),
+        ...(options?.maxTokens ? { options: { num_predict: options.maxTokens } } : {}),
+      }),
+      signal: options?.signal,
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(`Ollama chat failed (${response.status}): ${body || response.statusText}`);
+    }
+    if (!response.body) {
+      throw new Error("Ollama chat stream returned no body");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let content = "";
+
+    const processLine = async (line: string) => {
+      if (!line.trim()) return;
+      const event = JSON.parse(line) as {
+        message?: { content?: string };
+        error?: string;
+      };
+      if (event.error) {
+        throw new Error(`Ollama chat failed: ${event.error}`);
+      }
+      const delta = event.message?.content ?? "";
+      if (delta) {
+        content += delta;
+        await onToken(delta);
+      }
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      buffer += decoder.decode(value, { stream: !done });
+      const lines = buffer.split(/\r?\n/);
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        await processLine(line);
+      }
+      if (done) break;
+    }
+
+    await processLine(buffer);
+    return content;
   }
 
   async embed(texts: string[], options?: { model?: string }): Promise<number[][]> {
@@ -175,6 +250,10 @@ export function getOllamaClient(options?: { fetchImpl?: typeof fetch }): OllamaC
 /** Test helper — reset singleton between tests. */
 export function resetOllamaClient() {
   defaultClient = null;
+}
+
+export function healthCheck(): Promise<OllamaHealthResult> {
+  return getOllamaClient().healthCheck();
 }
 
 export function __testables() {

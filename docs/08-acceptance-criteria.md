@@ -62,10 +62,10 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Highlighted snippets, < 2s p95
 
 ### 08 Chat
-- [ ] Streaming cited Q&A, confidence badges
-- [ ] Suggested questions, agent selector
-- [ ] Chat history persistence
-- [ ] Insufficient evidence state
+- [x] Streaming cited Q&A, confidence badges
+- [x] Suggested questions, agent selector
+- [x] Chat history persistence
+- [x] Insufficient evidence state
 
 ### 09 Intelligence Agents
 - [ ] Financial: health score, revenue/expense/margin, anomalies, concentration

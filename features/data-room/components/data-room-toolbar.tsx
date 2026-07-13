@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Archive,
   Download,
@@ -14,6 +15,7 @@ import {
 
 import type { DocumentClassification, DocumentStatus, DocumentType } from "@prisma/client";
 
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -92,6 +94,10 @@ export function DataRoomToolbar({
   onTogglePreviewPanel,
   breadcrumb,
 }: DataRoomToolbarProps) {
+  const [bulkClassification, setBulkClassification] = useState("");
+
+  const toolbarSelectClass = "h-9 rounded-md border border-input bg-background px-2 text-sm";
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
@@ -140,21 +146,22 @@ export function DataRoomToolbar({
           )}
         </div>
 
-        <select
+        <AppSelect
           value={statusFilter}
-          onChange={(e) =>
-            onStatusFilterChange(e.target.value as DocumentStatus | "all" | "needs_attention")
+          onValueChange={(value) =>
+            onStatusFilterChange(value as DocumentStatus | "all" | "needs_attention")
           }
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          triggerClassName={toolbarSelectClass}
           aria-label="Filter by status"
-        >
-          <option value="all">All statuses</option>
-          <option value="needs_attention">Needs attention</option>
-          <option value="PENDING">Pending</option>
-          <option value="PROCESSING">Processing</option>
-          <option value="READY">Ready</option>
-          <option value="FAILED">Failed</option>
-        </select>
+          options={[
+            { value: "all", label: "All statuses" },
+            { value: "needs_attention", label: "Needs attention" },
+            { value: "PENDING", label: "Pending" },
+            { value: "PROCESSING", label: "Processing" },
+            { value: "READY", label: "Ready" },
+            { value: "FAILED", label: "Failed" },
+          ]}
+        />
 
         {(stats.failed ?? 0) > 0 && onRetryFailed && (
           <Button type="button" variant="outline" size="sm" onClick={onRetryFailed}>
@@ -162,71 +169,67 @@ export function DataRoomToolbar({
           </Button>
         )}
 
-        <select
+        <AppSelect
           value={typeFilter}
-          onChange={(e) => onTypeFilterChange(e.target.value as DocumentType | "all")}
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          onValueChange={(value) => onTypeFilterChange(value as DocumentType | "all")}
+          triggerClassName={toolbarSelectClass}
           aria-label="Filter by type"
-        >
-          <option value="all">All types</option>
-          <option value="PDF">PDF</option>
-          <option value="DOCX">DOCX</option>
-          <option value="XLSX">XLSX</option>
-          <option value="CSV">CSV</option>
-          <option value="PPTX">PPTX</option>
-          <option value="MD">MD</option>
-          <option value="TXT">TXT</option>
-          <option value="IMAGE">Image</option>
-        </select>
+          options={[
+            { value: "all", label: "All types" },
+            { value: "PDF", label: "PDF" },
+            { value: "DOCX", label: "DOCX" },
+            { value: "XLSX", label: "XLSX" },
+            { value: "CSV", label: "CSV" },
+            { value: "PPTX", label: "PPTX" },
+            { value: "MD", label: "MD" },
+            { value: "TXT", label: "TXT" },
+            { value: "IMAGE", label: "Image" },
+          ]}
+        />
 
-        <select
+        <AppSelect
           value={classificationFilter}
-          onChange={(e) =>
+          onValueChange={(value) =>
             onClassificationFilterChange(
-              e.target.value as DocumentClassification | "all" | "unclassified",
+              value as DocumentClassification | "all" | "unclassified",
             )
           }
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          triggerClassName={toolbarSelectClass}
           aria-label="Filter by classification"
-        >
-          <option value="all">All classes</option>
-          <option value="unclassified">Unclassified</option>
-          {DOCUMENT_CLASSIFICATIONS.map((c) => (
-            <option key={c} value={c}>
-              {getClassificationLabel(c)}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "all", label: "All classes" },
+            { value: "unclassified", label: "Unclassified" },
+            ...DOCUMENT_CLASSIFICATIONS.map((c) => ({
+              value: c,
+              label: getClassificationLabel(c) ?? c,
+            })),
+          ]}
+        />
 
-        <select
+        <AppSelect
           value={tagFilter}
-          onChange={(e) => onTagFilterChange(e.target.value)}
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          onValueChange={onTagFilterChange}
+          triggerClassName={toolbarSelectClass}
           aria-label="Filter by tag"
-        >
-          <option value="">All tags</option>
-          {availableTags.map((tag) => (
-            <option key={tag} value={tag}>
-              {tag}
-            </option>
-          ))}
-        </select>
+          options={[
+            { value: "", label: "All tags" },
+            ...availableTags.map((tag) => ({ value: tag, label: tag })),
+          ]}
+        />
 
-        <select
+        <AppSelect
           value={`${sortKey}-${sortDirection}`}
-          onChange={(e) => {
-            const [key] = e.target.value.split("-") as [DocumentSortKey, SortDirection];
+          onValueChange={(value) => {
+            const [key] = value.split("-") as [DocumentSortKey, SortDirection];
             onSortChange(key);
           }}
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+          triggerClassName={toolbarSelectClass}
           aria-label="Sort documents"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={`${opt.value}-${sortDirection}`}>
-              Sort: {opt.label} ({sortDirection === "asc" ? "↑" : "↓"})
-            </option>
-          ))}
-        </select>
+          options={SORT_OPTIONS.map((opt) => ({
+            value: `${opt.value}-${sortDirection}`,
+            label: `Sort: ${opt.label} (${sortDirection === "asc" ? "↑" : "↓"})`,
+          }))}
+        />
 
         <Button type="button" variant="outline" size="sm" onClick={onExportCsv}>
           <Download className="size-4" />
@@ -278,24 +281,24 @@ export function DataRoomToolbar({
           )}
           {canUpload && onApplyBulkClassification && (
             <div className="flex items-center gap-2">
-              <select
+              <AppSelect
                 id="bulk-classification"
-                className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                defaultValue=""
-                aria-label="Bulk classification"
-                onChange={(e) => {
-                  const value = e.target.value as DocumentClassification;
-                  if (value) onApplyBulkClassification(value);
-                  e.target.value = "";
+                value={bulkClassification}
+                onValueChange={(value) => {
+                  if (value) onApplyBulkClassification(value as DocumentClassification);
+                  setBulkClassification("");
                 }}
-              >
-                <option value="">Classify as…</option>
-                {DOCUMENT_CLASSIFICATIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {getClassificationLabel(c)}
-                  </option>
-                ))}
-              </select>
+                triggerClassName="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                placeholder="Classify as…"
+                aria-label="Bulk classification"
+                options={[
+                  { value: "", label: "Classify as…" },
+                  ...DOCUMENT_CLASSIFICATIONS.map((c) => ({
+                    value: c,
+                    label: getClassificationLabel(c) ?? c,
+                  })),
+                ]}
+              />
             </div>
           )}
           {canDelete && onBulkDelete && (

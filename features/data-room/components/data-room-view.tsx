@@ -127,6 +127,7 @@ export function DataRoomView({
   const { canEdit } = useProjectShell();
   const searchParams = useSearchParams();
   const deepLinkHandled = useRef(false);
+  const previewHighlight = searchParams.get("highlight");
   const processingWasActiveRef = useRef(false);
   const processingToastIdRef = useRef<string | number | null>(null);
   const documentSnapshotRef = useRef(snapshotDocuments(initialDocuments));
@@ -1205,6 +1206,7 @@ export function DataRoomView({
               document={selectedDoc}
               canEditTags={canEdit && canUpload}
               canEdit={canEdit && canUpload}
+              highlightText={previewHighlight}
               onExpand={() => setPreviewModalOpen(true)}
               onClose={() => {
                 setSelectedDoc(null);
@@ -1492,6 +1494,7 @@ export function DataRoomView({
         document={selectedDoc}
         open={previewModalOpen && Boolean(selectedDoc)}
         onOpenChange={setPreviewModalOpen}
+        highlightText={previewHighlight}
         canEdit={canEdit && canUpload}
         canEditTags={canEdit && canUpload}
         canDelete={canDelete}

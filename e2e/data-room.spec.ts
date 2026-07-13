@@ -91,11 +91,12 @@ test.describe("data room flow", () => {
 
     await expect(page.getByText("README.md")).toBeVisible({ timeout: 15_000 });
 
-    await page.getByRole("button", { name: "README.md" }).click();
+    await page.getByRole("button", { name: "README.md", exact: true }).click();
     await page.getByRole("button", { name: "Expand preview" }).click();
-    await expect(page.getByRole("dialog", { name: /README\.md/i })).toBeVisible({
+    const fullPreview = page.getByRole("dialog", { name: /README\.md/i });
+    await expect(fullPreview).toBeVisible({
       timeout: 10_000,
     });
-    await expect(page.getByText("Board Minutes")).toBeVisible();
+    await expect(fullPreview.getByRole("heading", { name: "Board Minutes" })).toBeVisible();
   });
 });

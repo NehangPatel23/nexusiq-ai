@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -109,33 +110,29 @@ export function VersionCompareDialog({
             <div className="flex flex-wrap gap-3">
               <label className="flex items-center gap-2 text-sm">
                 Left
-                <select
-                  value={leftVersion ?? ""}
-                  onChange={(e) => setLeftVersion(Number.parseInt(e.target.value, 10))}
-                  className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                <AppSelect
+                  value={leftVersion !== null ? String(leftVersion) : ""}
+                  onValueChange={(value) => setLeftVersion(Number.parseInt(value, 10))}
+                  triggerClassName="h-8 rounded-md border border-input bg-background px-2 text-sm"
                   aria-label="Left version"
-                >
-                  {versionOptions.map((v) => (
-                    <option key={v.version} value={v.version}>
-                      v{v.version} ({formatFileSize(v.fileSize)})
-                    </option>
-                  ))}
-                </select>
+                  options={versionOptions.map((v) => ({
+                    value: String(v.version),
+                    label: `v${v.version} (${formatFileSize(v.fileSize)})`,
+                  }))}
+                />
               </label>
               <label className="flex items-center gap-2 text-sm">
                 Right
-                <select
-                  value={rightVersion ?? ""}
-                  onChange={(e) => setRightVersion(Number.parseInt(e.target.value, 10))}
-                  className="h-8 rounded-md border border-input bg-background px-2 text-sm"
+                <AppSelect
+                  value={rightVersion !== null ? String(rightVersion) : ""}
+                  onValueChange={(value) => setRightVersion(Number.parseInt(value, 10))}
+                  triggerClassName="h-8 rounded-md border border-input bg-background px-2 text-sm"
                   aria-label="Right version"
-                >
-                  {versionOptions.map((v) => (
-                    <option key={v.version} value={v.version}>
-                      v{v.version} ({formatFileSize(v.fileSize)})
-                    </option>
-                  ))}
-                </select>
+                  options={versionOptions.map((v) => ({
+                    value: String(v.version),
+                    label: `v${v.version} (${formatFileSize(v.fileSize)})`,
+                  }))}
+                />
               </label>
             </div>
 

@@ -9,6 +9,7 @@ import {
   WorkspaceFormDialog,
   type WorkspaceFormValues,
 } from "@/features/workspaces/components/workspace-form-dialog";
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useListKeyboardShortcuts } from "@/hooks/use-list-keyboard-shortcuts";
@@ -159,15 +160,16 @@ export function WorkspacesList({
             aria-label="Search workspaces"
           />
         </div>
-        <select
+        <AppSelect
           value={sortBy}
-          onChange={(event) => setSortBy(event.target.value as "name" | "slug")}
-          className="flex h-10 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+          onValueChange={(value) => setSortBy(value as "name" | "slug")}
+          triggerClassName="flex h-10 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
           aria-label="Sort workspaces"
-        >
-          <option value="name">Name A–Z</option>
-          <option value="slug">Slug A–Z</option>
-        </select>
+          options={[
+            { value: "name", label: "Name A–Z" },
+            { value: "slug", label: "Slug A–Z" },
+          ]}
+        />
       </div>
 
       <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3" role="list">

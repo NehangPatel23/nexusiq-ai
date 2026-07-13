@@ -19,6 +19,8 @@ enum TaskPriority { LOW MEDIUM HIGH URGENT CRITICAL }
 enum ContradictionStatus { OPEN ACKNOWLEDGED RESOLVED DISMISSED }
 enum MissingItemStatus { OPEN REQUESTED RESOLVED NOT_APPLICABLE }
 enum AgentType { FINANCIAL LEGAL COMPLIANCE RISK FRAUD EXECUTIVE CONSENSUS }
+enum ChatAgentType { GENERAL FINANCIAL LEGAL COMPLIANCE RISK FRAUD }
+enum ChatMessageRole { USER ASSISTANT SYSTEM }
 enum ConfidenceLevel { HIGH MEDIUM LOW INSUFFICIENT }
 enum NotificationType { PROCESSING_COMPLETE RISK_FOUND TASK_ASSIGNED MENTION SYSTEM }
 enum ReportType { EXECUTIVE BOARD INVESTMENT_MEMO AUDIT RISK_REGISTER ACTION_PLAN PPTX }
@@ -132,8 +134,10 @@ enum AuditAction { CREATE UPDATE DELETE LOGIN LOGOUT UPLOAD PROCESS SEARCH CHAT 
 ## User Features
 
 ### Chat, ChatMessage
-- Chat: id, projectId, userId, title?, agentType?, createdAt, updatedAt
-- ChatMessage: id, chatId, role, content, citations (Json?), confidence?, createdAt
+- Chat: id, projectId, userId, title?, agentType (ChatAgentType, default GENERAL), pinned, createdAt, updatedAt
+- ChatMessage: id, chatId, role (ChatMessageRole), content, citations (Json?), confidence?, createdAt
+- Chat `@@index([projectId, userId, updatedAt])`; ChatMessage `@@index([chatId, createdAt])`
+- Both cascade with their parent; chat access is owner-scoped within the project organization
 
 ### SavedSearch
 - id, projectId, userId, name, query, filters (Json), mode, createdAt

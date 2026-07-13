@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { createWorkspaceAction, updateWorkspaceAction } from "@/features/workspaces/actions";
 import { slugifyName } from "@/features/workspaces/lib/slug";
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -196,21 +197,17 @@ export function WorkspaceFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="workspace-team">Team (optional)</Label>
-            <select
+            <AppSelect
               id="workspace-team"
-              name="teamId"
               value={teamId}
-              onChange={(event) => setTeamId(event.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              onValueChange={setTeamId}
+              triggerClassName="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-invalid={!!fieldErrors.teamId}
-            >
-              <option value="">No team</option>
-              {teams.map((team) => (
-                <option key={team.id} value={team.id}>
-                  {team.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "No team" },
+                ...teams.map((team) => ({ value: team.id, label: team.name })),
+              ]}
+            />
             {fieldErrors.teamId && (
               <p className="text-sm text-destructive">{fieldErrors.teamId[0]}</p>
             )}

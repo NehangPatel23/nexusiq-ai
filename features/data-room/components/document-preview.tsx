@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import type { DocumentClassification } from "@prisma/client";
 
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TagsInput } from "@/features/projects/components/tags-input";
@@ -28,6 +29,7 @@ interface DocumentPreviewProps {
   onClassificationChange?: (doc: DataRoomDocument, classification: DocumentClassification | null) => Promise<void>;
   onRename?: (doc: DataRoomDocument, name: string) => Promise<void>;
   onViewDuplicateOriginal?: (documentId: string) => void;
+  highlightText?: string | null;
   className?: string;
 }
 
@@ -37,6 +39,7 @@ export function DocumentPreview({
   canEdit,
   onClose,
   onExpand,
+  highlightText = null,
   onDownload,
   onTagsChange,
   onClassificationChange,
@@ -148,6 +151,7 @@ export function DocumentPreview({
           document={document}
           previewUrl={previewUrl}
           onDownload={() => onDownload(document)}
+          highlightText={highlightText}
         />
       </div>
 
@@ -201,25 +205,24 @@ export function DocumentPreview({
             <p className="mb-2 text-xs font-medium uppercase tracking-wider text-muted-foreground">
               Classification
             </p>
-            <select
+            <AppSelect
               value={document.classification ?? ""}
-              onChange={(e) => {
-                const value = e.target.value;
+              onValueChange={(value) => {
                 void onClassificationChange(
                   document,
                   value ? (value as DocumentClassification) : null,
                 );
               }}
-              className="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              triggerClassName="flex h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
               aria-label="Document classification"
-            >
-              <option value="">Unclassified</option>
-              {DOCUMENT_CLASSIFICATIONS.map((c) => (
-                <option key={c} value={c}>
-                  {getClassificationLabel(c)}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: "", label: "Unclassified" },
+                ...DOCUMENT_CLASSIFICATIONS.map((c) => ({
+                  value: c,
+                  label: getClassificationLabel(c) ?? c,
+                })),
+              ]}
+            />
           </div>
         )}
 

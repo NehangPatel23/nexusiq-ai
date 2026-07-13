@@ -17,6 +17,7 @@ interface DocumentPreviewContentProps {
   className?: string;
   /** Larger typography / min heights for modal view */
   expanded?: boolean;
+  highlightText?: string | null;
 }
 
 export function useDocumentPreviewText(
@@ -140,12 +141,34 @@ function CsvPreview({ content, expanded }: { content: string; expanded?: boolean
   );
 }
 
+function highlightPlainText(content: string, highlightText?: string | null) {
+  if (!highlightText?.trim()) return content;
+  const needle = highlightText.trim().slice(0, 120);
+  const index = content.indexOf(needle);
+  if (index < 0) return content;
+  return `${content.slice(0, index)}[[[HIGHLIGHT_START]]]${needle}[[[HIGHLIGHT_END]]]${content.slice(index + needle.length)}`;
+}
+
+function renderHighlightedText(content: string) {
+  const parts = content.split(/\[\[\[HIGHLIGHT_START\]\]\]|\[\[\[HIGHLIGHT_END\]\]\]/g);
+  return parts.map((part, index) =>
+    index % 2 === 1 ? (
+      <mark key={index} className="rounded-sm bg-primary/25 px-1 text-foreground">
+        {part}
+      </mark>
+    ) : (
+      <span key={index}>{part}</span>
+    ),
+  );
+}
+
 export function DocumentPreviewContent({
   document,
   previewUrl,
   onDownload,
   className,
   expanded = false,
+  highlightText = null,
 }: DocumentPreviewContentProps) {
   const { text, error, loading, mode } = useDocumentPreviewText(document, previewUrl);
   const minHeight = expanded ? "min-h-[420px]" : "min-h-[200px]";
@@ -195,7 +218,7 @@ export function DocumentPreviewContent({
               expanded ? "text-sm" : "text-xs",
             )}
           >
-            {text}
+            {renderHighlightedText(highlightPlainText(text, highlightText))}
           </pre>
         )}
         {text !== null && mode === "text" && (
@@ -205,7 +228,7 @@ export function DocumentPreviewContent({
               expanded ? "text-sm" : "text-xs",
             )}
           >
-            {text}
+            {renderHighlightedText(highlightPlainText(text, highlightText))}
           </pre>
         )}
       </div>

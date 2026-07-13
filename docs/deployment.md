@@ -36,6 +36,8 @@ Worker VPS (or Mac during dev) → polls PENDING documents
 
 **Smart search (slice 07):** Keyword mode works without Ollama (Postgres FTS). Semantic and hybrid modes require `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel) to embed the query; if Ollama is down, hybrid auto-falls back to keyword with a warning.
 
+**Interactive chat (slice 08):** Unlike keyword search, chat generation always requires reachable Ollama. Vercel must use the public HTTPS Ollama endpoint and server-only `OLLAMA_API_KEY`; localhost development uses `http://localhost:11434`. An outage returns `503 OLLAMA_UNAVAILABLE`, while questions with no retrieved evidence return a persisted `INSUFFICIENT` answer without calling Ollama.
+
 **Worker env (VPS):**
 
 ```bash
@@ -58,6 +60,8 @@ Local development still uses Docker Compose (`docker compose up -d db`) and `./s
 **Status:** Blocked on Oracle Cloud instance provisioning. Track checklist in [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md).
 
 Until OCI is live, use **localhost**: `ENABLE_INLINE_PROCESSING=true` or `pnpm worker:process` with local Ollama. Vercel uploads stay `PENDING` without a worker.
+
+**Mac interim setup (before OCI):** Full runbook for the Mac worker bridge + Cloudflare tunnel so Vercel can reach Ollama — [mac-bridge-tunnel.md](./mac-bridge-tunnel.md).
 
 ### Recommended shape (Always Free)
 
@@ -299,7 +303,7 @@ If `databaseUrl: false` → `DATABASE_URL` missing on Vercel. If `db: "error"` �
 | `STORAGE_PATH` | `./storage` | Not used on Vercel (ephemeral) |
 | `NEXT_PUBLIC_SUPABASE_*` | Optional | Set when using Storage |
 | `SUPABASE_SERVICE_ROLE_KEY` | Optional | Server uploads / signed URLs |
-| `OLLAMA_BASE_URL` | `http://localhost:11434` | Unused until AI slices |
+| `OLLAMA_BASE_URL` | `http://localhost:11434` | Public HTTPS Ollama endpoint (required for chat) |
 
 ---
 
@@ -404,10 +408,11 @@ Neon does **not** include file storage—you would need a separate service for d
 - Workspaces (CRUD, soft delete, restore, workspace cards with project counts)
 - Projects (CRUD, types, tags, deal status, pin/duplicate/bulk delete, 13-tab project shell)
 - **Data room** (folders, upload, preview, versions, tags, trash, share links, audit export)
-- Placeholder tabs: Intelligence, Chat, Reports, Timeline, Graph, etc.
+- **Smart search** (keyword plus Ollama-backed hybrid/semantic modes)
+- **Interactive chat** (project-scoped streaming, citations, confidence, and history; requires public Ollama)
+- Placeholder tabs: Intelligence, Reports, Timeline, Graph, etc.
 
 ## Deferred
 
 - **OCI worker VPS** — document processing on Vercel (Slice 06 prod path). Checklist: [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md)
 - **Public Ollama HTTPS** — chat/agents on Vercel (slices 08+)
-- Full-text search across document content (Slice 07 — in progress on localhost)
