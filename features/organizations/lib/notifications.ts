@@ -127,3 +127,73 @@ export async function deleteInviteNotifications(token: string) {
     where: { link: `/invite/${token}` },
   });
 }
+
+export type BulkNotificationAction = "read" | "archive" | "unarchive" | "delete";
+
+export async function bulkUpdateNotifications(
+  userId: string,
+  ids: string[],
+  action: BulkNotificationAction,
+) {
+  const uniqueIds = [...new Set(ids.filter(Boolean))];
+  if (uniqueIds.length === 0) {
+    return { count: 0 };
+  }
+
+  const owned = await prisma.notification.findMany({
+    where: { userId, id: { in: uniqueIds } },
+    select: { id: true, readAt: true, archivedAt: true },
+  });
+  if (owned.length === 0) {
+    return { count: 0 };
+  }
+
+  if (action === "delete") {
+    const result = await prisma.notification.deleteMany({
+      where: { userId, id: { in: owned.map((item) => item.id) } },
+    });
+    return { count: result.count };
+  }
+
+  if (action === "read") {
+    const unreadIds = owned
+      .filter((item) => item.archivedAt === null && item.readAt === null)
+      .map((item) => item.id);
+    if (unreadIds.length === 0) return { count: 0 };
+    const result = await prisma.notification.updateMany({
+      where: { userId, id: { in: unreadIds } },
+      data: { readAt: new Date() },
+    });
+    return { count: result.count };
+  }
+
+  if (action === "archive") {
+    const inboxIds = owned.filter((item) => item.archivedAt === null).map((item) => item.id);
+    if (inboxIds.length === 0) return { count: 0 };
+    const now = new Date();
+    // Mark unread as read in the same pass, then archive.
+    await prisma.notification.updateMany({
+      where: { userId, id: { in: inboxIds }, readAt: null },
+      data: { readAt: now },
+    });
+    const result = await prisma.notification.updateMany({
+      where: { userId, id: { in: inboxIds }, archivedAt: null },
+      data: { archivedAt: now },
+    });
+    return { count: result.count };
+  }
+
+  if (action === "unarchive") {
+    const archivedIds = owned
+      .filter((item) => item.archivedAt !== null)
+      .map((item) => item.id);
+    if (archivedIds.length === 0) return { count: 0 };
+    const result = await prisma.notification.updateMany({
+      where: { userId, id: { in: archivedIds } },
+      data: { archivedAt: null },
+    });
+    return { count: result.count };
+  }
+
+  return { count: 0 };
+}

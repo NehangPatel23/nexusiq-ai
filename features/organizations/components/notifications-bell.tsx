@@ -182,6 +182,7 @@ export function NotificationsBell() {
           <Link
             href="/dashboard/notifications"
             className="text-xs font-normal text-primary hover:underline"
+            onClick={() => setOpen(false)}
           >
             View all
           </Link>
@@ -204,7 +205,15 @@ export function NotificationsBell() {
           <DropdownMenuItem
             key={notification.id}
             className="flex cursor-pointer flex-col items-start gap-2 py-3"
-            onSelect={() => void markRead(notification)}
+            onSelect={(event) => {
+              // Keep the menu open when archive/delete buttons are used.
+              const target = event.target as HTMLElement | null;
+              if (target?.closest("[data-notification-action]")) {
+                event.preventDefault();
+                return;
+              }
+              void markRead(notification);
+            }}
           >
             <div className="flex w-full items-start justify-between gap-2">
               <span className="text-sm font-medium">{notification.title}</span>
@@ -218,6 +227,7 @@ export function NotificationsBell() {
                 type="button"
                 variant="ghost"
                 size="icon"
+                data-notification-action="archive"
                 className="h-7 w-7 text-muted-foreground"
                 disabled={pendingId === notification.id}
                 aria-label={`Archive ${notification.title}`}
@@ -226,7 +236,10 @@ export function NotificationsBell() {
                   event.stopPropagation();
                   void archiveNotification(notification);
                 }}
-                onPointerDown={(event) => event.stopPropagation()}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
               >
                 <Archive className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>
@@ -234,6 +247,7 @@ export function NotificationsBell() {
                 type="button"
                 variant="ghost"
                 size="icon"
+                data-notification-action="delete"
                 className="h-7 w-7 text-muted-foreground hover:text-destructive"
                 disabled={pendingId === notification.id}
                 aria-label={`Delete ${notification.title}`}
@@ -242,7 +256,10 @@ export function NotificationsBell() {
                   event.stopPropagation();
                   void deleteNotification(notification);
                 }}
-                onPointerDown={(event) => event.stopPropagation()}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               </Button>

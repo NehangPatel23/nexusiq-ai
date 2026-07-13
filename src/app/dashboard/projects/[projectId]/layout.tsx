@@ -17,6 +17,7 @@ interface LayoutProps {
 
 export async function generateMetadata({ params }: LayoutProps): Promise<Metadata> {
   const { projectId } = await params;
+  // Reuses the same request-scoped cache as the layout body.
   const project = await getProjectById(projectId);
   return {
     title: project ? project.name : "Project",

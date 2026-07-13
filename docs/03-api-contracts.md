@@ -206,6 +206,7 @@ Request: `{ scenarioName, parameters: { revenueChange?: number, customerLoss?: s
 | PATCH | `/api/notifications/[id]/archive` | Archive notification |
 | POST | `/api/notifications/[id]/unarchive` | Restore archived notification to inbox |
 | DELETE | `/api/notifications/[id]` | Permanently delete notification |
+| POST | `/api/notifications/bulk` | Bulk read / archive / unarchive / delete (`{ action, ids }`) |
 | GET | `/api/organizations/[orgId]/audit` | Audit log |
 | GET | `/api/organizations/[orgId]/compare` | Compare projects |
 

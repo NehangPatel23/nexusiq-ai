@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createUser } from "@/features/auth/lib/users";
 import {
   archiveNotification,
+  bulkUpdateNotifications,
   countUnreadNotifications,
   createNotification,
   deleteNotification,
@@ -92,5 +93,30 @@ describe("notifications archive and delete", () => {
     expect(await archiveNotification(note.id, "missing-user")).toBeNull();
     expect(await deleteNotification(note.id, "missing-user")).toBeNull();
     expect(await archiveNotification(note.id, userId)).toBeTruthy();
+  });
+
+  it("supports bulk archive and delete for owned notifications only", async () => {
+    const a = await createNotification({
+      userId,
+      type: "SYSTEM",
+      title: "Bulk A",
+      body: "One",
+    });
+    const b = await createNotification({
+      userId,
+      type: "SYSTEM",
+      title: "Bulk B",
+      body: "Two",
+    });
+
+    const archived = await bulkUpdateNotifications(userId, [a.id, b.id], "archive");
+    expect(archived.count).toBe(2);
+    expect((await listUserNotifications(userId, { archived: true })).length).toBeGreaterThanOrEqual(2);
+
+    const deleted = await bulkUpdateNotifications(userId, [a.id, b.id], "delete");
+    expect(deleted.count).toBe(2);
+    expect(
+      (await listUserNotifications(userId, { archived: true })).some((item) => item.id === a.id),
+    ).toBe(false);
   });
 });

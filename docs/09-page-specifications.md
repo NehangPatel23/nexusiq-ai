@@ -213,6 +213,7 @@ Each agent tab:
 - Mark read, mark all read
 - Archive to Archived tab; restore from Archived
 - Permanently delete (with confirm)
+- Multi-select with bulk mark read / archive / restore / delete
 
 ---
 

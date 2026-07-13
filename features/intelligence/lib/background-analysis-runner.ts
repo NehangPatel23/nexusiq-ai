@@ -91,6 +91,10 @@ type Listener = (snapshot: BackgroundAnalysisSnapshot, event: BackgroundAnalysis
 
 const jobs = new Map<string, JobState>();
 const listeners = new Map<string, Set<Listener>>();
+const pendingEmits = new Map<
+  string,
+  { snapshot: BackgroundAnalysisSnapshot; event: BackgroundAnalysisEvent | null; timer: ReturnType<typeof setTimeout> | null }
+>();
 
 function idleSnapshot(projectId: string): BackgroundAnalysisSnapshot {
   return {
@@ -119,20 +123,56 @@ function getOrCreateJob(projectId: string): JobState {
   return created;
 }
 
+function flushEmit(projectId: string) {
+  const pending = pendingEmits.get(projectId);
+  if (!pending) return;
+  pendingEmits.delete(projectId);
+  if (pending.timer) clearTimeout(pending.timer);
+
+  const projectListeners = listeners.get(projectId);
+  if (!projectListeners || projectListeners.size === 0) return;
+  const listenersSnapshot = [...projectListeners];
+  // Yield so click handlers / Link navigations run before progress UI work.
+  queueMicrotask(() => {
+    for (const listener of listenersSnapshot) {
+      listener(pending.snapshot, pending.event);
+    }
+  });
+}
+
 function emit(projectId: string, event: BackgroundAnalysisEvent | null) {
   const job = getOrCreateJob(projectId);
-  // `patch` already applied updates (including lastEvent). Do not clone again — that would
-  // notify subscribers twice for one step and jam the UI thread.
   const snapshot = job.snapshot;
   const projectListeners = listeners.get(projectId);
   if (!projectListeners || projectListeners.size === 0) return;
-  // Yield to the browser so click/navigation handlers are not starved by progress updates.
-  const listenersSnapshot = [...projectListeners];
-  queueMicrotask(() => {
-    for (const listener of listenersSnapshot) {
-      listener(snapshot, event);
-    }
-  });
+
+  // Critical transitions flush immediately; progress ticks are coalesced.
+  const urgent =
+    !event ||
+    event.type === "started" ||
+    event.type === "finished" ||
+    event.type === "agent_completed" ||
+    event.type === "agent_failed" ||
+    event.type === "consensus_completed" ||
+    event.type === "consensus_failed";
+
+  const existing = pendingEmits.get(projectId);
+  if (existing?.timer) clearTimeout(existing.timer);
+
+  if (urgent) {
+    pendingEmits.set(projectId, { snapshot, event, timer: null });
+    flushEmit(projectId);
+    return;
+  }
+
+  pendingEmits.set(
+    projectId,
+    {
+      snapshot,
+      event,
+      timer: setTimeout(() => flushEmit(projectId), 200),
+    },
+  );
 }
 
 function patch(
