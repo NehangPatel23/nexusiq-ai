@@ -6,11 +6,16 @@ import {
   getLatestCompletedRunsByAgent,
   listAgentRuns,
 } from "@/features/intelligence/lib/agent-runs";
+import {
+  getLatestConsensusRun,
+  listConsensusRuns,
+} from "@/features/intelligence/lib/consensus-runs";
 import { countOpenFindingsBySeverityForProject } from "@/features/intelligence/lib/findings-stats";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
 import { getProjectById } from "@/features/projects/lib/projects";
 import { INTELLIGENCE_AGENT_TYPES } from "@/lib/ai/agents/types";
 import { getSession } from "@/lib/session";
+import type { AgentType } from "@prisma/client";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
@@ -30,14 +35,18 @@ export default async function IntelligencePage({ params }: PageProps) {
   );
   if (!membership) redirect("/dashboard/projects");
 
-  const [runs, latestByAgent, initialRiskSummary] = await Promise.all([
-    listAgentRuns(projectId, { limit: 30 }),
-    getLatestCompletedRunsByAgent(projectId),
-    countOpenFindingsBySeverityForProject(projectId),
-  ]);
+  const [runs, latestByAgent, initialRiskSummary, initialConsensus, initialConsensusHistory] =
+    await Promise.all([
+      listAgentRuns(projectId, { limit: 30 }),
+      getLatestCompletedRunsByAgent(projectId),
+      countOpenFindingsBySeverityForProject(projectId),
+      getLatestConsensusRun(projectId),
+      listConsensusRuns(projectId, { limit: 20 }),
+    ]);
 
+  const agentTypesToHydrate: AgentType[] = [...INTELLIGENCE_AGENT_TYPES, "EXECUTIVE"];
   const initialDetailsEntries = await Promise.all(
-    INTELLIGENCE_AGENT_TYPES.map(async (agentType) => {
+    agentTypesToHydrate.map(async (agentType) => {
       const latest = latestByAgent.get(agentType);
       if (!latest) return [agentType, undefined] as const;
       const detail = await getAgentRunWithFindings(latest.id);
@@ -56,6 +65,8 @@ export default async function IntelligencePage({ params }: PageProps) {
       initialRuns={runs}
       initialDetails={initialDetails}
       initialRiskSummary={initialRiskSummary}
+      initialConsensus={initialConsensus}
+      initialConsensusHistory={initialConsensusHistory}
     />
   );
 }

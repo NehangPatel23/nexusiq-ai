@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import type { AgentType, ProjectType } from "@prisma/client";
+import type { AgentType, ConfidenceLevel, ProjectType } from "@prisma/client";
 
 import { ProcessingProgress } from "@/features/projects/components/processing-progress";
 import { TagsInput } from "@/features/projects/components/tags-input";
@@ -32,6 +32,7 @@ const AGENT_LABELS: Record<AgentType, string> = {
   COMPLIANCE: "Compliance",
   RISK: "Risk",
   FRAUD: "Fraud",
+  EXECUTIVE: "Executive",
 };
 
 const OVERVIEW_AGENTS: AgentType[] = ["FINANCIAL", "LEGAL", "COMPLIANCE", "RISK", "FRAUD"];
@@ -39,12 +40,33 @@ const OVERVIEW_AGENTS: AgentType[] = ["FINANCIAL", "LEGAL", "COMPLIANCE", "RISK"
 const OVERVIEW_SELECT_TRIGGER_CLASS =
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
+export type OverviewConsensusSummary = {
+  id: string;
+  finalRecommendation: string;
+  decisionConfidence: ConfidenceLevel;
+  createdAt: string;
+  conflictCount: number;
+  agreementCount: number;
+};
+
 type ProjectOverviewProps = {
   agentScores?: Partial<Record<AgentType, number | null>>;
   enterpriseRiskScore?: number | null;
+  latestConsensus?: OverviewConsensusSummary | null;
 };
 
-export function ProjectOverview({ agentScores = {}, enterpriseRiskScore = null }: ProjectOverviewProps) {
+function confidenceBadgeVariant(confidence: ConfidenceLevel) {
+  if (confidence === "HIGH") return "secondary" as const;
+  if (confidence === "MEDIUM") return "outline" as const;
+  if (confidence === "LOW") return "destructive" as const;
+  return "outline" as const;
+}
+
+export function ProjectOverview({
+  agentScores = {},
+  enterpriseRiskScore = null,
+  latestConsensus = null,
+}: ProjectOverviewProps) {
   const { project, setProject, canEdit } = useProjectShell();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(project.name);
@@ -107,6 +129,9 @@ export function ProjectOverview({ agentScores = {}, enterpriseRiskScore = null }
   }
 
   const displayDefaultAgent = getSnapshotDefaultAgent(project);
+  const consensusHref = `/dashboard/projects/${project.id}/intelligence?tab=consensus${
+    latestConsensus ? `&consensus=${latestConsensus.id}` : ""
+  }`;
 
   return (
     <div className="space-y-6">
@@ -312,17 +337,53 @@ export function ProjectOverview({ agentScores = {}, enterpriseRiskScore = null }
         </div>
       </div>
 
-      <Card className="border-dashed border-border/60 bg-transparent">
-        <CardHeader>
-          <CardTitle className="text-base">Consensus recommendation</CardTitle>
-          <CardDescription>
-            Run intelligence agents to generate a consensus recommendation with cited evidence.
-          </CardDescription>
+      <Card
+        className={
+          latestConsensus
+            ? "border-primary/20 bg-primary/5"
+            : "border-dashed border-border/60 bg-transparent"
+        }
+      >
+        <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Consensus recommendation</CardTitle>
+            <CardDescription>
+              {latestConsensus
+                ? `Synthesized ${new Date(latestConsensus.createdAt).toLocaleString()}`
+                : "Run intelligence agents to generate a consensus recommendation with cited evidence."}
+            </CardDescription>
+          </div>
+          {latestConsensus ? (
+            <Badge variant={confidenceBadgeVariant(latestConsensus.decisionConfidence)}>
+              {latestConsensus.decisionConfidence}
+            </Badge>
+          ) : null}
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No consensus run yet. Run agents from the Intelligence tab to build a recommendation.
-          </p>
+        <CardContent className="space-y-4">
+          {latestConsensus ? (
+            <>
+              <p className="text-sm leading-6 text-foreground/90">{latestConsensus.finalRecommendation}</p>
+              <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+                <span>{latestConsensus.agreementCount} agreement(s)</span>
+                <span>{latestConsensus.conflictCount} conflict(s)</span>
+              </div>
+              <Button asChild variant="secondary" size="sm">
+                <Link href={consensusHref}>View full consensus</Link>
+              </Button>
+            </>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                No consensus run yet. Run specialists from the Intelligence tab, then Consensus or Full
+                analysis.
+              </p>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/dashboard/projects/${project.id}/intelligence?tab=consensus`}>
+                  Open Consensus tab
+                </Link>
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

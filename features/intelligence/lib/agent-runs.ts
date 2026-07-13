@@ -174,19 +174,32 @@ export async function completeAgentRun(input: {
 
     if (input.findings.length > 0) {
       await tx.finding.createMany({
-        data: input.findings.map((finding) => ({
-          projectId: input.projectId,
-          agentType: input.agentType,
-          agentRunId: input.runId,
-          category: finding.category,
-          title: finding.title,
-          description: finding.description,
-          severity: finding.severity,
-          score: finding.score,
-          sourceChunkId: finding.sourceChunkId,
-          documentId: finding.documentId,
-          metadata: finding.metadata as Prisma.InputJsonValue | undefined,
-        })),
+        data: input.findings.map((finding) => {
+          const title =
+            typeof finding.title === "string" && finding.title.trim()
+              ? finding.title.trim()
+              : "Untitled finding";
+          const description =
+            typeof finding.description === "string" && finding.description.trim()
+              ? finding.description.trim()
+              : title;
+          return {
+            projectId: input.projectId,
+            agentType: input.agentType,
+            agentRunId: input.runId,
+            category:
+              typeof finding.category === "string" && finding.category.trim()
+                ? finding.category.trim()
+                : "General",
+            title,
+            description,
+            severity: finding.severity,
+            score: finding.score,
+            sourceChunkId: finding.sourceChunkId,
+            documentId: finding.documentId,
+            metadata: finding.metadata as Prisma.InputJsonValue | undefined,
+          };
+        }),
       });
     }
 

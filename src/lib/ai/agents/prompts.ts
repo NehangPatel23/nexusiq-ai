@@ -3,7 +3,7 @@ import path from "node:path";
 
 import type { AgentType } from "@prisma/client";
 
-import { AGENT_PROMPT_FILES } from "./types";
+import { AGENT_PROMPT_FILES, type SpecialistAgentType } from "./types";
 
 function readPrompt(fileName: string): string {
   return readFileSync(path.join(process.cwd(), "prompts", fileName), "utf8");
@@ -26,6 +26,14 @@ export function loadAgentSystemPrompt(agentType: AgentType): string {
   return extractFirstCodeBlock(readPrompt(AGENT_PROMPT_FILES[agentType]));
 }
 
+export function loadExecutiveSystemPrompt(): string {
+  return loadAgentSystemPrompt("EXECUTIVE");
+}
+
+export function loadConsensusSystemPrompt(): string {
+  return extractFirstCodeBlock(readPrompt("consensus.md"));
+}
+
 export function agentSeedQuery(agentType: AgentType): string {
   const markdown = readPrompt(AGENT_PROMPT_FILES[agentType]);
   const bias = extractRetrievalBias(markdown);
@@ -39,10 +47,16 @@ export function agentSeedQuery(agentType: AgentType): string {
     RISK: "enterprise risk operational financial legal vendor customer cyber supply chain market exposure",
     FRAUD:
       "fraud invoice duplicate vendor ghost suspicious transaction related party expense payroll conflict of interest",
+    EXECUTIVE:
+      "executive summary acquisition diligence investment memo board report financial legal compliance risk fraud recommendation priority actions",
   };
 
   if (!bias) return defaults[agentType];
   return `${defaults[agentType]} ${bias}`.trim();
+}
+
+export function specialistSeedQuery(agentType: SpecialistAgentType): string {
+  return agentSeedQuery(agentType);
 }
 
 export function __testables() {

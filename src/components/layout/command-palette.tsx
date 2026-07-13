@@ -78,7 +78,7 @@ export function CommandPalette() {
     ? `/dashboard/projects/${projectId}/chat?new=1`
     : "/dashboard/chat";
   const projectIntelligenceHref = projectId
-    ? `/dashboard/projects/${projectId}/intelligence?runAll=1`
+    ? `/dashboard/projects/${projectId}/intelligence?fullAnalysis=1`
     : "/dashboard/intelligence";
 
   const trimmedQuery = paletteQuery.trim();

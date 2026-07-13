@@ -6,6 +6,7 @@ import type { ChatCitation } from "@/lib/ai/citations";
 import type {
   AgentOutputByType,
   ComplianceAgentOutput,
+  ExecutiveAgentOutput,
   FinancialAgentOutput,
   FraudAgentOutput,
   LegalAgentOutput,
@@ -22,19 +23,26 @@ function parseSeverity(value: unknown): FindingSeverity | undefined {
   return undefined;
 }
 
+function coerceFindingText(value: unknown, fallback: string): string {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof value === "number" || typeof value === "boolean") return String(value);
+  return fallback;
+}
+
 function findingFromItem(input: {
   category: string;
   title: string;
-  description: string;
+  description?: string | null;
   severity?: FindingSeverity;
   sourceChunkId?: string;
   documentId?: string;
   metadata?: Record<string, unknown>;
 }): NormalizedFinding {
+  const title = coerceFindingText(input.title, "Untitled finding");
   return {
-    category: input.category,
-    title: input.title,
-    description: input.description,
+    category: coerceFindingText(input.category, "General"),
+    title,
+    description: coerceFindingText(input.description, title),
     severity: input.severity,
     sourceChunkId: input.sourceChunkId,
     documentId: input.documentId,
@@ -187,6 +195,18 @@ export function normalizeFraudFindings(output: FraudAgentOutput): NormalizedFind
   );
 }
 
+export function normalizeExecutiveFindings(output: ExecutiveAgentOutput): NormalizedFinding[] {
+  return (output.priorityActions ?? []).map((action, index) =>
+    findingFromItem({
+      category: "Executive",
+      title: `Priority action ${index + 1}`,
+      description: action,
+      severity: index === 0 ? "HIGH" : "MEDIUM",
+      metadata: { priorityIndex: index },
+    }),
+  );
+}
+
 const NORMALIZERS: {
   [K in AgentType]: (output: AgentOutputByType[K]) => NormalizedFinding[];
 } = {
@@ -195,6 +215,7 @@ const NORMALIZERS: {
   COMPLIANCE: normalizeComplianceFindings,
   RISK: normalizeRiskFindings,
   FRAUD: normalizeFraudFindings,
+  EXECUTIVE: normalizeExecutiveFindings,
 };
 
 export function normalizeAgentFindings<T extends AgentType>(
@@ -249,11 +270,19 @@ export function parseAgentConfidence(
   citations: ChatCitation[],
   retrievalCount: number,
 ): ConfidenceLevel {
+  // Only true empty-evidence case: no retrieved chunks at all.
   if (retrievalCount === 0) return "INSUFFICIENT";
+
   const modelConfidence = output.confidence;
-  if (modelConfidence === "INSUFFICIENT" || citations.length === 0) {
+  if (modelConfidence === "INSUFFICIENT") {
     return citations.length >= 2 ? "LOW" : "INSUFFICIENT";
   }
+
+  // Retrieved evidence exists but the model cited poorly — treat as LOW, not empty.
+  if (citations.length === 0) {
+    return "LOW";
+  }
+
   return modelConfidence ?? "MEDIUM";
 }
 

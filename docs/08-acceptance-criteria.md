@@ -76,10 +76,10 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Each agent: run UI, score card, findings table
 
 ### 10 Executive + Consensus
-- [ ] Executive agent: summary, memo, recommendation
-- [ ] Consensus: per-agent opinions preserved
-- [ ] Agreements, conflicts, resolution rationale shown
-- [ ] Never black-box final recommendation
+- [x] Executive agent: summary, memo, recommendation
+- [x] Consensus: per-agent opinions preserved
+- [x] Agreements, conflicts, resolution rationale shown
+- [x] Never black-box final recommendation
 
 ### 11 Reports & Export
 - [ ] Generate: executive, board, investment memo, audit, risk register

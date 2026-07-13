@@ -1,14 +1,7 @@
 import type { AgentType, FindingSeverity } from "@prisma/client";
 
 import { createNotification } from "@/features/organizations/lib/notifications";
-
-const AGENT_LABELS: Record<AgentType, string> = {
-  FINANCIAL: "Financial",
-  LEGAL: "Legal",
-  COMPLIANCE: "Compliance",
-  RISK: "Risk",
-  FRAUD: "Fraud",
-};
+import { AGENT_TYPE_LABELS } from "@/lib/ai/agents/types";
 
 const RISK_SEVERITIES = new Set<FindingSeverity>(["CRITICAL", "HIGH"]);
 
@@ -20,7 +13,7 @@ export async function notifyAgentRunCompleted(input: {
   findings: Array<{ severity: FindingSeverity | null; title: string }>;
 }) {
   const intelligenceLink = `/dashboard/projects/${input.projectId}/intelligence?run=${input.runId}`;
-  const label = AGENT_LABELS[input.agentType];
+  const label = AGENT_TYPE_LABELS[input.agentType];
 
   await createNotification({
     userId: input.userId,

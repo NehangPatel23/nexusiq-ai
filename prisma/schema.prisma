@@ -118,6 +118,7 @@ enum AgentType {
   COMPLIANCE
   RISK
   FRAUD
+  EXECUTIVE
 }
 
 enum AgentRunStatus {
@@ -163,6 +164,7 @@ model User {
   savedSearches       SavedSearch[]
   chats               Chat[]
   agentRuns           AgentRun[]
+  consensusRuns       ConsensusRun[]
 
   @@map("users")
 }
@@ -322,6 +324,7 @@ model Project {
   savedSearches   SavedSearch[]
   chats           Chat[]
   agentRuns       AgentRun[]
+  consensusRuns   ConsensusRun[]
   findings        Finding[]
 
   @@unique([workspaceId, slug])
@@ -574,6 +577,27 @@ model AgentRun {
 
   @@index([projectId, agentType, startedAt])
   @@map("agent_runs")
+}
+
+model ConsensusRun {
+  id                   String          @id @default(uuid())
+  projectId            String          @map("project_id")
+  agentRunIds          String[]        @map("agent_run_ids")
+  finalRecommendation  String          @map("final_recommendation")
+  decisionConfidence   ConfidenceLevel @map("decision_confidence")
+  agreements           Json
+  conflicts            Json
+  resolutionRationale  String          @map("resolution_rationale")
+  agentOpinions        Json            @map("agent_opinions")
+  citations            Json?
+  triggeredById        String?         @map("triggered_by_id")
+  createdAt            DateTime        @default(now()) @map("created_at")
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  triggeredBy User?   @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@map("consensus_runs")
 }
 
 model Finding {

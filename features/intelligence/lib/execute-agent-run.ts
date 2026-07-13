@@ -12,6 +12,7 @@ import {
 } from "@/features/intelligence/lib/agent-runs";
 import { logAgentRunAudit } from "@/features/intelligence/lib/intelligence-audit";
 import { runComplianceAgent } from "@/lib/ai/agents/compliance";
+import { runExecutiveAgent } from "@/lib/ai/agents/executive";
 import { runFinancialAgent } from "@/lib/ai/agents/financial";
 import { runFraudAgent } from "@/lib/ai/agents/fraud";
 import { runLegalAgent } from "@/lib/ai/agents/legal";
@@ -24,6 +25,7 @@ const AGENT_RUNNERS = {
   COMPLIANCE: runComplianceAgent,
   RISK: runRiskAgent,
   FRAUD: runFraudAgent,
+  EXECUTIVE: runExecutiveAgent,
 } as const;
 
 export async function executeAgentRun(input: {

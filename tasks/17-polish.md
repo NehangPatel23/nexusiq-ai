@@ -83,6 +83,15 @@ _Add new polish ideas here. Move to P0–P4 when prioritized._
 
 ---
 
+## Backlog — Intelligence / Consensus (post–Slice 10)
+
+- [ ] Stream agent runs (token progress) instead of silent 30–90s waits
+- [ ] Pin specific AgentRun IDs from Consensus history UI (“re-run with these opinions”)
+- [ ] Diff two ConsensusRuns side-by-side
+- [ ] Overview widget: sparkline of enterprise risk over time
+
+---
+
 ## Already shipped (reference — do not re-add)
 
 These were delivered in Slice 05 / follow-up sessions; listed so they are not duplicated in backlog:
