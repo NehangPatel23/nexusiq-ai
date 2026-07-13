@@ -705,9 +705,7 @@ export function DataRoomView({
     }
     setDeleteTarget(null);
     await refresh();
-    if (viewMode === "deleted") {
-      await Promise.all([refreshDeleted(), refreshDeletedFolders()]);
-    }
+    await Promise.all([refreshDeleted(), refreshDeletedFolders()]);
   }
 
   async function handleRestoreDocument(doc: DeletedDocument) {
@@ -947,7 +945,11 @@ export function DataRoomView({
               ? "bg-primary text-primary-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
           )}
-          onClick={() => setViewMode("deleted")}
+          onClick={() => {
+            setViewMode("deleted");
+            void refreshDeleted();
+            void refreshDeletedFolders();
+          }}
         >
           <Archive className="size-3.5" aria-hidden />
           Deleted
