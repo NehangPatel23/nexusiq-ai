@@ -3,7 +3,7 @@
 import type { AgentType, ConfidenceLevel } from "@prisma/client";
 import { Bot, History, Loader2, Play, RefreshCw, Scan, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -199,22 +199,23 @@ export function IntelligencePage({
   const [activeTab, setActiveTab] = useState<IntelligenceTab>("FINANCIAL");
   const [runs, setRuns] = useState(initialRuns);
   const [details, setDetails] = useState(initialDetails);
+  const [consensus, setConsensus] = useState<ConsensusRunApiResponse | null>(
+    initialConsensus ? detailToConsensusApi(initialConsensus) : null,
+  );
+  const [consensusHistory, setConsensusHistory] = useState(initialConsensusHistory);
   const [scanningAgents, setScanningAgents] = useState<Set<AgentType>>(() => new Set());
   const [consensusRunningLocal, setConsensusRunningLocal] = useState(false);
   const [ollamaUnavailable, setOllamaUnavailable] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const runAllTriggeredRef = useRef(false);
   const fullAnalysisTriggeredRef = useRef(false);
+  const hydratedDetailsRef = useRef(Object.keys(initialDetails).length > 0);
 
   const runningAll = backgroundAnalysis.status === "running" && backgroundAnalysis.mode === "specialists";
   const runningFullAnalysis = backgroundAnalysis.status === "running" && backgroundAnalysis.mode === "full";
   const runAllProgress = backgroundAnalysis.mode === "specialists" ? backgroundAnalysis.progress : 0;
   const fullAnalysisProgress = backgroundAnalysis.mode === "full" ? backgroundAnalysis.progress : 0;
   const consensusRunning = consensusRunningLocal || backgroundAnalysis.consensusRunning;
-  const [consensus, setConsensus] = useState<ConsensusRunApiResponse | null>(
-    initialConsensus ? detailToConsensusApi(initialConsensus) : null,
-  );
-  const [consensusHistory, setConsensusHistory] = useState(initialConsensusHistory);
 
   const completedSpecialists = useMemo(() => {
     const latest = new Map<SpecialistAgentType, AgentRunSummary>();
@@ -259,7 +260,9 @@ export function IntelligencePage({
     const response = await fetch(`/api/projects/${projectId}/agents/runs?limit=30`);
     const payload = (await response.json()) as ApiEnvelope<AgentRunSummary[]>;
     if (payload.success) {
-      setRuns(payload.data);
+      startTransition(() => {
+        setRuns(payload.data);
+      });
       return payload.data;
     }
     return null;
@@ -268,14 +271,20 @@ export function IntelligencePage({
   const refreshConsensusHistory = useCallback(async () => {
     const response = await fetch(`/api/projects/${projectId}/agents/consensus/runs?limit=20`);
     const payload = (await response.json()) as ApiEnvelope<ConsensusRunSummary[]>;
-    if (payload.success) setConsensusHistory(payload.data);
+    if (payload.success) {
+      startTransition(() => {
+        setConsensusHistory(payload.data);
+      });
+    }
   }, [projectId]);
 
   const loadRunDetail = useCallback(async (runId: string, agentType: AgentType) => {
     const response = await fetch(`/api/agent-runs/${runId}`);
     const payload = (await response.json()) as ApiEnvelope<AgentRunDetail>;
     if (payload.success) {
-      setDetails((current) => ({ ...current, [agentType]: payload.data }));
+      startTransition(() => {
+        setDetails((current) => ({ ...current, [agentType]: payload.data }));
+      });
     }
   }, []);
 
@@ -283,7 +292,9 @@ export function IntelligencePage({
     const response = await fetch(`/api/consensus-runs/${consensusRunId}`);
     const payload = (await response.json()) as ApiEnvelope<ConsensusRunDetail>;
     if (payload.success) {
-      setConsensus(detailToConsensusApi(payload.data));
+      startTransition(() => {
+        setConsensus(detailToConsensusApi(payload.data));
+      });
     }
   }, []);
 
@@ -303,6 +314,20 @@ export function IntelligencePage({
       return next;
     });
   }, []);
+
+  useEffect(() => {
+    if (hydratedDetailsRef.current) return;
+    hydratedDetailsRef.current = true;
+    const latestByAgent = new Map<AgentType, string>();
+    for (const run of runs) {
+      if (run.status !== "COMPLETED") continue;
+      if (latestByAgent.has(run.agentType)) continue;
+      latestByAgent.set(run.agentType, run.id);
+    }
+    for (const [agentType, runId] of latestByAgent) {
+      void loadRunDetail(runId, agentType);
+    }
+  }, [runs, loadRunDetail]);
 
   const runAgent = useCallback(
     async (
@@ -423,21 +448,123 @@ export function IntelligencePage({
   }, [backgroundAnalysis.status, projectId]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const onUpdate = (
       snapshot: ReturnType<typeof getBackgroundAnalysisSnapshot>,
       event: Parameters<Parameters<typeof subscribeBackgroundAnalysis>[1]>[1],
     ) => {
-      if (snapshot.ollamaUnavailable) {
-        setOllamaUnavailable(true);
-      }
+      if (cancelled) return;
+      // Keep analysis UI updates interruptible so project-tab / sidebar navigations stay responsive.
+      startTransition(() => {
+        if (cancelled) return;
+        if (snapshot.ollamaUnavailable) {
+          setOllamaUnavailable(true);
+        }
 
-      if (snapshot.suggestedTab && snapshot.status === "running") {
-        setActiveTab(snapshot.suggestedTab);
-      }
+        if (snapshot.suggestedTab && snapshot.status === "running") {
+          setActiveTab(snapshot.suggestedTab);
+        }
 
-      if (!event) {
-        if (snapshot.status === "running") {
+        if (!event) {
+          if (snapshot.status === "running") {
+            void refreshRuns();
+            for (const [agentType, runId] of Object.entries(snapshot.completedRuns) as Array<
+              [AgentType, string]
+            >) {
+              void loadRunDetail(runId, agentType);
+            }
+            if (snapshot.consensus) {
+              setConsensus(snapshot.consensus);
+            }
+          }
+          return;
+        }
+
+        if (event.type === "started") {
+          setDetails({});
+          if (event.mode === "full") setConsensus(null);
+          setOllamaUnavailable(false);
+          return;
+        }
+
+        if (event.type === "agent_started") {
+          beginAgentScan(event.agentType);
+          setActiveTab(event.agentType);
+          return;
+        }
+
+        if (event.type === "agent_completed") {
+          endAgentScan(event.agentType);
+          void refreshRuns().then(() => loadRunDetail(event.runId, event.agentType));
+          if (window.location.pathname.includes("/intelligence")) {
+            toast.success(`${AGENT_TYPE_LABELS[event.agentType]} scan completed.`);
+          }
+          return;
+        }
+
+        if (event.type === "agent_failed") {
+          endAgentScan(event.agentType);
+          if (event.ollama) {
+            setOllamaUnavailable(true);
+            if (window.location.pathname.includes("/intelligence")) {
+              toast.error("Ollama is unavailable.");
+            }
+            return;
+          }
+          if (window.location.pathname.includes("/intelligence")) {
+            toast.error(`${AGENT_TYPE_LABELS[event.agentType]} scan failed.`);
+          }
+          if (event.runId) {
+            void refreshRuns().then(async (latestRuns) => {
+              const previousCompleted = latestRuns?.find(
+                (run) =>
+                  run.agentType === event.agentType &&
+                  run.status === "COMPLETED" &&
+                  run.id !== event.runId,
+              );
+              await loadRunDetail(previousCompleted?.id ?? event.runId!, event.agentType);
+            });
+          } else {
+            void refreshRuns();
+          }
+          return;
+        }
+
+        if (event.type === "consensus_started") {
+          setActiveTab("CONSENSUS");
+          return;
+        }
+
+        if (event.type === "consensus_completed") {
+          setConsensus(event.data);
+          void refreshConsensusHistory();
+          if (window.location.pathname.includes("/intelligence")) {
+            toast.success("Consensus synthesis completed.");
+          }
+          return;
+        }
+
+        if (event.type === "consensus_failed") {
+          if (event.ollama) {
+            setOllamaUnavailable(true);
+            if (window.location.pathname.includes("/intelligence")) {
+              toast.error("Ollama is unavailable.");
+            }
+          } else if (window.location.pathname.includes("/intelligence")) {
+            toast.error("Consensus could not be completed.");
+          }
+          return;
+        }
+
+        if (event.type === "finished") {
           void refreshRuns();
+          void refreshConsensusHistory();
+          // Avoid router.refresh while the user may be navigating away — it re-fetches
+          // the whole project layout and can make tab/sidebar clicks feel stuck.
+          if (window.location.pathname.includes("/intelligence")) {
+            router.refresh();
+          }
           for (const [agentType, runId] of Object.entries(snapshot.completedRuns) as Array<
             [AgentType, string]
           >) {
@@ -447,94 +574,16 @@ export function IntelligencePage({
             setConsensus(snapshot.consensus);
           }
         }
-        return;
-      }
-
-      if (event.type === "started") {
-        setDetails({});
-        if (event.mode === "full") setConsensus(null);
-        setOllamaUnavailable(false);
-        return;
-      }
-
-      if (event.type === "agent_started") {
-        beginAgentScan(event.agentType);
-        setActiveTab(event.agentType);
-        return;
-      }
-
-      if (event.type === "agent_completed") {
-        endAgentScan(event.agentType);
-        void refreshRuns().then(() => loadRunDetail(event.runId, event.agentType));
-        toast.success(`${AGENT_TYPE_LABELS[event.agentType]} scan completed.`);
-        return;
-      }
-
-      if (event.type === "agent_failed") {
-        endAgentScan(event.agentType);
-        if (event.ollama) {
-          setOllamaUnavailable(true);
-          toast.error("Ollama is unavailable.");
-          return;
-        }
-        toast.error(`${AGENT_TYPE_LABELS[event.agentType]} scan failed.`);
-        if (event.runId) {
-          void refreshRuns().then(async (latestRuns) => {
-            const previousCompleted = latestRuns?.find(
-              (run) =>
-                run.agentType === event.agentType &&
-                run.status === "COMPLETED" &&
-                run.id !== event.runId,
-            );
-            await loadRunDetail(previousCompleted?.id ?? event.runId!, event.agentType);
-          });
-        } else {
-          void refreshRuns();
-        }
-        return;
-      }
-
-      if (event.type === "consensus_started") {
-        setActiveTab("CONSENSUS");
-        return;
-      }
-
-      if (event.type === "consensus_completed") {
-        setConsensus(event.data);
-        void refreshConsensusHistory();
-        toast.success("Consensus synthesis completed.");
-        return;
-      }
-
-      if (event.type === "consensus_failed") {
-        if (event.ollama) {
-          setOllamaUnavailable(true);
-          toast.error("Ollama is unavailable.");
-        } else {
-          toast.error("Consensus could not be completed.");
-        }
-        return;
-      }
-
-      if (event.type === "finished") {
-        void refreshRuns();
-        void refreshConsensusHistory();
-        router.refresh();
-        for (const [agentType, runId] of Object.entries(snapshot.completedRuns) as Array<
-          [AgentType, string]
-        >) {
-          void loadRunDetail(runId, agentType);
-        }
-        if (snapshot.consensus) {
-          setConsensus(snapshot.consensus);
-        }
-      }
+      });
     };
 
     const unsubscribe = subscribeBackgroundAnalysis(projectId, onUpdate);
-    // Initial sync after subscribe (must not run inside subscribe — breaks useSyncExternalStore).
+    // Initial sync after subscribe (must not run inside subscribe — breaks store subscribers).
     onUpdate(getBackgroundAnalysisSnapshot(projectId), null);
-    return unsubscribe;
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
   }, [
     projectId,
     beginAgentScan,
@@ -643,6 +692,9 @@ export function IntelligencePage({
           </div>
           <p className="text-sm text-muted-foreground">
             Run specialist scans, executive synthesis, and explainable consensus on {projectName}.
+            {(runningFullAnalysis || runningAll) && (
+              <> You can leave this tab — analysis keeps running and you&apos;ll get a notification when it finishes.</>
+            )}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

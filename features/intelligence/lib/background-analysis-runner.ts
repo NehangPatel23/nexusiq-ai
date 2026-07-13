@@ -83,7 +83,7 @@ const SPECIALISTS_TOTAL_STEPS = INTELLIGENCE_AGENT_TYPES.length;
 
 type JobState = {
   generation: number;
-  /** Stable reference for useSyncExternalStore — replaced only when state changes. */
+  /** Stable snapshot reference — replaced only when state changes. */
   snapshot: BackgroundAnalysisSnapshot;
 };
 
@@ -121,15 +121,18 @@ function getOrCreateJob(projectId: string): JobState {
 
 function emit(projectId: string, event: BackgroundAnalysisEvent | null) {
   const job = getOrCreateJob(projectId);
-  if (event) {
-    job.snapshot = { ...job.snapshot, lastEvent: event };
-  }
+  // `patch` already applied updates (including lastEvent). Do not clone again — that would
+  // notify subscribers twice for one step and jam the UI thread.
   const snapshot = job.snapshot;
   const projectListeners = listeners.get(projectId);
-  if (!projectListeners) return;
-  for (const listener of projectListeners) {
-    listener(snapshot, event);
-  }
+  if (!projectListeners || projectListeners.size === 0) return;
+  // Yield to the browser so click/navigation handlers are not starved by progress updates.
+  const listenersSnapshot = [...projectListeners];
+  queueMicrotask(() => {
+    for (const listener of listenersSnapshot) {
+      listener(snapshot, event);
+    }
+  });
 }
 
 function patch(

@@ -200,8 +200,12 @@ Request: `{ scenarioName, parameters: { revenueChange?: number, customerLoss?: s
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET | `/api/notifications` | User notifications |
+| GET | `/api/notifications` | User notifications (`?archived=true` for archived inbox) |
+| PATCH | `/api/notifications/read-all` | Mark all inbox notifications read |
 | PATCH | `/api/notifications/[id]/read` | Mark read |
+| PATCH | `/api/notifications/[id]/archive` | Archive notification |
+| POST | `/api/notifications/[id]/unarchive` | Restore archived notification to inbox |
+| DELETE | `/api/notifications/[id]` | Permanently delete notification |
 | GET | `/api/organizations/[orgId]/audit` | Audit log |
 | GET | `/api/organizations/[orgId]/compare` | Compare projects |
 

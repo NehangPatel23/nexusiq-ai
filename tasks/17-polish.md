@@ -90,6 +90,7 @@ _Add new polish ideas here. Move to P0–P4 when prioritized._
 - [ ] Diff two ConsensusRuns side-by-side
 - [ ] Overview widget: sparkline of enterprise risk over time
 - [ ] Server-side full-analysis job worker (survives browser close / hard refresh; pairs with OCI worker VPS)
+- [ ] Further nav latency: skip redundant page-level session/membership when project layout already authorized; light ollama status endpoint (no DB) for Search badge
 
 ---
 
