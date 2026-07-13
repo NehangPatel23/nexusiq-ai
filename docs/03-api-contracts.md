@@ -88,8 +88,25 @@ Actions: `signIn`, `signOut`, `register`, `updateProfile`, `changePassword`
 | Method | Path | Description |
 |--------|------|-------------|
 | GET/POST | `/api/projects/[id]/chats` | Chat sessions |
-| GET | `/api/chats/[id]/messages` | Messages |
+| PATCH/DELETE | `/api/chats/[id]` | Rename, pin, change agent, or delete owner session |
+| GET | `/api/chats/[id]/messages` | Paginated messages (oldest first) |
 | POST | `/api/chats/[id]/messages` | Send (SSE stream) |
+| GET | `/api/projects/[id]/chat/suggested-questions` | Suggested prompts, optionally by `agentType` |
+
+SSE events:
+```text
+event: token
+data: {"delta":"..."}
+
+event: done
+data: {"messageId","citations","confidence","content","retrievedChunks"}
+
+event: error
+data: {"code","message"}
+```
+
+Chat sessions are user-owned and require data-room view access to the project organization.
+An unavailable generation endpoint returns `503 OLLAMA_UNAVAILABLE` before streaming starts.
 
 ---
 

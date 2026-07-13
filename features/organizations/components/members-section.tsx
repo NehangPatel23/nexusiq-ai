@@ -13,6 +13,7 @@ import {
   updateMemberRoleAction,
 } from "@/features/organizations/actions";
 import { INVITABLE_ROLES, formatOrgRole } from "@/features/organizations/lib/roles";
+import { AppSelect } from "@/components/ui/app-select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,7 @@ export function MembersSection({
 }: MembersSectionProps) {
   const router = useRouter();
   const confirm = useConfirm();
+  const [inviteRole, setInviteRole] = useState<OrgRole>("VIEWER");
   const [inviteError, setInviteError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const [isInviting, startInvite] = useTransition();
@@ -96,7 +98,7 @@ export function MembersSection({
     const formData = new FormData(event.currentTarget);
     const input = {
       email: formData.get("email"),
-      role: formData.get("role"),
+      role: inviteRole,
     };
 
     startInvite(async () => {
@@ -117,6 +119,7 @@ export function MembersSection({
         });
       }
       (event.target as HTMLFormElement).reset();
+      setInviteRole("VIEWER");
       router.refresh();
     });
   }
@@ -253,18 +256,16 @@ export function MembersSection({
             </div>
             <div className="space-y-2 sm:w-40">
               <Label htmlFor="invite-role">Role</Label>
-              <select
+              <AppSelect
                 id="invite-role"
-                name="role"
-                defaultValue="VIEWER"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {INVITABLE_ROLES.map((role) => (
-                  <option key={role} value={role}>
-                    {formatOrgRole(role)}
-                  </option>
-                ))}
-              </select>
+                value={inviteRole}
+                onValueChange={(value) => setInviteRole(value as OrgRole)}
+                triggerClassName="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                options={INVITABLE_ROLES.map((role) => ({
+                  value: role,
+                  label: formatOrgRole(role),
+                }))}
+              />
             </div>
             <Button type="submit" disabled={isInviting}>
               {isInviting ? "Sending…" : "Send invite"}
@@ -315,24 +316,22 @@ export function MembersSection({
                   </td>
                   <td className="px-4 py-3">
                     {canManage && !isOwner && !isSelf ? (
-                      <select
+                      <AppSelect
                         value={memberRoleOverrides[member.id] ?? member.role}
                         disabled={pendingMemberId === member.id}
-                        onChange={(event) => {
+                        onValueChange={(value) => {
                           const previousRole = memberRoleOverrides[member.id] ?? member.role;
-                          const newRole = event.target.value as OrgRole;
+                          const newRole = value as OrgRole;
                           setMemberRoleOverrides((prev) => ({ ...prev, [member.id]: newRole }));
                           void handleRoleChange(member.id, previousRole, newRole);
                         }}
                         aria-label={`Role for ${displayName}`}
-                        className="rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                      >
-                        {INVITABLE_ROLES.map((role) => (
-                          <option key={role} value={role}>
-                            {formatOrgRole(role)}
-                          </option>
-                        ))}
-                      </select>
+                        triggerClassName="rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        options={INVITABLE_ROLES.map((role) => ({
+                          value: role,
+                          label: formatOrgRole(role),
+                        }))}
+                      />
                     ) : (
                       <Badge variant="outline">{formatOrgRole(member.role)}</Badge>
                     )}
@@ -371,24 +370,22 @@ export function MembersSection({
                 <span>{invite.email}</span>
                 <div className="flex items-center gap-2">
                   {canManage ? (
-                    <select
+                    <AppSelect
                       value={inviteRoleOverrides[invite.id] ?? invite.role}
                       disabled={pendingInviteId === invite.id}
-                      onChange={(event) => {
+                      onValueChange={(value) => {
                         const previousRole = inviteRoleOverrides[invite.id] ?? invite.role;
-                        const newRole = event.target.value as OrgRole;
+                        const newRole = value as OrgRole;
                         setInviteRoleOverrides((prev) => ({ ...prev, [invite.id]: newRole }));
                         void handleInviteRoleChange(invite.id, previousRole, newRole);
                       }}
                       aria-label={`Role for invite ${invite.email}`}
-                      className="rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    >
-                      {INVITABLE_ROLES.map((role) => (
-                        <option key={role} value={role}>
-                          {formatOrgRole(role)}
-                        </option>
-                      ))}
-                    </select>
+                      triggerClassName="rounded-md border border-input bg-background px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      options={INVITABLE_ROLES.map((role) => ({
+                        value: role,
+                        label: formatOrgRole(role),
+                      }))}
+                    />
                   ) : (
                     <Badge variant="outline">{formatOrgRole(invite.role)}</Badge>
                   )}

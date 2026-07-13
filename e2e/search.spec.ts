@@ -37,7 +37,7 @@ test.describe("search flow", () => {
     await page.getByRole("tab", { name: "Search" }).click();
     await expect(page).toHaveURL(/\/search/, { timeout: 10_000 });
     await expect(page.getByRole("heading", { name: "Smart Search" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Search" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Search", exact: true })).toBeVisible();
     await expect(page.getByText("Search your data room")).toBeVisible();
 
     await page.goto("/dashboard/search");

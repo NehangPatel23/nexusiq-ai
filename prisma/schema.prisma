@@ -87,6 +87,28 @@ enum SearchMode {
   KEYWORD
 }
 
+enum ChatAgentType {
+  GENERAL
+  FINANCIAL
+  LEGAL
+  COMPLIANCE
+  RISK
+  FRAUD
+}
+
+enum ChatMessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+  INSUFFICIENT
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -106,6 +128,7 @@ model User {
   dataRoomAuditEvents DataRoomAuditEvent[]
   dataRoomShares      DataRoomShare[]
   savedSearches       SavedSearch[]
+  chats               Chat[]
 
   @@map("users")
 }
@@ -263,6 +286,7 @@ model Project {
   entities        Entity[]
   entityRelations EntityRelation[]
   savedSearches   SavedSearch[]
+  chats           Chat[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, deletedAt])
@@ -456,4 +480,39 @@ model SavedSearch {
   @@index([projectId])
   @@index([userId])
   @@map("saved_searches")
+}
+
+model Chat {
+  id        String        @id @default(uuid())
+  projectId String        @map("project_id")
+  userId    String        @map("user_id")
+  title     String?
+  agentType ChatAgentType @default(GENERAL) @map("agent_type")
+  pinned    Boolean       @default(false)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  project  Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages ChatMessage[]
+
+  @@index([projectId, userId, updatedAt])
+  @@map("chats")
+}
+
+model ChatMessage {
+  id               String           @id @default(uuid())
+  chatId           String           @map("chat_id")
+  role             ChatMessageRole
+  content          String
+  citations        Json?
+  confidence       ConfidenceLevel?
+  confidenceScore  Int?             @map("confidence_score")
+  confidenceReason String?          @map("confidence_reason")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId, createdAt])
+  @@map("chat_messages")
 }

@@ -4,6 +4,7 @@ import type { DocumentClassification, DocumentType } from "@prisma/client";
 import { ChevronDown, Filter, X } from "lucide-react";
 import { useId, useState } from "react";
 
+import { AppSelect } from "@/components/ui/app-select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -57,12 +58,8 @@ function formatLabel(value: string) {
     .join(" ");
 }
 
-function selectClassName() {
-  return cn(
-    "h-10 w-full rounded-lg border border-border/50 bg-background/50 px-3 text-sm text-foreground",
-    "transition-colors hover:border-border/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-  );
-}
+const FILTER_SELECT_TRIGGER_CLASS =
+  "h-10 w-full rounded-lg border border-border/50 bg-background/50 px-3 text-sm text-foreground transition-colors hover:border-border/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 function countActiveFilters(filters: SearchFilters) {
   let count = 0;
@@ -153,74 +150,63 @@ export function SearchFiltersBar({
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Type
               </span>
-              <select
-                className={selectClassName()}
+              <AppSelect
+                triggerClassName={FILTER_SELECT_TRIGGER_CLASS}
                 value={filters.type ?? ""}
                 disabled={disabled}
-                onChange={(event) =>
+                onValueChange={(value) =>
                   onChange({
                     ...filters,
-                    type: (event.target.value || undefined) as DocumentType | undefined,
+                    type: (value || undefined) as DocumentType | undefined,
                   })
                 }
-              >
-                <option value="">All types</option>
-                {DOCUMENT_TYPES.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: "", label: "All types" },
+                  ...DOCUMENT_TYPES.map((type) => ({ value: type, label: type })),
+                ]}
+              />
             </label>
 
             <label className="space-y-1.5">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Classification
               </span>
-              <select
-                className={selectClassName()}
+              <AppSelect
+                triggerClassName={FILTER_SELECT_TRIGGER_CLASS}
                 value={filters.classification ?? ""}
                 disabled={disabled}
-                onChange={(event) =>
+                onValueChange={(value) =>
                   onChange({
                     ...filters,
-                    classification: (event.target.value || undefined) as
-                      | DocumentClassification
-                      | undefined,
+                    classification: (value || undefined) as DocumentClassification | undefined,
                   })
                 }
-              >
-                <option value="">All classifications</option>
-                {CLASSIFICATIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {formatLabel(value)}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: "", label: "All classifications" },
+                  ...CLASSIFICATIONS.map((value) => ({ value, label: formatLabel(value) })),
+                ]}
+              />
             </label>
 
             <label className="space-y-1.5">
               <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 Folder
               </span>
-              <select
-                className={selectClassName()}
+              <AppSelect
+                triggerClassName={FILTER_SELECT_TRIGGER_CLASS}
                 value={filters.folderId ?? ""}
                 disabled={disabled}
-                onChange={(event) =>
+                onValueChange={(value) =>
                   onChange({
                     ...filters,
-                    folderId: event.target.value || undefined,
+                    folderId: value || undefined,
                   })
                 }
-              >
-                <option value="">All folders</option>
-                {folders.map((folder) => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.path}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: "", label: "All folders" },
+                  ...folders.map((folder) => ({ value: folder.id, label: folder.path })),
+                ]}
+              />
             </label>
 
             <fieldset className="space-y-2 sm:col-span-2 lg:col-span-4">

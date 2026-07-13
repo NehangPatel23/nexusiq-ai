@@ -14,6 +14,7 @@ import {
 } from "@/features/projects/lib/default-agents";
 import { COMMON_DEAL_STATUSES } from "@/features/projects/lib/deal-statuses";
 import { PROJECT_TYPES, PROJECT_TYPE_LABELS } from "@/features/projects/lib/project-types";
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +38,9 @@ interface ProjectFormDialogProps {
   workspaces: WorkspaceOption[];
   defaultWorkspaceId?: string;
 }
+
+const FORM_SELECT_TRIGGER_CLASS =
+  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ProjectFormDialog({
   open,
@@ -151,19 +155,17 @@ export function ProjectFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="project-type">Type</Label>
-            <select
+            <AppSelect
               id="project-type"
               value={type}
-              onChange={(event) => setType(event.target.value as ProjectType)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onValueChange={(value) => setType(value as ProjectType)}
+              triggerClassName={FORM_SELECT_TRIGGER_CLASS}
               aria-invalid={!!fieldErrors.type}
-            >
-              {PROJECT_TYPES.map((projectType) => (
-                <option key={projectType} value={projectType}>
-                  {PROJECT_TYPE_LABELS[projectType]}
-                </option>
-              ))}
-            </select>
+              options={PROJECT_TYPES.map((projectType) => ({
+                value: projectType,
+                label: PROJECT_TYPE_LABELS[projectType],
+              }))}
+            />
             {fieldErrors.type && (
               <p className="text-sm text-destructive">{fieldErrors.type[0]}</p>
             )}
@@ -171,23 +173,21 @@ export function ProjectFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="project-workspace">Workspace</Label>
-            <select
+            <AppSelect
               id="project-workspace"
               value={workspaceId}
-              onChange={(event) => setWorkspaceId(event.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              required
-            >
-              {workspaces.length === 0 ? (
-                <option value="">No workspaces available</option>
-              ) : (
-                workspaces.map((workspace) => (
-                  <option key={workspace.id} value={workspace.id}>
-                    {workspace.name} ({workspace.organizationName})
-                  </option>
-                ))
-              )}
-            </select>
+              onValueChange={setWorkspaceId}
+              triggerClassName={FORM_SELECT_TRIGGER_CLASS}
+              disabled={workspaces.length === 0}
+              options={
+                workspaces.length === 0
+                  ? [{ value: "", label: "No workspaces available", disabled: true }]
+                  : workspaces.map((workspace) => ({
+                      value: workspace.id,
+                      label: `${workspace.name} (${workspace.organizationName})`,
+                    }))
+              }
+            />
           </div>
 
           <div className="space-y-2">
@@ -218,19 +218,19 @@ export function ProjectFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="project-default-agent">Default agent (optional)</Label>
-            <select
+            <AppSelect
               id="project-default-agent"
               value={defaultAgent}
-              onChange={(event) => setDefaultAgent(event.target.value as DefaultAgent | "")}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <option value="">No default — choose per session</option>
-              {DEFAULT_AGENTS.map((agent) => (
-                <option key={agent} value={agent}>
-                  {DEFAULT_AGENT_LABELS[agent]}
-                </option>
-              ))}
-            </select>
+              onValueChange={(value) => setDefaultAgent(value as DefaultAgent | "")}
+              triggerClassName={FORM_SELECT_TRIGGER_CLASS}
+              options={[
+                { value: "", label: "No default — choose per session" },
+                ...DEFAULT_AGENTS.map((agent) => ({
+                  value: agent,
+                  label: DEFAULT_AGENT_LABELS[agent],
+                })),
+              ]}
+            />
           </div>
 
           <div className="space-y-2">

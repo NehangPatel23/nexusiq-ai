@@ -26,6 +26,7 @@ import { collectDealStatusOptions, type DealStatusFilter } from "@/features/proj
 import {
   resolveProjectOrgPermissions,
 } from "@/features/projects/lib/roles";
+import { AppSelect } from "@/components/ui/app-select";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
@@ -381,57 +382,53 @@ export function ProjectsList({
               aria-label="Search projects"
             />
           </div>
-          <select
+          <AppSelect
             value={workspaceFilter}
-            onChange={(event) => handleWorkspaceFilterChange(event.target.value)}
-            className="flex h-10 max-w-[11rem] rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+            onValueChange={handleWorkspaceFilterChange}
+            triggerClassName="flex h-10 max-w-[11rem] rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
             aria-label="Filter by workspace"
-          >
-            <option value="ALL">All workspaces</option>
-            {workspaces.map((workspace) => (
-              <option key={workspace.id} value={workspace.id}>
-                {workspace.name}
-              </option>
-            ))}
-          </select>
-          <select
+            options={[
+              { value: "ALL", label: "All workspaces" },
+              ...workspaces.map((workspace) => ({ value: workspace.id, label: workspace.name })),
+            ]}
+          />
+          <AppSelect
             value={typeFilter}
-            onChange={(event) => setTypeFilter(event.target.value as ProjectType | "ALL")}
-            className="flex h-10 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+            onValueChange={(value) => setTypeFilter(value as ProjectType | "ALL")}
+            triggerClassName="flex h-10 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
             aria-label="Filter by project type"
-          >
-            <option value="ALL">All types</option>
-            <option value="MA">M&A</option>
-            <option value="VENDOR_DD">Vendor DD</option>
-            <option value="AUDIT">Audit</option>
-            <option value="INVESTMENT">Investment</option>
-            <option value="INTERNAL">Internal</option>
-          </select>
-          <select
+            options={[
+              { value: "ALL", label: "All types" },
+              { value: "MA", label: "M&A" },
+              { value: "VENDOR_DD", label: "Vendor DD" },
+              { value: "AUDIT", label: "Audit" },
+              { value: "INVESTMENT", label: "Investment" },
+              { value: "INTERNAL", label: "Internal" },
+            ]}
+          />
+          <AppSelect
             value={dealStatusFilter}
-            onChange={(event) => setDealStatusFilter(event.target.value as DealStatusFilter)}
-            className="flex h-10 max-w-[10rem] rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+            onValueChange={(value) => setDealStatusFilter(value as DealStatusFilter)}
+            triggerClassName="flex h-10 max-w-[10rem] rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
             aria-label="Filter by deal status"
-          >
-            <option value="ALL">All statuses</option>
-            <option value="NONE">No status</option>
-            {dealStatusOptions.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-          <select
+            options={[
+              { value: "ALL", label: "All statuses" },
+              { value: "NONE", label: "No status" },
+              ...dealStatusOptions.map((status) => ({ value: status, label: status })),
+            ]}
+          />
+          <AppSelect
             value={sortBy}
-            onChange={(event) => setSortBy(event.target.value as SortOption)}
-            className="flex h-10 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
+            onValueChange={(value) => setSortBy(value as SortOption)}
+            triggerClassName="flex h-10 rounded-md border border-border/60 bg-card/40 px-3 py-2 text-sm"
             aria-label="Sort projects"
-          >
-            <option value="pinned">Pinned first</option>
-            <option value="updated">Last updated</option>
-            <option value="name">Name A–Z</option>
-            <option value="type">Type</option>
-          </select>
+            options={[
+              { value: "pinned", label: "Pinned first" },
+              { value: "updated", label: "Last updated" },
+              { value: "name", label: "Name A–Z" },
+              { value: "type", label: "Type" },
+            ]}
+          />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">

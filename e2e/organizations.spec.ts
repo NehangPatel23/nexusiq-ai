@@ -32,7 +32,12 @@ test.describe("organizations flow", () => {
 
     await ownerPage.goto("/dashboard/organizations");
     await ownerPage.getByRole("link", { name: /manage organization/i }).click();
-    await expect(ownerPage.getByRole("heading", { name: ownerOrgName })).toBeVisible();
+    await expect(ownerPage).toHaveURL(/\/dashboard\/organizations\/[^/]+\/settings$/, {
+      timeout: 15_000,
+    });
+    await expect(ownerPage.getByRole("heading", { name: ownerOrgName })).toBeVisible({
+      timeout: 15_000,
+    });
 
     await ownerPage.getByLabel("Email").fill(inviteeEmail);
     await ownerPage.getByRole("button", { name: /send invite/i }).click();
@@ -45,8 +50,9 @@ test.describe("organizations flow", () => {
       .filter({ hasText: new RegExp(`Invitation to ${ownerOrgName}`, "i") });
     await expect(inviteNotification).toBeVisible({ timeout: 15_000 });
     await inviteNotification.click();
+    await expect(inviteePage).toHaveURL(/\/invite\//, { timeout: 15_000 });
     await expect(inviteePage.getByRole("heading", { name: /you're invited/i })).toBeVisible({
-      timeout: 10_000,
+      timeout: 15_000,
     });
     await inviteePage.getByRole("button", { name: new RegExp(ownerOrgName, "i") }).click();
     await expect(inviteePage).toHaveURL(/\/dashboard\/organizations\/[^/]+\/settings$/, {
