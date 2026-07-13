@@ -18,18 +18,17 @@ import type { FileEntry } from "../lib/upload-client";
 
 const SKIP_UPLOAD_FILE_NAMES = new Set([".ds_store", "thumbs.db", "desktop.ini"]);
 
-function shouldSkipUploadFile(fileName: string): boolean {
-  const base = fileName.split(/[/\\]/).pop()?.trim().toLowerCase() ?? "";
+function shouldSkipUploadFile(entry: FileEntry): boolean {
+  const name = entry.relativePath ?? entry.file.name;
+  const base = name.split(/[/\\]/).pop()?.trim().toLowerCase() ?? "";
   if (!base) return true;
   if (SKIP_UPLOAD_FILE_NAMES.has(base)) return true;
-  return base === "readme.md";
+  // Skip root README when bulk-uploading a folder tree, not when the user picks a single file.
+  return base === "readme.md" && Boolean(entry.relativePath);
 }
 
 function filterUploadEntries(entries: FileEntry[]): FileEntry[] {
-  return entries.filter((entry) => {
-    const name = entry.relativePath ?? entry.file.name;
-    return !shouldSkipUploadFile(name);
-  });
+  return entries.filter((entry) => !shouldSkipUploadFile(entry));
 }
 
 interface UploadDropzoneProps {

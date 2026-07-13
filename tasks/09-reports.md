@@ -1,6 +1,6 @@
 # Task 09: Intelligence Agents
 
-**Status:** NOT STARTED | **Slice:** 9/16 | **Depends on:** 08-chat
+**Status:** DONE | **Slice:** 9/16 | **Depends on:** 08-chat
 
 ## Goal
 Five specialist agents with scores, findings, citations, run UI.

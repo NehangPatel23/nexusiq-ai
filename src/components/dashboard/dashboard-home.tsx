@@ -96,11 +96,11 @@ export function DashboardHome({ data }: DashboardHomeProps) {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.15 }}>
+      <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+        <motion.div className="min-w-0" variants={fadeUp} transition={{ ...easeOut, delay: 0.15 }}>
           <RiskOverviewDonut data={data.riskOverview} />
         </motion.div>
-        <motion.div variants={fadeUp} transition={{ ...easeOut, delay: 0.2 }}>
+        <motion.div className="min-w-0" variants={fadeUp} transition={{ ...easeOut, delay: 0.2 }}>
           <ActivityFeed items={data.recentActivity} />
         </motion.div>
       </div>

@@ -74,11 +74,14 @@ enum DataRoomAuditAction {
   MOVED
   SHARE_CREATED
   SHARE_REVOKED
+  AGENT_RUN_COMPLETED
+  AGENT_RUN_FAILED
 }
 
 enum DataRoomResourceType {
   DOCUMENT
   FOLDER
+  PROJECT
 }
 
 enum SearchMode {
@@ -109,6 +112,36 @@ enum ConfidenceLevel {
   INSUFFICIENT
 }
 
+enum AgentType {
+  FINANCIAL
+  LEGAL
+  COMPLIANCE
+  RISK
+  FRAUD
+}
+
+enum AgentRunStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum RiskStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+  SUPERSEDED
+}
+
+enum FindingSeverity {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -129,6 +162,7 @@ model User {
   dataRoomShares      DataRoomShare[]
   savedSearches       SavedSearch[]
   chats               Chat[]
+  agentRuns           AgentRun[]
 
   @@map("users")
 }
@@ -287,6 +321,8 @@ model Project {
   entityRelations EntityRelation[]
   savedSearches   SavedSearch[]
   chats           Chat[]
+  agentRuns       AgentRun[]
+  findings        Finding[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, deletedAt])
@@ -515,4 +551,52 @@ model ChatMessage {
 
   @@index([chatId, createdAt])
   @@map("chat_messages")
+}
+
+model AgentRun {
+  id            String           @id @default(uuid())
+  projectId     String           @map("project_id")
+  agentType     AgentType        @map("agent_type")
+  status        AgentRunStatus   @default(PENDING)
+  inputParams   Json?            @map("input_params")
+  output        Json?
+  score         Float?
+  confidence    ConfidenceLevel?
+  citations     Json?
+  startedAt     DateTime         @default(now()) @map("started_at")
+  completedAt   DateTime?        @map("completed_at")
+  error         String?
+  triggeredById String?          @map("triggered_by_id")
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  triggeredBy User?     @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+  findings    Finding[]
+
+  @@index([projectId, agentType, startedAt])
+  @@map("agent_runs")
+}
+
+model Finding {
+  id            String           @id @default(uuid())
+  projectId     String           @map("project_id")
+  agentType     AgentType        @map("agent_type")
+  agentRunId    String?          @map("agent_run_id")
+  category      String
+  title         String
+  description   String
+  severity      FindingSeverity?
+  score         Float?
+  sourceChunkId String?          @map("source_chunk_id")
+  documentId    String?          @map("document_id")
+  metadata      Json?
+  status        RiskStatus       @default(OPEN)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  agentRun AgentRun? @relation(fields: [agentRunId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, agentType])
+  @@index([agentRunId])
+  @@map("findings")
 }

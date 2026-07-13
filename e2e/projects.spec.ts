@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { registerAndOnboard } from "./helpers";
+import { registerAndOnboard, selectComboboxOption } from "./helpers";
 
 test.describe("projects flow", () => {
   test("create workspace → create project → appears in list → open overview tab", async ({
@@ -35,7 +35,6 @@ test.describe("projects flow", () => {
 
     await page.getByRole("button", { name: /create project/i }).click();
     await page.getByLabel("Name").fill(projectName);
-    await page.getByLabel("Type").selectOption("MA");
     await page.getByLabel("Target company (optional)").fill("Acme Corporation");
     await page.getByRole("button", { name: /^create project$/i }).click();
 
@@ -81,9 +80,10 @@ test.describe("projects flow", () => {
     await page.getByRole("button", { name: /new project|create project/i }).first().click();
     const createDialog = page.getByRole("dialog", { name: /create project/i });
     await createDialog.getByLabel("Name").fill(projectA);
-    await createDialog.getByLabel("Workspace", { exact: true }).selectOption({
-      label: `${workspaceA} (${orgName})`,
-    });
+    await selectComboboxOption(
+      createDialog.getByLabel("Workspace", { exact: true }),
+      `${workspaceA} (${orgName})`,
+    );
     await createDialog.getByRole("button", { name: /^create project$/i }).click();
     await expect(page.getByRole("heading", { name: projectA })).toBeVisible({ timeout: 15_000 });
 
@@ -91,9 +91,10 @@ test.describe("projects flow", () => {
     await page.getByRole("button", { name: /new project/i }).click();
     const secondCreateDialog = page.getByRole("dialog", { name: /create project/i });
     await secondCreateDialog.getByLabel("Name").fill(projectB);
-    await secondCreateDialog.getByLabel("Workspace", { exact: true }).selectOption({
-      label: `${workspaceB} (${orgName})`,
-    });
+    await selectComboboxOption(
+      secondCreateDialog.getByLabel("Workspace", { exact: true }),
+      `${workspaceB} (${orgName})`,
+    );
     await secondCreateDialog.getByRole("button", { name: /^create project$/i }).click();
     await expect(page.getByRole("heading", { name: projectB })).toBeVisible({ timeout: 15_000 });
 
