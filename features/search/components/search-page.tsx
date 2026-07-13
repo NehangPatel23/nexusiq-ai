@@ -44,7 +44,7 @@ interface SearchPageProps {
   initialSavedSearches: SavedSearchItem[];
   folders: FolderOption[];
   documents: DataRoomDocument[];
-  ollamaStatus: "connected" | "unreachable" | "not_configured";
+  initialOllamaStatus: "connected" | "unreachable" | "not_configured" | "checking";
 }
 
 type SearchParams = {
@@ -56,8 +56,16 @@ type SearchParams = {
 function OllamaStatusBadge({
   status,
 }: {
-  status: "connected" | "unreachable" | "not_configured";
+  status: "connected" | "unreachable" | "not_configured" | "checking";
 }) {
+  if (status === "checking") {
+    return (
+      <Badge variant="outline" className="gap-1">
+        <Zap className="h-3 w-3 animate-pulse" aria-hidden="true" />
+        Checking Ollama…
+      </Badge>
+    );
+  }
   if (status === "connected") {
     return (
       <Badge variant="success" className="gap-1">
@@ -86,7 +94,7 @@ export function SearchPage({
   initialSavedSearches,
   folders,
   documents,
-  ollamaStatus,
+  initialOllamaStatus,
 }: SearchPageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -103,6 +111,7 @@ export function SearchPage({
   const [hasSearched, setHasSearched] = useState(false);
   const [fallbackBanner, setFallbackBanner] = useState<string | null>(null);
   const [recentSearches, setRecentSearches] = useState<RecentSearchEntry[]>([]);
+  const [ollamaStatus, setOllamaStatus] = useState(initialOllamaStatus);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +123,26 @@ export function SearchPage({
 
   const initialSearchDone = useRef(false);
   const skipUrlSync = useRef(true);
+
+  useEffect(() => {
+    if (initialOllamaStatus !== "checking") return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch("/api/health");
+        const payload = (await response.json()) as { ollama?: string };
+        if (cancelled) return;
+        if (payload.ollama === "connected") setOllamaStatus("connected");
+        else if (payload.ollama === "not_configured") setOllamaStatus("not_configured");
+        else setOllamaStatus("unreachable");
+      } catch {
+        if (!cancelled) setOllamaStatus("unreachable");
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialOllamaStatus]);
 
   const syncUrl = useCallback(
     (state: SearchParams) => {

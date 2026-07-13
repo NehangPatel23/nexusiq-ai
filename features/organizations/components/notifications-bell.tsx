@@ -1,9 +1,10 @@
 "use client";
 
-import { Bell, Check } from "lucide-react";
+import { Archive, Bell, Check, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -34,10 +35,11 @@ export function NotificationsBell() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [open, setOpen] = useState(false);
+  const [pendingId, setPendingId] = useState<string | null>(null);
   const hasFetchedRef = useRef(false);
 
-  const fetchNotifications = useCallback(async () => {
-    setLoading(true);
+  const fetchNotifications = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoading(true);
     try {
       const response = await fetch("/api/notifications");
       const json = await response.json();
@@ -52,7 +54,7 @@ export function NotificationsBell() {
     } catch {
       setError(true);
     } finally {
-      setLoading(false);
+      if (!options?.silent) setLoading(false);
     }
   }, []);
 
@@ -67,12 +69,12 @@ export function NotificationsBell() {
 
     const interval = window.setInterval(() => {
       if (document.visibilityState === "visible") {
-        void fetchNotifications();
+        void fetchNotifications({ silent: true });
       }
     }, POLL_INTERVAL_MS);
 
     function onNotificationsChanged() {
-      void fetchNotifications();
+      void fetchNotifications({ silent: true });
     }
 
     window.addEventListener("nexusiq:notifications-changed", onNotificationsChanged);
@@ -110,6 +112,48 @@ export function NotificationsBell() {
 
     if (notification.link) {
       router.push(notification.link);
+    }
+  }
+
+  async function archiveNotification(notification: NotificationItem) {
+    setPendingId(notification.id);
+    try {
+      const response = await fetch(`/api/notifications/${notification.id}/archive`, {
+        method: "PATCH",
+      });
+      if (!response.ok) {
+        toast.error("Could not archive notification.");
+        return;
+      }
+      setNotifications((items) => items.filter((item) => item.id !== notification.id));
+      if (!notification.readAt) {
+        setUnreadCount((count) => Math.max(0, count - 1));
+      }
+      toast.success("Notification archived.");
+      window.dispatchEvent(new Event("nexusiq:notifications-changed"));
+    } finally {
+      setPendingId(null);
+    }
+  }
+
+  async function deleteNotification(notification: NotificationItem) {
+    setPendingId(notification.id);
+    try {
+      const response = await fetch(`/api/notifications/${notification.id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) {
+        toast.error("Could not delete notification.");
+        return;
+      }
+      setNotifications((items) => items.filter((item) => item.id !== notification.id));
+      if (!notification.readAt) {
+        setUnreadCount((count) => Math.max(0, count - 1));
+      }
+      toast.success("Notification deleted.");
+      window.dispatchEvent(new Event("nexusiq:notifications-changed"));
+    } finally {
+      setPendingId(null);
     }
   }
 
@@ -159,7 +203,7 @@ export function NotificationsBell() {
         {notifications.slice(0, 8).map((notification) => (
           <DropdownMenuItem
             key={notification.id}
-            className="flex cursor-pointer flex-col items-start gap-1 py-3"
+            className="flex cursor-pointer flex-col items-start gap-2 py-3"
             onSelect={() => void markRead(notification)}
           >
             <div className="flex w-full items-start justify-between gap-2">
@@ -169,6 +213,40 @@ export function NotificationsBell() {
               )}
             </div>
             <span className="line-clamp-2 text-xs text-muted-foreground">{notification.body}</span>
+            <div className="flex w-full justify-end gap-1">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground"
+                disabled={pendingId === notification.id}
+                aria-label={`Archive ${notification.title}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void archiveNotification(notification);
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <Archive className="h-3.5 w-3.5" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                disabled={pendingId === notification.id}
+                aria-label={`Delete ${notification.title}`}
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  void deleteNotification(notification);
+                }}
+                onPointerDown={(event) => event.stopPropagation()}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+              </Button>
+            </div>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

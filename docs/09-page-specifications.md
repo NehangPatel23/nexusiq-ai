@@ -211,6 +211,8 @@ Each agent tab:
 
 - In-app list: processing done, risk found, task assigned
 - Mark read, mark all read
+- Archive to Archived tab; restore from Archived
+- Permanently delete (with confirm)
 
 ---
 

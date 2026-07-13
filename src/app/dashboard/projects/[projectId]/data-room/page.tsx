@@ -9,7 +9,7 @@ import {
   canManageDeletedDocuments,
   canUploadDocuments,
 } from "@/features/data-room/lib/roles";
-import { getDeletedRetentionDays, purgeExpiredDeletedItems } from "@/features/data-room/lib/retention";
+import { getDeletedRetentionDays } from "@/features/data-room/lib/retention";
 import type { DataRoomDocument, DataRoomFolderNode } from "@/features/data-room/lib/types";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
 import { getProjectById } from "@/features/projects/lib/projects";
@@ -59,10 +59,7 @@ export default async function DataRoomPage({ params }: PageProps) {
   ]);
 
   const canManageDeleted = canManageDeletedDocuments(membership.role);
-  if (canManageDeleted) {
-    await purgeExpiredDeletedItems(projectId);
-  }
-
+  // Retention purge runs from explicit actions — not on every Data Room navigation.
   const retentionDays = getDeletedRetentionDays();
 
   return (

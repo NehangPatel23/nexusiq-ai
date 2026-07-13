@@ -8,17 +8,11 @@ import { getOrganizationMembership } from "@/features/organizations/lib/authoriz
 import { listSavedSearches } from "@/features/search/lib/saved-searches";
 import { SearchPage } from "@/features/search/components/search-page";
 import { getProjectById } from "@/features/projects/lib/projects";
-import { getOllamaClient, isOllamaConfigured } from "@/lib/ai/ollama-client";
+import { isOllamaConfigured } from "@/lib/ai/ollama-client";
 import { getSession } from "@/lib/session";
 
 interface PageProps {
   params: Promise<{ projectId: string }>;
-}
-
-async function getOllamaStatus(): Promise<"connected" | "unreachable" | "not_configured"> {
-  if (!isOllamaConfigured()) return "not_configured";
-  const health = await getOllamaClient().healthCheck();
-  return health.ok ? "connected" : "unreachable";
 }
 
 export default async function ProjectSearchPage({ params }: PageProps) {
@@ -41,11 +35,12 @@ export default async function ProjectSearchPage({ params }: PageProps) {
     redirect("/dashboard/projects");
   }
 
-  const [folders, documents, savedSearches, ollamaStatus] = await Promise.all([
+  // Do not await Ollama health on the server — a slow/unreachable host can add up to 5s
+  // to every Search tab navigation. The client verifies after paint.
+  const [folders, documents, savedSearches] = await Promise.all([
     listFolders(projectId),
     listDocuments(projectId, { folderId: "all" }),
     listSavedSearches(projectId, session.user.id),
-    getOllamaStatus(),
   ]);
 
   const clientDocuments = documents.map((doc) =>
@@ -67,7 +62,7 @@ export default async function ProjectSearchPage({ params }: PageProps) {
         initialSavedSearches={savedSearches}
         folders={folders.map((folder) => ({ id: folder.id, path: folder.path }))}
         documents={clientDocuments}
-        ollamaStatus={ollamaStatus}
+        initialOllamaStatus={isOllamaConfigured() ? "checking" : "not_configured"}
       />
     </Suspense>
   );

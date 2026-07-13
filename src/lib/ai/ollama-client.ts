@@ -49,7 +49,7 @@ function readConfig(): OllamaConfig {
     chatModel: process.env.OLLAMA_CHAT_MODEL ?? "llama3",
     embedModel: process.env.OLLAMA_EMBED_MODEL ?? "nomic-embed-text",
     apiKey: process.env.OLLAMA_API_KEY,
-    healthTimeoutMs: 5000,
+    healthTimeoutMs: 2000,
     chatTimeoutMs:
       Number.isFinite(chatTimeoutFromEnv) && chatTimeoutFromEnv > 0
         ? chatTimeoutFromEnv
@@ -126,7 +126,7 @@ export class OllamaClient {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), this.config.healthTimeoutMs ?? 5000);
+    const timeout = setTimeout(() => controller.abort(), this.config.healthTimeoutMs ?? 2000);
 
     try {
       const response = await this.fetchImpl(`${this.config.baseUrl}/api/tags`, {

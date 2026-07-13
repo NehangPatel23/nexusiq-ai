@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { startTransition, useEffect, useState } from "react";
 
 import {
   getBackgroundAnalysisSnapshot,
@@ -8,10 +8,28 @@ import {
   type BackgroundAnalysisSnapshot,
 } from "@/features/intelligence/lib/background-analysis-runner";
 
+/**
+ * Prefer useState + startTransition over useSyncExternalStore.
+ * External-store updates are high priority and can starve App Router navigations
+ * while a long full-analysis job is emitting progress.
+ */
 export function useBackgroundAnalysis(projectId: string): BackgroundAnalysisSnapshot {
-  return useSyncExternalStore(
-    (onStoreChange) => subscribeBackgroundAnalysis(projectId, () => onStoreChange()),
-    () => getBackgroundAnalysisSnapshot(projectId),
-    () => getBackgroundAnalysisSnapshot(projectId),
-  );
+  const [snapshot, setSnapshot] = useState(() => getBackgroundAnalysisSnapshot(projectId));
+
+  useEffect(() => {
+    let cancelled = false;
+    setSnapshot(getBackgroundAnalysisSnapshot(projectId));
+    const unsubscribe = subscribeBackgroundAnalysis(projectId, (next) => {
+      if (cancelled) return;
+      startTransition(() => {
+        if (!cancelled) setSnapshot(next);
+      });
+    });
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, [projectId]);
+
+  return snapshot;
 }

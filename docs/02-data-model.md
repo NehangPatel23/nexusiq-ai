@@ -157,8 +157,9 @@ enum AuditAction { CREATE UPDATE DELETE LOGIN LOGOUT UPLOAD PROCESS SEARCH CHAT 
 - createdAt, updatedAt, deletedAt?
 
 ### Notification
-- id, userId, type (NotificationType), title, body, link?, readAt?, createdAt
+- id, userId, type (NotificationType), title, body, link?, readAt?, archivedAt?, createdAt
 - @@index([userId, readAt])
+- @@index([userId, archivedAt])
 
 ### AuditLog
 - id, organizationId, userId?, action (AuditAction), entityType, entityId?

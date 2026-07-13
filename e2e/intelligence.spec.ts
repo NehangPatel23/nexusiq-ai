@@ -554,4 +554,49 @@ test.describe("intelligence agents", () => {
     ).toBeVisible();
     await expect(page.getByText(/Last completed/i)).toHaveCount(0);
   });
+
+  test("allows leaving Intelligence while full analysis is still running", async ({ page }) => {
+    test.setTimeout(120_000);
+    const timestamp = Date.now();
+    await createIntelProject(page, timestamp);
+
+    const agents = ["financial", "legal", "compliance", "risk", "fraud", "executive"] as const;
+    for (const agent of agents) {
+      await page.route(`**/api/projects/*/agents/${agent}/run`, async (route) => {
+        if (route.request().method() !== "POST") {
+          await route.continue();
+          return;
+        }
+        // Hold the first step open long enough that navigation must interrupt UI updates.
+        await new Promise((resolve) => setTimeout(resolve, 15_000));
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            success: true,
+            data: {
+              runId: `run-nav-${agent}`,
+              agentType: agent.toUpperCase(),
+              status: "completed",
+              score: 70,
+              confidence: "MEDIUM",
+              findings: [],
+              citations: [],
+              output: {},
+            },
+          }),
+        });
+      });
+    }
+
+    await page.getByRole("button", { name: /Full analysis/i }).click();
+    await expect(page.getByText(/running in the background/i)).toBeVisible({ timeout: 10_000 });
+
+    await page.getByRole("tab", { name: "Data Room" }).click();
+    await expect(page).toHaveURL(/\/data-room/, { timeout: 10_000 });
+    await expect(page.getByRole("heading", { name: "Data Room" })).toBeVisible({
+      timeout: 10_000,
+    });
+    await expect(page.getByText(/running in the background/i)).toBeVisible();
+  });
 });

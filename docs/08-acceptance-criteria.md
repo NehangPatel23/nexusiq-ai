@@ -35,6 +35,7 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Org CRUD, teams, roles (Owner/Admin/Analyst/Reviewer/Viewer)
 - [x] Invites, member management, permissions enforced
 - [x] In-app notifications created on key events
+- [x] Notifications inbox: archive, restore, delete, mark all read
 
 ### 03 Workspaces
 - [x] Workspace CRUD, unique slug per org
