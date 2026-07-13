@@ -694,9 +694,9 @@ export function IntelligencePage({
   const currentOutput = showResults ? (activeDetail?.output ?? null) : null;
   const currentScore = showResults ? (activeDetail?.score ?? null) : null;
   const currentConfidence = showResults ? (activeDetail?.confidence ?? null) : null;
+  // Prefer ternary so TS keeps ConsensusRunApiResponse (not `true` from `obj && boolean`).
   const visibleConsensus =
-    consensus &&
-    !(runningFullAnalysis && !backgroundAnalysis.consensus);
+    consensus && !(runningFullAnalysis && !backgroundAnalysis.consensus) ? consensus : null;
 
   const fullAnalysisStepLabel = useMemo(() => {
     if (runningFullAnalysis && backgroundAnalysis.currentStepLabel) {
