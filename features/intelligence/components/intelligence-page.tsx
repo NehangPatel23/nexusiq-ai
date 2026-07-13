@@ -220,7 +220,11 @@ export function IntelligencePage({
   }, []);
 
   const runAgent = useCallback(
-    async (agentType: AgentType, force = false): Promise<boolean> => {
+    async (
+      agentType: AgentType,
+      force = false,
+      options?: { skipRouterRefresh?: boolean },
+    ): Promise<boolean> => {
       beginAgentScan(agentType);
       setOllamaUnavailable(false);
       try {
@@ -249,6 +253,12 @@ export function IntelligencePage({
 
         await refreshRuns();
         await loadRunDetail(payload.data.runId, agentType);
+        // Invalidate the Router Cache so server components on sibling tabs
+        // (e.g. the project overview scores + enterprise risk gauge) reflect
+        // this run without a manual page refresh.
+        if (!options?.skipRouterRefresh) {
+          router.refresh();
+        }
         return payload.data.status === "completed";
       } catch {
         toast.error("Agent scan could not be started.");
@@ -257,7 +267,7 @@ export function IntelligencePage({
         endAgentScan(agentType);
       }
     },
-    [projectId, refreshRuns, loadRunDetail, beginAgentScan, endAgentScan],
+    [projectId, refreshRuns, loadRunDetail, beginAgentScan, endAgentScan, router],
   );
 
   const runAllAgents = useCallback(async () => {
@@ -270,19 +280,23 @@ export function IntelligencePage({
     for (let index = 0; index < INTELLIGENCE_AGENT_TYPES.length; index += 1) {
       const agentType = INTELLIGENCE_AGENT_TYPES[index];
       setActiveAgent(agentType);
-      const ok = await runAgent(agentType, true);
+      const ok = await runAgent(agentType, true, { skipRouterRefresh: true });
       setRunAllProgress(index + 1);
       if (!ok) break;
       completed += 1;
     }
 
     setRunningAll(false);
+    if (completed > 0) {
+      // Single refresh after the batch so overview scores update once.
+      router.refresh();
+    }
     if (completed === INTELLIGENCE_AGENT_TYPES.length) {
       toast.success("Full intelligence scan finished.");
     } else if (completed > 0) {
       toast.message("Full scan stopped early. Completed agents were updated.");
     }
-  }, [runAgent]);
+  }, [runAgent, router]);
 
   useEffect(() => {
     const runAll = searchParams.get("runAll");
