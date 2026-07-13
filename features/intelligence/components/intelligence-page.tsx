@@ -199,9 +199,12 @@ export function IntelligencePage({
   const [activeTab, setActiveTab] = useState<IntelligenceTab>("FINANCIAL");
   const [runs, setRuns] = useState(initialRuns);
   const [details, setDetails] = useState(initialDetails);
-  const [consensus, setConsensus] = useState<ConsensusRunApiResponse | null>(
-    initialConsensus ? detailToConsensusApi(initialConsensus) : null,
-  );
+  const [consensus, setConsensus] = useState<ConsensusRunApiResponse | null>(() => {
+    if (backgroundAnalysis.status === "running" && backgroundAnalysis.mode === "full") {
+      return backgroundAnalysis.consensus ?? null;
+    }
+    return initialConsensus ? detailToConsensusApi(initialConsensus) : null;
+  });
   const [consensusHistory, setConsensusHistory] = useState(initialConsensusHistory);
   const [scanningAgents, setScanningAgents] = useState<Set<AgentType>>(() => new Set());
   const [consensusRunningLocal, setConsensusRunningLocal] = useState(false);
@@ -209,13 +212,19 @@ export function IntelligencePage({
   const [showHistory, setShowHistory] = useState(false);
   const runAllTriggeredRef = useRef(false);
   const fullAnalysisTriggeredRef = useRef(false);
-  const hydratedDetailsRef = useRef(Object.keys(initialDetails).length > 0);
+  const hydratedDetailsRef = useRef(
+    Object.keys(initialDetails).length > 0 && backgroundAnalysis.status !== "running",
+  );
+  /** Bumped when a batch starts so in-flight detail fetches cannot restore stale runs. */
+  const detailsEpochRef = useRef(0);
 
   const runningAll = backgroundAnalysis.status === "running" && backgroundAnalysis.mode === "specialists";
   const runningFullAnalysis = backgroundAnalysis.status === "running" && backgroundAnalysis.mode === "full";
+  const batchRunning = runningAll || runningFullAnalysis;
   const runAllProgress = backgroundAnalysis.mode === "specialists" ? backgroundAnalysis.progress : 0;
   const fullAnalysisProgress = backgroundAnalysis.mode === "full" ? backgroundAnalysis.progress : 0;
   const consensusRunning = consensusRunningLocal || backgroundAnalysis.consensusRunning;
+  const completedThisRun = backgroundAnalysis.completedRuns;
 
   const completedSpecialists = useMemo(() => {
     const latest = new Map<SpecialistAgentType, AgentRunSummary>();
@@ -244,13 +253,13 @@ export function IntelligencePage({
   const activeAgent = isSpecialistTab || activeTab === "EXECUTIVE" ? (activeTab as AgentType) : null;
   const activeDetail = activeAgent ? details[activeAgent] : undefined;
   const isActiveAgentScanning = activeAgent ? isAgentScanning(activeAgent) : false;
-  const batchRunning = runningAll || runningFullAnalysis;
+  const activeCompletedThisRun =
+    activeAgent !== null && Boolean(completedThisRun[activeAgent]);
   const isWaitingInFullScan =
     batchRunning &&
     activeAgent !== null &&
-    activeAgent !== "EXECUTIVE" &&
     !isActiveAgentScanning &&
-    activeDetail === undefined;
+    !activeCompletedThisRun;
   const activeRun = useMemo(() => {
     if (!activeAgent || isActiveAgentScanning || batchRunning) return undefined;
     return runs.find((run) => run.agentType === activeAgent && run.status === "COMPLETED");
@@ -278,14 +287,21 @@ export function IntelligencePage({
     }
   }, [projectId]);
 
-  const loadRunDetail = useCallback(async (runId: string, agentType: AgentType) => {
+  const loadRunDetail = useCallback(async (runId: string, agentType: AgentType, epoch?: number) => {
+    const expectedEpoch = epoch ?? detailsEpochRef.current;
     const response = await fetch(`/api/agent-runs/${runId}`);
     const payload = (await response.json()) as ApiEnvelope<AgentRunDetail>;
-    if (payload.success) {
-      startTransition(() => {
-        setDetails((current) => ({ ...current, [agentType]: payload.data }));
-      });
-    }
+    if (!payload.success) return;
+    startTransition(() => {
+      if (detailsEpochRef.current !== expectedEpoch) return;
+      setDetails((current) => ({ ...current, [agentType]: payload.data }));
+    });
+  }, []);
+
+  const clearDetailsForNewBatch = useCallback(() => {
+    detailsEpochRef.current += 1;
+    hydratedDetailsRef.current = true;
+    setDetails({});
   }, []);
 
   const loadConsensusDetail = useCallback(async (consensusRunId: string) => {
@@ -317,7 +333,12 @@ export function IntelligencePage({
 
   useEffect(() => {
     if (hydratedDetailsRef.current) return;
+    if (backgroundAnalysis.status === "running") {
+      hydratedDetailsRef.current = true;
+      return;
+    }
     hydratedDetailsRef.current = true;
+    const epoch = detailsEpochRef.current;
     const latestByAgent = new Map<AgentType, string>();
     for (const run of runs) {
       if (run.status !== "COMPLETED") continue;
@@ -325,9 +346,9 @@ export function IntelligencePage({
       latestByAgent.set(run.agentType, run.id);
     }
     for (const [agentType, runId] of latestByAgent) {
-      void loadRunDetail(runId, agentType);
+      void loadRunDetail(runId, agentType, epoch);
     }
-  }, [runs, loadRunDetail]);
+  }, [runs, loadRunDetail, backgroundAnalysis.status]);
 
   const runAgent = useCallback(
     async (
@@ -434,18 +455,18 @@ export function IntelligencePage({
 
   const runAllAgents = useCallback(() => {
     if (backgroundAnalysis.status === "running") return;
-    setDetails({});
+    clearDetailsForNewBatch();
     setOllamaUnavailable(false);
     startBackgroundSpecialistsScan(projectId);
-  }, [backgroundAnalysis.status, projectId]);
+  }, [backgroundAnalysis.status, projectId, clearDetailsForNewBatch]);
 
   const runFullAnalysis = useCallback(() => {
     if (backgroundAnalysis.status === "running") return;
-    setDetails({});
+    clearDetailsForNewBatch();
     setConsensus(null);
     setOllamaUnavailable(false);
     startBackgroundFullAnalysis(projectId);
-  }, [backgroundAnalysis.status, projectId]);
+  }, [backgroundAnalysis.status, projectId, clearDetailsForNewBatch]);
 
   useEffect(() => {
     let cancelled = false;
@@ -468,11 +489,12 @@ export function IntelligencePage({
 
         if (!event) {
           if (snapshot.status === "running") {
-            void refreshRuns();
+            // Only hydrate details completed in the *current* background job.
+            const epoch = detailsEpochRef.current;
             for (const [agentType, runId] of Object.entries(snapshot.completedRuns) as Array<
               [AgentType, string]
             >) {
-              void loadRunDetail(runId, agentType);
+              void loadRunDetail(runId, agentType, epoch);
             }
             if (snapshot.consensus) {
               setConsensus(snapshot.consensus);
@@ -482,7 +504,7 @@ export function IntelligencePage({
         }
 
         if (event.type === "started") {
-          setDetails({});
+          clearDetailsForNewBatch();
           if (event.mode === "full") setConsensus(null);
           setOllamaUnavailable(false);
           return;
@@ -496,7 +518,8 @@ export function IntelligencePage({
 
         if (event.type === "agent_completed") {
           endAgentScan(event.agentType);
-          void refreshRuns().then(() => loadRunDetail(event.runId, event.agentType));
+          const epoch = detailsEpochRef.current;
+          void refreshRuns().then(() => loadRunDetail(event.runId, event.agentType, epoch));
           if (window.location.pathname.includes("/intelligence")) {
             toast.success(`${AGENT_TYPE_LABELS[event.agentType]} scan completed.`);
           }
@@ -558,6 +581,7 @@ export function IntelligencePage({
         }
 
         if (event.type === "finished") {
+          const epoch = detailsEpochRef.current;
           void refreshRuns();
           void refreshConsensusHistory();
           // Avoid router.refresh while the user may be navigating away — it re-fetches
@@ -568,7 +592,7 @@ export function IntelligencePage({
           for (const [agentType, runId] of Object.entries(snapshot.completedRuns) as Array<
             [AgentType, string]
           >) {
-            void loadRunDetail(runId, agentType);
+            void loadRunDetail(runId, agentType, epoch);
           }
           if (snapshot.consensus) {
             setConsensus(snapshot.consensus);
@@ -586,6 +610,7 @@ export function IntelligencePage({
     };
   }, [
     projectId,
+    clearDetailsForNewBatch,
     beginAgentScan,
     endAgentScan,
     refreshRuns,
@@ -656,17 +681,22 @@ export function IntelligencePage({
     !isActiveAgentScanning &&
     !isWaitingInFullScan &&
     Boolean(activeDetail) &&
-    activeDetail?.status === "COMPLETED";
+    activeDetail?.status === "COMPLETED" &&
+    (!batchRunning || activeCompletedThisRun);
   const showFailedResult =
     activeAgent !== null &&
     !isActiveAgentScanning &&
     !isWaitingInFullScan &&
-    activeDetail?.status === "FAILED";
+    activeDetail?.status === "FAILED" &&
+    (!batchRunning || activeCompletedThisRun);
   const currentFindings = showResults ? (activeDetail?.findings ?? []) : [];
   const currentCitations = showResults ? (activeDetail?.citations ?? []) : [];
   const currentOutput = showResults ? (activeDetail?.output ?? null) : null;
   const currentScore = showResults ? (activeDetail?.score ?? null) : null;
   const currentConfidence = showResults ? (activeDetail?.confidence ?? null) : null;
+  const visibleConsensus =
+    consensus &&
+    !(runningFullAnalysis && !backgroundAnalysis.consensus);
 
   const fullAnalysisStepLabel = useMemo(() => {
     if (runningFullAnalysis && backgroundAnalysis.currentStepLabel) {
@@ -763,18 +793,23 @@ export function IntelligencePage({
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Intelligence agents">
         {INTELLIGENCE_AGENT_TYPES.map((agent) => {
           const scanning = isAgentScanning(agent);
-          const agentDetail = details[agent];
-          const waitingInFullScan = batchRunning && !scanning && agentDetail === undefined;
+          const completedInBatch = Boolean(completedThisRun[agent]);
+          const agentDetail = completedInBatch || !batchRunning ? details[agent] : undefined;
+          const waitingInFullScan = batchRunning && !scanning && !completedInBatch;
           const latest =
             !batchRunning && !scanning
               ? runs.find((run) => run.agentType === agent && run.status === "COMPLETED")
               : undefined;
           const tabScore =
-            agentDetail?.score !== null && agentDetail?.score !== undefined
+            completedInBatch && agentDetail?.score !== null && agentDetail?.score !== undefined
               ? agentDetail.score
-              : !batchRunning && latest?.score !== null && latest?.score !== undefined
-                ? latest.score
-                : null;
+              : !batchRunning &&
+                  agentDetail?.score !== null &&
+                  agentDetail?.score !== undefined
+                ? agentDetail.score
+                : !batchRunning && latest?.score !== null && latest?.score !== undefined
+                  ? latest.score
+                  : null;
 
           return (
             <button
@@ -806,18 +841,24 @@ export function IntelligencePage({
           type="button"
           role="tab"
           aria-selected={activeTab === "EXECUTIVE"}
-          aria-busy={isAgentScanning("EXECUTIVE")}
+          aria-busy={
+            isAgentScanning("EXECUTIVE") ||
+            (batchRunning && !completedThisRun.EXECUTIVE && !isAgentScanning("EXECUTIVE"))
+          }
           className={cn(
             "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors",
             activeTab === "EXECUTIVE"
               ? "border-primary bg-primary/10 text-foreground"
               : "border-border/60 text-muted-foreground hover:text-foreground",
-            isAgentScanning("EXECUTIVE") && "border-primary/40",
+            (isAgentScanning("EXECUTIVE") ||
+              (batchRunning && !completedThisRun.EXECUTIVE)) &&
+              "border-primary/40",
           )}
           onClick={() => setActiveTab("EXECUTIVE")}
         >
           Executive
-          {isAgentScanning("EXECUTIVE") ? (
+          {isAgentScanning("EXECUTIVE") ||
+          (batchRunning && !completedThisRun.EXECUTIVE) ? (
             <Loader2 className="h-3.5 w-3.5 motion-safe:animate-spin text-primary" aria-hidden="true" />
           ) : null}
         </button>
@@ -849,12 +890,14 @@ export function IntelligencePage({
             <div>
               <CardTitle>Consensus</CardTitle>
               <CardDescription>
-                {consensus
+                {visibleConsensus
                   ? `Last synthesis ${new Date(
-                      consensusHistory.find((item) => item.id === consensus.consensusRunId)?.createdAt ??
+                      consensusHistory.find((item) => item.id === visibleConsensus.consensusRunId)?.createdAt ??
                         Date.now(),
                     ).toLocaleString()}`
-                  : "Explainable multi-agent recommendation"}
+                  : runningFullAnalysis
+                    ? "Waiting for specialist scans to finish before consensus"
+                    : "Explainable multi-agent recommendation"}
               </CardDescription>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -909,31 +952,32 @@ export function IntelligencePage({
               </div>
             ) : null}
 
-            {!consensusRunning && !consensus ? (
+            {!consensusRunning && !visibleConsensus ? (
               <p className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
-                No consensus yet. Complete specialist scans, then run consensus to see per-agent opinions before the
-                final recommendation.
+                {runningFullAnalysis
+                  ? "Consensus will appear after specialists finish."
+                  : "No consensus yet. Complete specialist scans, then run consensus to see per-agent opinions before the final recommendation."}
               </p>
             ) : null}
 
-            {!consensusRunning && consensus ? (
+            {!consensusRunning && visibleConsensus ? (
               <>
                 <div>
                   <h3 className="mb-3 text-sm font-medium text-muted-foreground">Agent opinions</h3>
-                  <ConsensusOpinionGrid opinions={consensus.agentOpinions} />
+                  <ConsensusOpinionGrid opinions={visibleConsensus.agentOpinions} />
                 </div>
 
                 <ConsensusConflictMatrix
-                  agreements={consensus.agreements}
-                  conflicts={consensus.conflicts}
+                  agreements={visibleConsensus.agreements}
+                  conflicts={visibleConsensus.conflicts}
                 />
 
                 <ConsensusRecommendation
                   projectId={projectId}
-                  finalRecommendation={consensus.finalRecommendation}
-                  decisionConfidence={consensus.decisionConfidence}
-                  resolutionRationale={consensus.resolutionRationale}
-                  citations={consensus.citations}
+                  finalRecommendation={visibleConsensus.finalRecommendation}
+                  decisionConfidence={visibleConsensus.decisionConfidence}
+                  resolutionRationale={visibleConsensus.resolutionRationale}
+                  citations={visibleConsensus.citations}
                 />
               </>
             ) : null}

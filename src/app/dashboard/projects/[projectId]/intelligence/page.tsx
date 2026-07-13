@@ -20,6 +20,7 @@ export default async function IntelligencePage({ params }: PageProps) {
   if (!session?.user?.id) redirect("/login");
 
   const { projectId } = await params;
+  // Layout already authorized this project; reuse cached getProjectById within the request.
   const project = await getProjectById(projectId);
   if (!project) notFound();
 
@@ -42,11 +43,11 @@ export default async function IntelligencePage({ params }: PageProps) {
     <ProjectIntelligencePage
       projectId={projectId}
       projectName={project.name}
-      initialRuns={runs}
+      initialRuns={JSON.parse(JSON.stringify(runs))}
       initialDetails={{}}
       initialRiskSummary={initialRiskSummary}
-      initialConsensus={initialConsensus}
-      initialConsensusHistory={initialConsensusHistory}
+      initialConsensus={initialConsensus ? JSON.parse(JSON.stringify(initialConsensus)) : null}
+      initialConsensusHistory={JSON.parse(JSON.stringify(initialConsensusHistory))}
     />
   );
 }

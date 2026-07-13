@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import {
-  NotificationsInbox,
-  serializeNotifications,
-} from "@/features/organizations/components/notifications-inbox";
+import { NotificationsInbox } from "@/features/organizations/components/notifications-inbox";
 import { listUserNotifications } from "@/features/organizations/lib/notifications";
+import { serializeNotifications } from "@/features/organizations/lib/serialize-notifications";
 import { PageHeader } from "@/components/layout/page-header";
 import { getSession } from "@/lib/session";
 
@@ -25,7 +23,7 @@ export default async function NotificationsPage() {
   ]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
         title="Notifications"
         description="Stay updated on invites, processing, and team activity. Archive or delete items you no longer need."
