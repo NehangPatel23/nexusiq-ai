@@ -96,7 +96,8 @@ export function DataRoomToolbar({
 }: DataRoomToolbarProps) {
   const [bulkClassification, setBulkClassification] = useState("");
 
-  const toolbarSelectClass = "h-9 rounded-md border border-input bg-background px-2 text-sm";
+  const toolbarSelectClass =
+    "h-9 w-auto min-w-[9rem] shrink-0 rounded-md border border-input bg-background px-2 text-sm";
 
   return (
     <div className="space-y-3">

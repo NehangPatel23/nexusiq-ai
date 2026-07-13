@@ -87,6 +87,10 @@ export async function POST(request: Request, context: RouteContext) {
 
     return apiSuccess(result.document, 201);
   } catch (error) {
+    if (error instanceof Error && error.message.trim()) {
+      console.error("Upload failed:", error);
+      return apiError("PROCESSING_ERROR", error.message, 500);
+    }
     return handleApiError(error);
   }
 }

@@ -329,37 +329,42 @@ export async function uploadDocument(
   await storage.putObject(storageKey, input.buffer, validation.mimeType);
 
   try {
-    const document = await prisma.$transaction(async (tx) => {
-      const created = await tx.document.create({
-        data: {
-          id: documentId,
-          projectId: input.projectId,
-          folderId,
-          name: displayName,
-          originalName: displayName,
-          mimeType: validation.mimeType,
-          type: validation.type,
-          filePath: storageKey,
-          fileSize: input.buffer.byteLength,
-          status: "PENDING",
-          version,
-          contentHash: hash,
-          tags: input.tags ?? [],
-        },
-        include: documentInclude,
-      });
+    await prisma.document.create({
+      data: {
+        id: documentId,
+        projectId: input.projectId,
+        folderId,
+        name: displayName,
+        originalName: displayName,
+        mimeType: validation.mimeType,
+        type: validation.type,
+        filePath: storageKey,
+        fileSize: input.buffer.byteLength,
+        status: "PENDING",
+        version,
+        contentHash: hash,
+        tags: input.tags ?? [],
+      },
+    });
 
-      await tx.documentVersion.create({
+    try {
+      await prisma.documentVersion.create({
         data: {
-          documentId: created.id,
+          documentId,
           version,
           filePath: storageKey,
           fileSize: input.buffer.byteLength,
           uploadedById: input.uploadedById,
         },
       });
+    } catch (error) {
+      await prisma.document.delete({ where: { id: documentId } }).catch(() => undefined);
+      throw error;
+    }
 
-      return created;
+    const document = await prisma.document.findFirstOrThrow({
+      where: { id: documentId },
+      include: documentInclude,
     });
 
     scheduleDocumentProcessing(document.id);
@@ -401,38 +406,38 @@ async function createDocumentVersion(params: {
   await storage.putObject(storageKey, params.buffer, params.mimeType);
 
   try {
-    const document = await prisma.$transaction(async (tx) => {
-      const updated = await tx.document.update({
-        where: { id: existing.id },
-        data: {
-          name: params.displayName,
-          originalName: params.displayName,
-          mimeType: params.mimeType,
-          type: params.type,
-          filePath: storageKey,
-          fileSize: params.buffer.byteLength,
-          status: "PENDING" satisfies DocumentStatus,
-          version: nextVersion,
-          contentHash: params.hash,
-          folderId: params.folderId ?? existing.folderId,
-          tags: params.tags ?? existing.tags,
-          errorMessage: null,
-          processedAt: null,
-        },
-        include: documentInclude,
-      });
+    await prisma.document.update({
+      where: { id: existing.id },
+      data: {
+        name: params.displayName,
+        originalName: params.displayName,
+        mimeType: params.mimeType,
+        type: params.type,
+        filePath: storageKey,
+        fileSize: params.buffer.byteLength,
+        status: "PENDING" satisfies DocumentStatus,
+        version: nextVersion,
+        contentHash: params.hash,
+        folderId: params.folderId ?? existing.folderId,
+        tags: params.tags ?? existing.tags,
+        errorMessage: null,
+        processedAt: null,
+      },
+    });
 
-      await tx.documentVersion.create({
-        data: {
-          documentId: existing.id,
-          version: nextVersion,
-          filePath: storageKey,
-          fileSize: params.buffer.byteLength,
-          uploadedById: params.uploadedById,
-        },
-      });
+    await prisma.documentVersion.create({
+      data: {
+        documentId: existing.id,
+        version: nextVersion,
+        filePath: storageKey,
+        fileSize: params.buffer.byteLength,
+        uploadedById: params.uploadedById,
+      },
+    });
 
-      return updated;
+    const document = await prisma.document.findFirstOrThrow({
+      where: { id: existing.id },
+      include: documentInclude,
     });
 
     scheduleDocumentProcessing(document.id);

@@ -16,6 +16,22 @@ import { cn } from "@/lib/utils";
 
 import type { FileEntry } from "../lib/upload-client";
 
+const SKIP_UPLOAD_FILE_NAMES = new Set([".ds_store", "thumbs.db", "desktop.ini"]);
+
+function shouldSkipUploadFile(fileName: string): boolean {
+  const base = fileName.split(/[/\\]/).pop()?.trim().toLowerCase() ?? "";
+  if (!base) return true;
+  if (SKIP_UPLOAD_FILE_NAMES.has(base)) return true;
+  return base === "readme.md";
+}
+
+function filterUploadEntries(entries: FileEntry[]): FileEntry[] {
+  return entries.filter((entry) => {
+    const name = entry.relativePath ?? entry.file.name;
+    return !shouldSkipUploadFile(name);
+  });
+}
+
 interface UploadDropzoneProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -101,7 +117,10 @@ export function UploadDropzone({
       entries.push(...Array.from(files).map((file) => ({ file })));
     }
 
-    await onUploadFiles(entries);
+    const filtered = filterUploadEntries(entries);
+    if (filtered.length === 0) return;
+
+    await onUploadFiles(filtered);
   }
 
   return (
@@ -169,7 +188,12 @@ export function UploadDropzone({
             onChange={(e) => {
               const fileList = e.target.files;
               if (fileList?.length) {
-                void onUploadFiles(Array.from(fileList).map((file) => ({ file })));
+                const entries = filterUploadEntries(
+                  Array.from(fileList).map((file) => ({ file })),
+                );
+                if (entries.length > 0) {
+                  void onUploadFiles(entries);
+                }
               }
               e.target.value = "";
             }}
