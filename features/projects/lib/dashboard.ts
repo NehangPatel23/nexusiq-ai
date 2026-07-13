@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/db";
 
+import { listRecentAgentRunActivity } from "@/features/intelligence/lib/agent-run-activity";
+import {
+  countOpenFindingsBySeverityForUser,
+  countOpenFindingsForUser,
+} from "@/features/intelligence/lib/findings-stats";
 import { listUserOrganizations } from "@/features/organizations/lib/organizations";
 import { listUserWorkspaces } from "@/features/projects/lib/user-workspaces";
 
@@ -45,8 +50,18 @@ export interface DashboardData {
 }
 
 export async function getDashboardData(userId: string): Promise<DashboardData> {
-  const [projectCount, projects, notifications, orgList, workspaces, documentsProcessed, documentsProcessing] =
-    await Promise.all([
+  const [
+    projectCount,
+    projects,
+    notifications,
+    orgList,
+    workspaces,
+    documentsProcessed,
+    documentsProcessing,
+    openRisks,
+    riskOverview,
+    agentRunActivity,
+  ] = await Promise.all([
     countUserProjects(userId),
     listUserProjects(userId),
     prisma.notification.findMany({
@@ -88,32 +103,36 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
         },
       },
     }),
+    countOpenFindingsForUser(userId),
+    countOpenFindingsBySeverityForUser(userId),
+    listRecentAgentRunActivity(userId, 10),
   ]);
 
   const primaryOrg = orgList[0] ?? null;
+
+  const notificationActivity: DashboardActivityItem[] = notifications.map((notification) => ({
+    id: notification.id,
+    type: notification.type,
+    title: notification.title,
+    body: notification.body,
+    link: notification.link,
+    createdAt: notification.createdAt.toISOString(),
+  }));
+
+  const recentActivity = [...notificationActivity, ...agentRunActivity]
+    .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
+    .slice(0, 10);
 
   return {
     stats: {
       projectCount,
       documentsProcessed,
       documentsProcessing,
-      openRisks: 0,
+      openRisks,
       pendingTasks: 0,
     },
-    riskOverview: {
-      critical: 0,
-      high: 0,
-      medium: 0,
-      low: 0,
-    },
-    recentActivity: notifications.map((notification) => ({
-      id: notification.id,
-      type: notification.type,
-      title: notification.title,
-      body: notification.body,
-      link: notification.link,
-      createdAt: notification.createdAt.toISOString(),
-    })),
+    riskOverview,
+    recentActivity,
     recentReports: [],
     upcomingTasks: [],
     recentProjectId: projects[0]?.id ?? null,

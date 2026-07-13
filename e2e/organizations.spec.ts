@@ -120,7 +120,7 @@ test.describe("organizations flow", () => {
     await expect(page).toHaveURL("/dashboard", { timeout: 15_000 });
 
     await page.getByRole("link", { name: "Agents" }).click();
-    await expect(page.getByText(/coming soon/i)).toBeVisible();
     await expect(page.getByRole("heading", { name: "Intelligence Agents" })).toBeVisible();
+    await expect(page.getByText(/scoped to a project/i)).toBeVisible();
   });
 });

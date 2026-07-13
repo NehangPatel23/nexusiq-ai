@@ -29,7 +29,6 @@ async function setupProjectWithDataRoom(page: Page) {
   await page.goto("/dashboard/projects");
   await page.getByRole("button", { name: /create project/i }).click();
   await page.getByLabel("Name").fill(projectName);
-  await page.getByLabel("Type").selectOption("MA");
   await page.getByRole("button", { name: /^create project$/i }).click();
   await expect(page.getByRole("heading", { name: projectName })).toBeVisible({
     timeout: 15_000,
@@ -90,13 +89,17 @@ test.describe("data room flow", () => {
     await dialog.locator('input[type="file"]').setInputFiles(mdPath);
 
     await expect(page.getByText("README.md")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText("READY").first()).toBeVisible({ timeout: 30_000 });
 
     await page.getByRole("button", { name: "README.md", exact: true }).click();
     await page.getByRole("button", { name: "Expand preview" }).click();
     const fullPreview = page.getByRole("dialog", { name: /README\.md/i });
-    await expect(fullPreview).toBeVisible({
-      timeout: 10_000,
+    await expect(fullPreview).toBeVisible({ timeout: 10_000 });
+    await expect(fullPreview.getByText(/loading markdown preview/i)).toBeHidden({
+      timeout: 15_000,
     });
-    await expect(fullPreview.getByRole("heading", { name: "Board Minutes" })).toBeVisible();
+    await expect(fullPreview.getByRole("heading", { name: "Board Minutes" })).toBeVisible({
+      timeout: 15_000,
+    });
   });
 });

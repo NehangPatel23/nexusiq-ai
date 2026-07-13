@@ -38,6 +38,8 @@ Worker VPS (or Mac during dev) → polls PENDING documents
 
 **Interactive chat (slice 08):** Unlike keyword search, chat generation always requires reachable Ollama. Vercel must use the public HTTPS Ollama endpoint and server-only `OLLAMA_API_KEY`; localhost development uses `http://localhost:11434`. An outage returns `503 OLLAMA_UNAVAILABLE`, while questions with no retrieved evidence return a persisted `INSUFFICIENT` answer without calling Ollama.
 
+**Intelligence agents (slice 09):** Agent runs use the same Ollama endpoint as chat (`ollama.chat` with JSON output, not streaming). Vercel prod requires public HTTPS Ollama; localhost uses `http://localhost:11434`. Zero retrieved chunks complete with `INSUFFICIENT` confidence without calling Ollama; unreachable Ollama returns `503 OLLAMA_UNAVAILABLE`.
+
 **Worker env (VPS):**
 
 ```bash

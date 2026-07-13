@@ -1,4 +1,13 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
+
+/** Radix / AppSelect combobox — options render in a portal, not as <select>. */
+export async function selectComboboxOption(
+  combobox: Locator,
+  optionLabel: string | RegExp,
+) {
+  await combobox.click();
+  await combobox.page().getByRole("option", { name: optionLabel }).click();
+}
 
 export async function registerAccount(
   page: Page,

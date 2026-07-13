@@ -26,7 +26,6 @@ test.describe("interactive chat", () => {
     await page.goto("/dashboard/projects");
     await page.getByRole("button", { name: /create project/i }).click();
     await page.getByLabel("Name").fill(projectName);
-    await page.getByLabel("Type").selectOption("MA");
     await page.getByRole("button", { name: /^create project$/i }).click();
     await expect(page.getByRole("heading", { name: projectName })).toBeVisible({
       timeout: 15_000,

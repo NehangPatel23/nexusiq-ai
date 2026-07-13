@@ -68,12 +68,12 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Insufficient evidence state
 
 ### 09 Intelligence Agents
-- [ ] Financial: health score, revenue/expense/margin, anomalies, concentration
-- [ ] Legal: risk score, clauses, red flags, expiring contracts
-- [ ] Compliance: audit readiness, GDPR/SOX/PCI/ISO/HIPAA gaps
-- [ ] Risk: enterprise score, category heatmap
-- [ ] Fraud: indicators with citations
-- [ ] Each agent: run UI, score card, findings table
+- [x] Financial: health score, revenue/expense/margin, anomalies, concentration
+- [x] Legal: risk score, clauses, red flags, expiring contracts
+- [x] Compliance: audit readiness, GDPR/SOX/PCI/ISO/HIPAA gaps
+- [x] Risk: enterprise score, category heatmap
+- [x] Fraud: indicators with citations
+- [x] Each agent: run UI, score card, findings table
 
 ### 10 Executive + Consensus
 - [ ] Executive agent: summary, memo, recommendation

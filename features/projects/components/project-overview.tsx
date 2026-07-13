@@ -1,14 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import type { ProjectType } from "@prisma/client";
+import type { AgentType, ProjectType } from "@prisma/client";
 
 import { ProcessingProgress } from "@/features/projects/components/processing-progress";
 import { TagsInput } from "@/features/projects/components/tags-input";
 import { useProjectShell } from "@/features/projects/components/project-shell-context";
 import { updateProjectAction } from "@/features/projects/actions";
 import { ProjectTypeBadge } from "@/features/projects/components/project-type-badge";
+import { AgentScoreGauge } from "@/features/intelligence/components/agent-score-gauge";
 import {
   DEFAULT_AGENTS,
   DEFAULT_AGENT_LABELS,
@@ -24,18 +26,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const AGENT_PLACEHOLDERS = [
-  { name: "Financial", score: "—" },
-  { name: "Legal", score: "—" },
-  { name: "Compliance", score: "—" },
-  { name: "Risk", score: "—" },
-  { name: "Fraud", score: "—" },
-];
+const AGENT_LABELS: Record<AgentType, string> = {
+  FINANCIAL: "Financial",
+  LEGAL: "Legal",
+  COMPLIANCE: "Compliance",
+  RISK: "Risk",
+  FRAUD: "Fraud",
+};
+
+const OVERVIEW_AGENTS: AgentType[] = ["FINANCIAL", "LEGAL", "COMPLIANCE", "RISK", "FRAUD"];
 
 const OVERVIEW_SELECT_TRIGGER_CLASS =
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
-export function ProjectOverview() {
+type ProjectOverviewProps = {
+  agentScores?: Partial<Record<AgentType, number | null>>;
+  enterpriseRiskScore?: number | null;
+};
+
+export function ProjectOverview({ agentScores = {}, enterpriseRiskScore = null }: ProjectOverviewProps) {
   const { project, setProject, canEdit } = useProjectShell();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(project.name);
@@ -269,17 +278,37 @@ export function ProjectOverview() {
         />
       </div>
 
+      <Card className="border-border/60 bg-card/40">
+        <CardContent className="p-6">
+          <AgentScoreGauge
+            score={enterpriseRiskScore}
+            label="Enterprise risk"
+            description="Composite score from the latest Risk agent assessment"
+          />
+        </CardContent>
+      </Card>
+
       <div>
-        <h3 className="mb-3 text-sm font-medium text-muted-foreground">Agent scores</h3>
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <h3 className="text-sm font-medium text-muted-foreground">Agent scores</h3>
+          <Button asChild variant="ghost" size="sm">
+            <Link href={`/dashboard/projects/${project.id}/intelligence`}>Open intelligence</Link>
+          </Button>
+        </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          {AGENT_PLACEHOLDERS.map((agent) => (
-            <Card key={agent.name} className="border-border/60 bg-card/40">
-              <CardContent className="p-4 text-center">
-                <p className="text-xs text-muted-foreground">{agent.name}</p>
-                <p className="mt-1 text-2xl font-semibold">{agent.score}</p>
-              </CardContent>
-            </Card>
-          ))}
+          {OVERVIEW_AGENTS.map((agent) => {
+            const score = agentScores[agent];
+            return (
+              <Card key={agent} className="border-border/60 bg-card/40">
+                <CardContent className="p-4 text-center">
+                  <p className="text-xs text-muted-foreground">{AGENT_LABELS[agent]}</p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums">
+                    {score === null || score === undefined ? "—" : Math.round(score)}
+                  </p>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 
