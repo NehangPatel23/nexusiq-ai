@@ -13,17 +13,28 @@ import { getSession } from "@/lib/session";
 vi.mock("@/lib/session", () => ({ getSession: vi.fn() }));
 vi.mock("@/lib/ai/agents/retrieval", () => ({ retrieveForAgent: vi.fn() }));
 
-const { mockOllama } = vi.hoisted(() => ({
-  mockOllama: {
-    healthCheck: vi.fn(),
-    chat: vi.fn(),
-  },
-}));
+const { mockOllama, OllamaTimeoutError } = vi.hoisted(() => {
+  class OllamaTimeoutError extends Error {
+    readonly code = "OLLAMA_TIMEOUT";
+    constructor(message = "Ollama chat timed out before completing.") {
+      super(message);
+      this.name = "OllamaTimeoutError";
+    }
+  }
+  return {
+    mockOllama: {
+      healthCheck: vi.fn(),
+      chat: vi.fn(),
+    },
+    OllamaTimeoutError,
+  };
+});
 
 vi.mock("@/lib/ai/ollama-client", () => ({
   getOllamaClient: () => mockOllama,
   isOllamaConfigured: () => true,
   resetOllamaClient: vi.fn(),
+  OllamaTimeoutError,
 }));
 
 const ownerEmail = `exec-owner-${Date.now()}@example.com`;

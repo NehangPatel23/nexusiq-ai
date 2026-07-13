@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
+import { BackgroundAnalysisBanner } from "@/features/intelligence/components/background-analysis-banner";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
 import { ProjectShellHeader } from "@/features/projects/components/project-shell-header";
 import { ProjectShellProvider } from "@/features/projects/components/project-shell-context";
@@ -9,7 +10,6 @@ import { canEditProject, canManageProjects } from "@/features/projects/lib/roles
 import { getProjectById } from "@/features/projects/lib/projects";
 import { toProjectSnapshot } from "@/features/projects/lib/project-snapshot";
 import { getSession } from "@/lib/session";
-
 interface LayoutProps {
   children: React.ReactNode;
   params: Promise<{ projectId: string }>;
@@ -56,6 +56,7 @@ export default async function ProjectLayout({ children, params }: LayoutProps) {
         <ProjectShellHeader projectId={projectId} />
 
         <ProjectShellNav projectId={projectId} />
+        <BackgroundAnalysisBanner projectId={projectId} />
         {children}
       </div>
     </ProjectShellProvider>

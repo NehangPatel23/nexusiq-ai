@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "src/app/api/projects/[id]/agents/*/run/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/projects/[id]/agents/consensus/run/route.ts": {
+      "maxDuration": 300
+    }
+  }
+}

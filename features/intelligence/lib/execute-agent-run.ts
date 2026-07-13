@@ -10,6 +10,7 @@ import {
   getRecentCompletedAgentRun,
   getRunningAgentRun,
 } from "@/features/intelligence/lib/agent-runs";
+import { failStaleRunningAgentRuns } from "@/features/intelligence/lib/fail-stale-runs";
 import { logAgentRunAudit } from "@/features/intelligence/lib/intelligence-audit";
 import { runComplianceAgent } from "@/lib/ai/agents/compliance";
 import { runExecutiveAgent } from "@/lib/ai/agents/executive";
@@ -17,7 +18,7 @@ import { runFinancialAgent } from "@/lib/ai/agents/financial";
 import { runFraudAgent } from "@/lib/ai/agents/fraud";
 import { runLegalAgent } from "@/lib/ai/agents/legal";
 import { runRiskAgent } from "@/lib/ai/agents/risk";
-import { OllamaUnavailableError } from "@/lib/ai/agents/run-agent";
+import { OllamaTimeoutError, OllamaUnavailableError } from "@/lib/ai/agents/run-agent";
 
 const AGENT_RUNNERS = {
   FINANCIAL: runFinancialAgent,
@@ -47,6 +48,13 @@ export async function executeAgentRun(input: {
         return buildAgentRunApiResponse(detail, { cached: true });
       }
     }
+  } else {
+    // Timed-out Vercel invocations leave RUNNING rows; clear before starting again.
+    await failStaleRunningAgentRuns(
+      input.projectId,
+      input.agentType,
+      "Superseded by a forced re-run (previous run may have timed out).",
+    );
   }
 
   const run = await createAgentRun({
@@ -116,6 +124,7 @@ export async function executeAgentRun(input: {
       throw error;
     }
 
+    // Timeouts and validation errors become failed runs so Full analysis can continue.
     return {
       runId: run.id,
       agentType: input.agentType,
@@ -124,7 +133,10 @@ export async function executeAgentRun(input: {
       findings: [],
       citations: [],
       output: null,
-      error: message,
+      error:
+        error instanceof OllamaTimeoutError
+          ? `Timed out waiting for Ollama. ${message}`
+          : message,
     };
   }
 }
