@@ -1,6 +1,6 @@
 import { requireOrgRole } from "@/features/organizations/lib/authorization";
 import { createDataRoomShare, listDataRoomShares } from "@/features/data-room/lib/shares";
-import { DATA_ROOM_DELETE_MIN_ROLE } from "@/features/data-room/lib/roles";
+import { DATA_ROOM_ADMIN_MIN_ROLE } from "@/features/data-room/lib/roles";
 import { getProjectById } from "@/features/projects/lib/projects";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api";
 
@@ -16,7 +16,7 @@ export async function GET(_request: Request, context: RouteContext) {
       return apiError("NOT_FOUND", "Project not found", 404);
     }
 
-    await requireOrgRole(project.workspace.organizationId, DATA_ROOM_DELETE_MIN_ROLE);
+    await requireOrgRole(project.workspace.organizationId, DATA_ROOM_ADMIN_MIN_ROLE);
 
     const shares = await listDataRoomShares(projectId);
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
@@ -43,7 +43,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const session = await requireOrgRole(
       project.workspace.organizationId,
-      DATA_ROOM_DELETE_MIN_ROLE,
+      DATA_ROOM_ADMIN_MIN_ROLE,
     );
 
     const body = (await request.json()) as {

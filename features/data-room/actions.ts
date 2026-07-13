@@ -41,6 +41,7 @@ import {
   revokeDataRoomShare,
 } from "./lib/shares";
 import {
+  DATA_ROOM_ADMIN_MIN_ROLE,
   DATA_ROOM_DELETE_MIN_ROLE,
   DATA_ROOM_UPLOAD_MIN_ROLE,
 } from "./lib/roles";
@@ -447,7 +448,7 @@ export async function restoreDocumentAction(
   documentId: string,
 ): Promise<ActionResult> {
   try {
-    const { session } = await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    const { session } = await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const deleted = await getDeletedDocumentById(documentId);
     const result = await restoreDocument(documentId);
     if ("error" in result) {
@@ -479,7 +480,7 @@ export async function permanentlyDeleteDocumentAction(
   documentId: string,
 ): Promise<ActionResult> {
   try {
-    const { session } = await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    const { session } = await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const deleted = await getDeletedDocumentById(documentId);
     const result = await permanentlyDeleteDocument(documentId);
     if ("error" in result) {
@@ -512,7 +513,7 @@ export async function bulkRestoreDocumentsAction(
   input: unknown,
 ): Promise<ActionResult<{ restored: number }>> {
   try {
-    await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const parsed = bulkDocumentIdsSchema.safeParse(input);
     if (!parsed.success) {
       return validationError(parsed.error.flatten().fieldErrors);
@@ -538,7 +539,7 @@ export async function bulkPermanentlyDeleteDocumentsAction(
   input: unknown,
 ): Promise<ActionResult<{ deleted: number }>> {
   try {
-    await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const parsed = bulkDocumentIdsSchema.safeParse(input);
     if (!parsed.success) {
       return validationError(parsed.error.flatten().fieldErrors);
@@ -564,7 +565,7 @@ export async function restoreFolderAction(
   folderId: string,
 ): Promise<ActionResult> {
   try {
-    const { session } = await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    const { session } = await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const deleted = await getDeletedFolderById(folderId);
     const result = await restoreFolder(folderId);
     if ("error" in result) {
@@ -595,7 +596,7 @@ export async function permanentlyDeleteFolderAction(
   folderId: string,
 ): Promise<ActionResult> {
   try {
-    const { session } = await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    const { session } = await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const deleted = await getDeletedFolderById(folderId);
     const result = await permanentlyDeleteFolder(folderId);
     if ("error" in result) {
@@ -627,7 +628,7 @@ export async function purgeExpiredDeletedAction(
   projectId: string,
 ): Promise<ActionResult<PurgeResult>> {
   try {
-    await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const result = await purgeExpiredDeletedItems(projectId);
     revalidatePath(`/dashboard/projects/${projectId}/data-room`);
     return { success: true, data: result };
@@ -644,7 +645,7 @@ export async function createShareLinkAction(
   input: { label?: string; expiresInDays?: number },
 ): Promise<ActionResult<{ token: string; url: string }>> {
   try {
-    const { session } = await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    const { session } = await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     const share = await createDataRoomShare({
       projectId,
       createdById: session.userId,
@@ -680,7 +681,7 @@ export async function revokeShareLinkAction(
   shareId: string,
 ): Promise<ActionResult> {
   try {
-    const { session } = await requireProjectAccess(projectId, DATA_ROOM_DELETE_MIN_ROLE);
+    const { session } = await requireProjectAccess(projectId, DATA_ROOM_ADMIN_MIN_ROLE);
     await revokeDataRoomShare(shareId);
 
     await logDataRoomAudit({

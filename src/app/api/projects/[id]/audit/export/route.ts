@@ -3,7 +3,7 @@ import {
   exportAuditEventsCsv,
   listDataRoomAuditEvents,
 } from "@/features/data-room/lib/audit";
-import { DATA_ROOM_DELETE_MIN_ROLE } from "@/features/data-room/lib/roles";
+import { DATA_ROOM_ADMIN_MIN_ROLE } from "@/features/data-room/lib/roles";
 import { getProjectById } from "@/features/projects/lib/projects";
 import { apiError, handleApiError } from "@/lib/api";
 
@@ -19,7 +19,7 @@ export async function GET(_request: Request, context: RouteContext) {
       return apiError("NOT_FOUND", "Project not found", 404);
     }
 
-    await requireOrgRole(project.workspace.organizationId, DATA_ROOM_DELETE_MIN_ROLE);
+    await requireOrgRole(project.workspace.organizationId, DATA_ROOM_ADMIN_MIN_ROLE);
 
     const events = await listDataRoomAuditEvents(projectId);
     const csv = exportAuditEventsCsv(events);

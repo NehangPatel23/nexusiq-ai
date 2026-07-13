@@ -169,7 +169,6 @@ export function DataRoomView({
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const [preserveStructure, setPreserveStructure] = useState(true);
-  const [uploading, setUploading] = useState(false);
   const [viewMode, setViewMode] = useState<DataRoomViewMode>("active");
   const [deletedTab, setDeletedTab] = useState<DeletedTab>("files");
   const [deletedDocuments, setDeletedDocuments] = useState<DeletedDocument[]>([]);
@@ -836,24 +835,14 @@ export function DataRoomView({
 
   async function handleDropFilesOnFolder(folderId: string | null, files: File[]) {
     if (!canUpload || files.length === 0) return;
-    setUploading(true);
-    try {
-      await uploadFiles(
-        files.map((file) => ({ file })),
-        { folderId },
-      );
-    } finally {
-      setUploading(false);
-    }
+    await uploadFiles(
+      files.map((file) => ({ file })),
+      { folderId },
+    );
   }
 
   async function handleUploadFromDropzone(entries: Parameters<typeof uploadFiles>[0]) {
-    setUploading(true);
-    try {
-      await uploadFiles(entries);
-    } finally {
-      setUploading(false);
-    }
+    await uploadFiles(entries);
   }
 
   const gridClass = cn(
@@ -1348,7 +1337,6 @@ export function DataRoomView({
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         replaceDocumentId={replaceDocumentId}
-        uploading={uploading}
         preserveStructure={preserveStructure}
         onPreserveStructureChange={setPreserveStructure}
         onUploadFiles={handleUploadFromDropzone}

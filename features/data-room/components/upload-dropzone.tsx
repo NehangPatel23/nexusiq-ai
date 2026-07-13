@@ -36,7 +36,6 @@ interface UploadDropzoneProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   replaceDocumentId?: string | null;
-  uploading?: boolean;
   preserveStructure: boolean;
   onPreserveStructureChange: (value: boolean) => void;
   onUploadFiles: (entries: FileEntry[]) => Promise<void>;
@@ -46,7 +45,6 @@ export function UploadDropzone({
   open,
   onOpenChange,
   replaceDocumentId,
-  uploading = false,
   preserveStructure,
   onPreserveStructureChange,
   onUploadFiles,
@@ -117,20 +115,18 @@ export function UploadDropzone({
       entries.push(...Array.from(files).map((file) => ({ file })));
     }
 
+    queueUpload(entries);
+  }
+
+  function queueUpload(entries: FileEntry[]) {
     const filtered = filterUploadEntries(entries);
     if (filtered.length === 0) return;
-
-    await onUploadFiles(filtered);
+    void onUploadFiles(filtered);
+    onOpenChange(false);
   }
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(next) => {
-        if (uploading) return;
-        onOpenChange(next);
-      }}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{replaceDocumentId ? "Upload new version" : "Upload documents"}</DialogTitle>
@@ -188,12 +184,7 @@ export function UploadDropzone({
             onChange={(e) => {
               const fileList = e.target.files;
               if (fileList?.length) {
-                const entries = filterUploadEntries(
-                  Array.from(fileList).map((file) => ({ file })),
-                );
-                if (entries.length > 0) {
-                  void onUploadFiles(entries);
-                }
+                queueUpload(Array.from(fileList).map((file) => ({ file })));
               }
               e.target.value = "";
             }}
@@ -201,12 +192,7 @@ export function UploadDropzone({
         </div>
 
         <div className="flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={uploading}
-            onClick={() => onOpenChange(false)}
-          >
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             <X className="size-4" />
             Close
           </Button>
