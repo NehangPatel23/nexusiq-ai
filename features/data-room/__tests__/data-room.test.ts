@@ -174,10 +174,10 @@ describe("schemas", () => {
 });
 
 describe("roles", () => {
-  it("allows viewers to upload and admins to delete", () => {
+  it("allows viewers to upload and soft-delete; admins manage trash", () => {
     expect(canViewDataRoom("VIEWER")).toBe(true);
     expect(canUploadDocuments("VIEWER")).toBe(true);
-    expect(canDeleteDocuments("VIEWER")).toBe(false);
+    expect(canDeleteDocuments("VIEWER")).toBe(true);
     expect(canManageDeletedDocuments("VIEWER")).toBe(false);
     expect(canDeleteDocuments("ADMIN")).toBe(true);
     expect(canManageDeletedDocuments("ADMIN")).toBe(true);

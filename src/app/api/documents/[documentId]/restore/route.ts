@@ -3,7 +3,7 @@ import {
   getDeletedDocumentById,
   restoreDocument,
 } from "@/features/data-room/lib/documents";
-import { DATA_ROOM_DELETE_MIN_ROLE } from "@/features/data-room/lib/roles";
+import { DATA_ROOM_ADMIN_MIN_ROLE } from "@/features/data-room/lib/roles";
 import { getProjectById } from "@/features/projects/lib/projects";
 import { apiError, apiSuccess, handleApiError } from "@/lib/api";
 
@@ -24,7 +24,7 @@ export async function POST(_request: Request, context: RouteContext) {
       return apiError("NOT_FOUND", "Project not found", 404);
     }
 
-    await requireOrgRole(project.workspace.organizationId, DATA_ROOM_DELETE_MIN_ROLE);
+    await requireOrgRole(project.workspace.organizationId, DATA_ROOM_ADMIN_MIN_ROLE);
 
     const result = await restoreDocument(documentId);
     if ("error" in result) {
