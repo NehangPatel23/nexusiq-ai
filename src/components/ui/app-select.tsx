@@ -54,7 +54,7 @@ export function AppSelect({
         id={id}
         aria-label={ariaLabel}
         aria-invalid={ariaInvalid}
-        className={cn(triggerClassName, className)}
+        className={cn("w-auto min-w-[8.5rem] shrink-0", triggerClassName, className)}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
