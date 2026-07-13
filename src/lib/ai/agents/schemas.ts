@@ -40,6 +40,16 @@ function coerceOptionalString(value: unknown): unknown {
   return value;
 }
 
+function coerceScore(value: unknown): unknown {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() && !Number.isNaN(Number(value))) {
+    return Number(value);
+  }
+  return value;
+}
+
+const scoreSchema = z.preprocess(coerceScore, z.number().min(0).max(100));
+
 function normalizeConcentration(value: unknown, listKey: string): unknown {
   if (value === null || value === undefined) return undefined;
   if (Array.isArray(value)) return { [listKey]: value };
@@ -104,7 +114,7 @@ const citedItemSchema = z
 
 export const financialOutputSchema = z
   .object({
-    financialHealthScore: z.number().min(0).max(100),
+    financialHealthScore: scoreSchema,
     revenueAnalysis: z.string().optional(),
     expenseAnalysis: z.string().optional(),
     cashFlowAnalysis: z.string().optional(),
@@ -141,15 +151,21 @@ export const financialOutputSchema = z
 
 export const legalOutputSchema = z
   .object({
-    legalRiskScore: z.number().min(0).max(100),
-    contracts: z.array(citedItemSchema.extend({ name: z.string() })).optional(),
+    legalRiskScore: scoreSchema,
+    contracts: z.array(citedItemSchema.extend({ name: z.preprocess(coerceOptionalString, z.string().default("Contract")) })).optional(),
     clauses: z.record(z.array(citedItemSchema)).optional(),
-    redFlags: z.array(citedItemSchema.extend({ title: z.string() })).optional(),
+    redFlags: z
+      .array(
+        citedItemSchema.extend({
+          title: z.preprocess(coerceOptionalString, z.string().default("Legal red flag")),
+        }),
+      )
+      .optional(),
     expiringContracts: z
       .array(
         z
           .object({
-            name: z.string(),
+            name: z.preprocess(coerceOptionalString, z.string().default("Contract")),
             expiryDate: optionalStringSchema,
             sourceChunkId: optionalStringSchema,
           })
@@ -164,7 +180,7 @@ export const legalOutputSchema = z
 
 export const complianceOutputSchema = z
   .object({
-    auditReadinessScore: z.number().min(0).max(100),
+    auditReadinessScore: scoreSchema,
     frameworkGaps: z
       .array(
         z
@@ -206,7 +222,7 @@ export const complianceOutputSchema = z
 
 export const riskOutputSchema = z
   .object({
-    enterpriseRiskScore: z.number().min(0).max(100),
+    enterpriseRiskScore: scoreSchema,
     categoryScores: z.record(z.number()).optional(),
     findings: z
       .array(
@@ -214,23 +230,33 @@ export const riskOutputSchema = z
           .object({
             category: z.string(),
             title: z.string(),
-            description: z.string(),
+            description: z.preprocess(coerceOptionalString, z.string().default("")),
             severity: severitySchema,
-            sourceChunkId: z.string(),
-            documentId: z.string(),
+            sourceChunkId: optionalStringSchema,
+            documentId: optionalStringSchema,
           })
           .passthrough(),
       )
       .optional(),
     riskHeatmap: z
-      .array(
-        z
-          .object({
-            category: z.string(),
-            severity: severitySchema,
-            count: z.number(),
-          })
-          .passthrough(),
+      .preprocess(
+        normalizeObjectArray(["category", "severity", "count"]),
+        z.array(
+          z
+            .object({
+              category: z.string(),
+              severity: severitySchema,
+              // Ollama often omits count; default rather than failing the whole agent.
+              count: z.preprocess((value) => {
+                if (value === null || value === undefined || value === "") return 0;
+                if (typeof value === "string" && /^\d+(\.\d+)?$/.test(value.trim())) {
+                  return Number(value);
+                }
+                return value;
+              }, z.number().default(0)),
+            })
+            .passthrough(),
+        ),
       )
       .optional(),
     recommendation: z.string(),
@@ -240,17 +266,17 @@ export const riskOutputSchema = z
 
 export const fraudOutputSchema = z
   .object({
-    fraudRiskScore: z.number().min(0).max(100),
+    fraudRiskScore: scoreSchema,
     indicators: z
       .array(
         z
           .object({
             type: z.string(),
             title: z.string(),
-            description: z.string(),
+            description: z.preprocess(coerceOptionalString, z.string().default("")),
             severity: severitySchema,
-            sourceChunkId: z.string(),
-            documentId: z.string(),
+            sourceChunkId: optionalStringSchema,
+            documentId: optionalStringSchema,
           })
           .passthrough(),
       )

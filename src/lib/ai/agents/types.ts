@@ -79,8 +79,8 @@ export type RiskAgentOutput = AgentOutputBase & {
     title: string;
     description: string;
     severity: FindingSeverity;
-    sourceChunkId: string;
-    documentId: string;
+    sourceChunkId?: string;
+    documentId?: string;
   }>;
   riskHeatmap?: Array<{ category: string; severity: FindingSeverity; count: number }>;
 };
@@ -92,8 +92,25 @@ export type FraudAgentOutput = AgentOutputBase & {
     title: string;
     description: string;
     severity: FindingSeverity;
-    sourceChunkId: string;
-    documentId: string;
+    sourceChunkId?: string;
+    documentId?: string;
+  }>;
+};
+
+export type ExecutiveAgentOutput = AgentOutputBase & {
+  executiveSummary: string;
+  boardReport?: string;
+  investmentMemo?: string;
+  markdown: string;
+  acquisitionRecommendation?: string;
+  priorityActions?: string[];
+  specialistRunIds?: string[];
+  specialistContext?: Array<{
+    agentType: SpecialistAgentType;
+    runId: string;
+    score: number | null;
+    confidence: ConfidenceLevel;
+    recommendation: string;
   }>;
 };
 
@@ -103,6 +120,7 @@ export type AgentOutputByType = {
   COMPLIANCE: ComplianceAgentOutput;
   RISK: RiskAgentOutput;
   FRAUD: FraudAgentOutput;
+  EXECUTIVE: ExecutiveAgentOutput;
 };
 
 export type NormalizedFinding = {
@@ -125,7 +143,20 @@ export type AgentRunResult<T extends AgentType = AgentType> = {
   findings: NormalizedFinding[];
 };
 
-export const AGENT_SCORE_FIELDS: Record<AgentType, string> = {
+export const SPECIALIST_AGENT_TYPES = [
+  "FINANCIAL",
+  "LEGAL",
+  "COMPLIANCE",
+  "RISK",
+  "FRAUD",
+] as const satisfies readonly AgentType[];
+
+export type SpecialistAgentType = (typeof SPECIALIST_AGENT_TYPES)[number];
+
+/** Specialist scans only — Executive is a separate package tab. */
+export const INTELLIGENCE_AGENT_TYPES = SPECIALIST_AGENT_TYPES;
+
+export const AGENT_SCORE_FIELDS: Record<Exclude<AgentType, "EXECUTIVE">, string> = {
   FINANCIAL: "financialHealthScore",
   LEGAL: "legalRiskScore",
   COMPLIANCE: "auditReadinessScore",
@@ -139,12 +170,14 @@ export const AGENT_PROMPT_FILES: Record<AgentType, string> = {
   COMPLIANCE: "compliance.md",
   RISK: "risk.md",
   FRAUD: "fraud.md",
+  EXECUTIVE: "executive.md",
 };
 
-export const INTELLIGENCE_AGENT_TYPES = [
-  "FINANCIAL",
-  "LEGAL",
-  "COMPLIANCE",
-  "RISK",
-  "FRAUD",
-] as const satisfies readonly AgentType[];
+export const AGENT_TYPE_LABELS: Record<AgentType, string> = {
+  FINANCIAL: "Financial",
+  LEGAL: "Legal",
+  COMPLIANCE: "Compliance",
+  RISK: "Risk",
+  FRAUD: "Fraud",
+  EXECUTIVE: "Executive",
+};

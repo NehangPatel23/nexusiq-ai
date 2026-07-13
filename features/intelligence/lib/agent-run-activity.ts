@@ -1,15 +1,8 @@
 import type { AgentType, Prisma } from "@prisma/client";
 
 import type { DashboardActivityItem } from "@/features/projects/lib/dashboard";
+import { AGENT_TYPE_LABELS } from "@/lib/ai/agents/types";
 import { prisma } from "@/lib/db";
-
-const AGENT_LABELS: Record<AgentType, string> = {
-  FINANCIAL: "Financial",
-  LEGAL: "Legal",
-  COMPLIANCE: "Compliance",
-  RISK: "Risk",
-  FRAUD: "Fraud",
-};
 
 function userProjectsFilter(userId: string): Prisma.ProjectWhereInput {
   return {
@@ -40,7 +33,7 @@ export async function listRecentAgentRunActivity(
   });
 
   return runs.map((run) => {
-    const label = AGENT_LABELS[run.agentType];
+    const label = AGENT_TYPE_LABELS[run.agentType as AgentType];
     const timestamp = run.completedAt ?? run.startedAt;
     const statusLabel =
       run.status === "COMPLETED"

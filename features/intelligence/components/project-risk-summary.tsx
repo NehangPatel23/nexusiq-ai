@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, ShieldCheck } from "lucide-react";
+import { AlertTriangle, Loader2, ShieldCheck } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -18,28 +18,37 @@ const SEVERITY_META = [
 
 type ProjectRiskSummaryProps = {
   counts: FindingSeverityCounts;
+  /** True while agent scans are in progress — hide stale totals messaging. */
+  refreshing?: boolean;
   className?: string;
 };
 
-export function ProjectRiskSummary({ counts, className }: ProjectRiskSummaryProps) {
+export function ProjectRiskSummary({ counts, refreshing = false, className }: ProjectRiskSummaryProps) {
   const total = totalFindingCount(counts);
   const needsAttention = counts.critical + counts.high;
   const hasData = total > 0;
 
   return (
-    <Card className={cn("border-border/60 bg-card/40", className)}>
+    <Card
+      className={cn("border-border/60 bg-card/40", className)}
+      aria-busy={refreshing}
+    >
       <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-6">
         <div className="flex items-center gap-3 sm:min-w-[13rem]">
           <div
             className={cn(
               "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border",
-              needsAttention > 0
-                ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+              refreshing
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : needsAttention > 0
+                  ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
             )}
             aria-hidden="true"
           >
-            {needsAttention > 0 ? (
+            {refreshing ? (
+              <Loader2 className="h-5 w-5 motion-safe:animate-spin" />
+            ) : needsAttention > 0 ? (
               <AlertTriangle className="h-5 w-5" />
             ) : (
               <ShieldCheck className="h-5 w-5" />
@@ -48,11 +57,15 @@ export function ProjectRiskSummary({ counts, className }: ProjectRiskSummaryProp
           <div>
             <p className="text-sm font-medium">Open findings</p>
             <p className="text-xs text-muted-foreground">
-              {hasData
-                ? needsAttention > 0
-                  ? `${needsAttention} critical or high need attention`
-                  : "No critical or high-severity findings"
-                : "No findings yet — run agents to populate"}
+              {refreshing
+                ? hasData
+                  ? "Updating from completed scans in this run…"
+                  : "Waiting for new scan results…"
+                : hasData
+                  ? needsAttention > 0
+                    ? `${needsAttention} critical or high need attention`
+                    : "No critical or high-severity findings"
+                  : "No findings yet — run agents to populate"}
             </p>
           </div>
         </div>

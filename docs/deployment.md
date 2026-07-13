@@ -40,6 +40,8 @@ Worker VPS (or Mac during dev) → polls PENDING documents
 
 **Intelligence agents (slice 09):** Agent runs use the same Ollama endpoint as chat (`ollama.chat` with JSON output, not streaming). Vercel prod requires public HTTPS Ollama; localhost uses `http://localhost:11434`. Zero retrieved chunks complete with `INSUFFICIENT` confidence without calling Ollama; unreachable Ollama returns `503 OLLAMA_UNAVAILABLE`.
 
+**Executive + consensus (slice 10):** Executive and consensus also run on Vercel/Next.js against the same Ollama endpoint. Executive uses Markdown chat (not JSON); consensus uses a single `format: "json"` call. Fewer than 3 completed specialist runs returns `400 CONSENSUS_PREREQUISITE` without calling Ollama. Full analysis is client-orchestrated (5 specialists → consensus → executive), not one long serverless request.
+
 **Worker env (VPS):**
 
 ```bash
@@ -412,7 +414,8 @@ Neon does **not** include file storage—you would need a separate service for d
 - **Data room** (folders, upload, preview, versions, tags, trash, share links, audit export)
 - **Smart search** (keyword plus Ollama-backed hybrid/semantic modes)
 - **Interactive chat** (project-scoped streaming, citations, confidence, and history; requires public Ollama)
-- Placeholder tabs: Intelligence, Reports, Timeline, Graph, etc.
+- **Intelligence agents** (specialist scans + executive package + explainable consensus; requires public Ollama on Vercel)
+- Placeholder tabs: Reports, Timeline, Graph, etc.
 
 ## Deferred
 

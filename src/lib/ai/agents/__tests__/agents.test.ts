@@ -6,6 +6,7 @@ import {
   financialOutputSchema,
   fraudOutputSchema,
   parseAgentJson,
+  riskOutputSchema,
 } from "@/lib/ai/agents/schemas";
 import {
   normalizeComplianceFindings,
@@ -146,6 +147,47 @@ describe("agent zod parsers", () => {
     });
     expect(output.policyMappings?.[1]?.policy).toBe("Retention policy");
     expect(output.policyMappings?.[1]?.coverage).toBeUndefined();
+  });
+
+  it("coerces string agent scores from ollama", () => {
+    const output = parseAgentJson(
+      "FINANCIAL",
+      JSON.stringify({
+        financialHealthScore: "77",
+        recommendation: "Ok",
+        confidence: "HIGH",
+      }),
+    );
+    expect(output.financialHealthScore).toBe(77);
+  });
+
+  it("accepts risk heatmap entries without count and optional finding ids", () => {
+    const output = parseAgentJson(
+      "RISK",
+      JSON.stringify({
+        enterpriseRiskScore: 55,
+        recommendation: "Address cyber and concentration risk",
+        confidence: "MEDIUM",
+        riskHeatmap: [
+          { category: "Cyber", severity: "HIGH" },
+          { category: "Financial", severity: "MEDIUM", count: 2 },
+        ],
+        findings: [
+          {
+            category: "Cyber",
+            title: "Legacy encryption",
+            description: "At-rest encryption gaps",
+            severity: "HIGH",
+          },
+        ],
+      }),
+    );
+
+    expect(output.enterpriseRiskScore).toBe(55);
+    expect(output.riskHeatmap?.[0]?.count).toBe(0);
+    expect(output.riskHeatmap?.[1]?.count).toBe(2);
+    expect(output.findings?.[0]?.sourceChunkId).toBeUndefined();
+    expect(riskOutputSchema.safeParse(output).success).toBe(true);
   });
 
   it("rejects invalid financial score range", () => {

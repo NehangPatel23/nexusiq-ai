@@ -1,15 +1,8 @@
 import type { AgentRunStatus, AgentType } from "@prisma/client";
 
 import { logDataRoomAudit } from "@/features/data-room/lib/audit";
+import { AGENT_TYPE_LABELS } from "@/lib/ai/agents/types";
 import { prisma } from "@/lib/db";
-
-const AGENT_LABELS: Record<AgentType, string> = {
-  FINANCIAL: "Financial",
-  LEGAL: "Legal",
-  COMPLIANCE: "Compliance",
-  RISK: "Risk",
-  FRAUD: "Fraud",
-};
 
 export async function logAgentRunAudit(input: {
   projectId: string;
@@ -34,7 +27,7 @@ export async function logAgentRunAudit(input: {
 
   if (!action) return null;
 
-  const label = AGENT_LABELS[input.agentType];
+  const label = AGENT_TYPE_LABELS[input.agentType];
   const scoreText =
     input.score !== null && input.score !== undefined ? ` · score ${Math.round(input.score)}` : "";
 
@@ -51,6 +44,7 @@ export async function logAgentRunAudit(input: {
       status: input.status,
       score: input.score ?? null,
       findingCount: input.findingCount ?? 0,
+      projectName: project?.name ?? null,
       summary: `${label} scan ${input.status.toLowerCase()}${scoreText}`,
     },
   });

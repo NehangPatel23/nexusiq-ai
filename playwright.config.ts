@@ -13,6 +13,10 @@ export default defineConfig({
   workers: 1,
   reporter: "html",
   globalTeardown: "./e2e/global-teardown.ts",
+  // The e2e webServer runs `next dev`, which compiles each route on-demand on
+  // first visit. That first compile can push simple visibility assertions past
+  // the 5s Playwright default, so give assertions more headroom by default.
+  expect: { timeout: 15_000 },
   use: {
     baseURL: E2E_BASE_URL,
     trace: "on-first-retry",

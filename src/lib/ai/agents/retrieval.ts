@@ -7,16 +7,17 @@ import { retrieveForRag } from "@/lib/ai/retrieval";
 
 import { agentSeedQuery } from "./prompts";
 
-const AGENT_TO_CHAT: Record<AgentType, ChatAgentType> = {
+const AGENT_TO_CHAT: Partial<Record<AgentType, ChatAgentType>> = {
   FINANCIAL: "FINANCIAL",
   LEGAL: "LEGAL",
   COMPLIANCE: "COMPLIANCE",
   RISK: "RISK",
   FRAUD: "FRAUD",
+  EXECUTIVE: "GENERAL",
 };
 
 export function toChatAgentType(agentType: AgentType): ChatAgentType {
-  return AGENT_TO_CHAT[agentType];
+  return AGENT_TO_CHAT[agentType] ?? "GENERAL";
 }
 
 export async function retrieveForAgent(

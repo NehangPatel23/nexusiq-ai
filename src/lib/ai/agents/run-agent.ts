@@ -1,4 +1,4 @@
-import type { AgentType, ConfidenceLevel } from "@prisma/client";
+import type { ConfidenceLevel } from "@prisma/client";
 import type { z } from "zod";
 
 import { buildContext } from "@/lib/ai/chat/rag-chat";
@@ -18,7 +18,7 @@ import {
   formatAgentValidationErrors,
   parseAgentJsonResult,
 } from "./schemas";
-import type { AgentOutputByType, AgentRunResult } from "./types";
+import type { AgentOutputByType, AgentRunResult, SpecialistAgentType } from "./types";
 
 export class OllamaUnavailableError extends Error {
   readonly code = "OLLAMA_UNAVAILABLE";
@@ -41,7 +41,7 @@ const defaultDependencies = (): RunAgentDependencies => ({
   ollama: getOllamaClient(),
 });
 
-function insufficientResult<T extends AgentType>(agentType: T): AgentRunResult<T> {
+function insufficientResult<T extends SpecialistAgentType>(agentType: T): AgentRunResult<T> {
   const recommendation = INSUFFICIENT_AGENT_RECOMMENDATION;
   const output = {
     recommendation,
@@ -63,7 +63,7 @@ function insufficientResult<T extends AgentType>(agentType: T): AgentRunResult<T
   };
 }
 
-function buildAgentCorrectionPrompt(agentType: AgentType, error: z.ZodError): string {
+function buildAgentCorrectionPrompt(agentType: SpecialistAgentType, error: z.ZodError): string {
   return `Your previous JSON response did not match the required ${agentType} agent schema.
 
 Fix every issue below and return ONLY corrected JSON (no prose, no markdown):
@@ -76,7 +76,7 @@ Rules:
 - Keep all findings grounded in the provided document excerpts`;
 }
 
-async function requestAgentOutput<T extends AgentType>(
+async function requestAgentOutput<T extends SpecialistAgentType>(
   agentType: T,
   messages: ChatMessage[],
   ollama: Pick<OllamaClient, "chat">,
@@ -119,7 +119,7 @@ async function requestAgentOutput<T extends AgentType>(
   );
 }
 
-export async function runAgent<T extends AgentType>(
+export async function runAgent<T extends SpecialistAgentType>(
   projectId: string,
   agentType: T,
   dependenciesOverride?: Partial<RunAgentDependencies>,
@@ -161,7 +161,9 @@ export async function runAgent<T extends AgentType>(
   return {
     agentType,
     output: parsedOutput,
-    score: confidence === "INSUFFICIENT" ? null : score,
+    // Keep the model score whenever documents were retrieved. INSUFFICIENT is
+    // reserved for empty retrieval — don't blank a valid score due to weak citations.
+    score: retrieval.results.length === 0 ? null : score,
     confidence,
     citations,
     findings,

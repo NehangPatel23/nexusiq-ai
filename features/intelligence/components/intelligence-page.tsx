@@ -1,7 +1,7 @@
 "use client";
 
 import type { AgentType, ConfidenceLevel } from "@prisma/client";
-import { Bot, History, Loader2, Play, RefreshCw, Scan } from "lucide-react";
+import { Bot, History, Loader2, Play, RefreshCw, Scan, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -10,17 +10,31 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { AgentRunDetail, AgentRunSummary } from "@/features/intelligence/lib/agent-runs";
+import type {
+  ConsensusRunApiResponse,
+  ConsensusRunDetail,
+  ConsensusRunSummary,
+} from "@/features/intelligence/lib/consensus-runs";
 import {
   aggregateOpenFindingsBySeverity,
   type FindingSeverityCounts,
 } from "@/features/intelligence/lib/severity-summary";
 import type { ChatCitation } from "@/lib/ai/citations";
-import { INTELLIGENCE_AGENT_TYPES } from "@/lib/ai/agents/types";
+import {
+  AGENT_TYPE_LABELS,
+  INTELLIGENCE_AGENT_TYPES,
+  SPECIALIST_AGENT_TYPES,
+  type SpecialistAgentType,
+} from "@/lib/ai/agents/types";
 import { cn } from "@/lib/utils";
 
 import { AgentRunHistory } from "./agent-run-history";
 import { AgentScoreGauge } from "./agent-score-gauge";
 import { AgentThinking } from "./agent-thinking";
+import { ConsensusConflictMatrix } from "./consensus-conflict-matrix";
+import { ConsensusOpinionGrid } from "./consensus-opinion-grid";
+import { ConsensusRecommendation } from "./consensus-recommendation";
+import { ExecutiveReportView } from "./executive-report-view";
 import { FindingsTable, type FindingRow } from "./findings-table";
 import { ProjectRiskSummary } from "./project-risk-summary";
 
@@ -40,26 +54,17 @@ type RunResponse = {
   error?: string;
 };
 
+type IntelligenceTab = SpecialistAgentType | "EXECUTIVE" | "CONSENSUS";
+
 type IntelligencePageProps = {
   projectId: string;
   projectName: string;
   initialRuns: AgentRunSummary[];
   initialDetails: Partial<Record<AgentType, AgentRunDetail>>;
   initialRiskSummary: FindingSeverityCounts;
+  initialConsensus: ConsensusRunDetail | null;
+  initialConsensusHistory: ConsensusRunSummary[];
 };
-
-const AGENT_LABELS: Record<AgentType, string> = {
-  FINANCIAL: "Financial",
-  LEGAL: "Legal",
-  COMPLIANCE: "Compliance",
-  RISK: "Risk",
-  FRAUD: "Fraud",
-};
-
-const COMING_SOON_AGENTS = [
-  { id: "EXECUTIVE", label: "Executive", slice: "Slice 10" },
-  { id: "CONSENSUS", label: "Consensus", slice: "Slice 10" },
-] as const;
 
 const API_SEGMENTS: Record<AgentType, string> = {
   FINANCIAL: "financial",
@@ -67,7 +72,10 @@ const API_SEGMENTS: Record<AgentType, string> = {
   COMPLIANCE: "compliance",
   RISK: "risk",
   FRAUD: "fraud",
+  EXECUTIVE: "executive",
 };
+
+const FULL_ANALYSIS_TOTAL_STEPS = SPECIALIST_AGENT_TYPES.length + 2;
 
 function confidenceBadgeVariant(confidence: ConfidenceLevel | null) {
   if (confidence === "HIGH") return "secondary";
@@ -83,7 +91,7 @@ function AgentBreakdown({
   agentType: AgentType;
   output: Record<string, unknown> | null;
 }) {
-  if (!output) return null;
+  if (!output || agentType === "EXECUTIVE") return null;
 
   if (agentType === "RISK" && output.categoryScores && typeof output.categoryScores === "object") {
     const entries = Object.entries(output.categoryScores as Record<string, number>);
@@ -152,55 +160,120 @@ function AgentBreakdown({
   return null;
 }
 
+function detailToConsensusApi(detail: ConsensusRunDetail): ConsensusRunApiResponse {
+  return {
+    consensusRunId: detail.id,
+    projectId: detail.projectId,
+    status: "completed",
+    finalRecommendation: detail.finalRecommendation,
+    decisionConfidence: detail.decisionConfidence,
+    agentOpinions: detail.agentOpinions,
+    agreements: detail.agreements,
+    conflicts: detail.conflicts,
+    resolutionRationale: detail.resolutionRationale,
+    citations: detail.citations,
+    agentRunIds: detail.agentRunIds,
+  };
+}
+
 export function IntelligencePage({
   projectId,
   projectName,
   initialRuns,
   initialDetails,
   initialRiskSummary,
+  initialConsensus,
+  initialConsensusHistory,
 }: IntelligencePageProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [activeAgent, setActiveAgent] = useState<AgentType>("FINANCIAL");
+  const [activeTab, setActiveTab] = useState<IntelligenceTab>("FINANCIAL");
   const [runs, setRuns] = useState(initialRuns);
   const [details, setDetails] = useState(initialDetails);
   const [scanningAgents, setScanningAgents] = useState<Set<AgentType>>(() => new Set());
   const [runningAll, setRunningAll] = useState(false);
+  const [runningFullAnalysis, setRunningFullAnalysis] = useState(false);
   const [runAllProgress, setRunAllProgress] = useState(0);
+  const [fullAnalysisProgress, setFullAnalysisProgress] = useState(0);
+  const [consensusRunning, setConsensusRunning] = useState(false);
+  const [consensus, setConsensus] = useState<ConsensusRunApiResponse | null>(
+    initialConsensus ? detailToConsensusApi(initialConsensus) : null,
+  );
+  const [consensusHistory, setConsensusHistory] = useState(initialConsensusHistory);
   const [ollamaUnavailable, setOllamaUnavailable] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const runAllTriggeredRef = useRef(false);
+  const fullAnalysisTriggeredRef = useRef(false);
+
+  const completedSpecialists = useMemo(() => {
+    const latest = new Map<SpecialistAgentType, AgentRunSummary>();
+    for (const run of runs) {
+      if (run.status !== "COMPLETED") continue;
+      if (!SPECIALIST_AGENT_TYPES.includes(run.agentType as SpecialistAgentType)) continue;
+      if (!latest.has(run.agentType as SpecialistAgentType)) {
+        latest.set(run.agentType as SpecialistAgentType, run);
+      }
+    }
+    return latest;
+  }, [runs]);
+
+  const missingSpecialists = useMemo(
+    () => SPECIALIST_AGENT_TYPES.filter((agent) => !completedSpecialists.has(agent)),
+    [completedSpecialists],
+  );
 
   const isAgentScanning = useCallback(
     (agentType: AgentType) => scanningAgents.has(agentType),
     [scanningAgents],
   );
 
-  const activeDetail = details[activeAgent];
-  const isActiveAgentScanning = isAgentScanning(activeAgent);
+  const isSpecialistTab = SPECIALIST_AGENT_TYPES.includes(activeTab as SpecialistAgentType);
+  const activeAgent = isSpecialistTab || activeTab === "EXECUTIVE" ? (activeTab as AgentType) : null;
+  const activeDetail = activeAgent ? details[activeAgent] : undefined;
+  const isActiveAgentScanning = activeAgent ? isAgentScanning(activeAgent) : false;
+  const batchRunning = runningAll || runningFullAnalysis;
   const isWaitingInFullScan =
-    runningAll && !isActiveAgentScanning && activeDetail === undefined;
+    batchRunning &&
+    activeAgent !== null &&
+    activeAgent !== "EXECUTIVE" &&
+    !isActiveAgentScanning &&
+    activeDetail === undefined;
   const activeRun = useMemo(() => {
-    if (isActiveAgentScanning || runningAll) return undefined;
+    if (!activeAgent || isActiveAgentScanning || batchRunning) return undefined;
     return runs.find((run) => run.agentType === activeAgent && run.status === "COMPLETED");
-  }, [runs, activeAgent, isActiveAgentScanning, runningAll]);
+  }, [runs, activeAgent, isActiveAgentScanning, batchRunning]);
 
   const refreshRuns = useCallback(async () => {
     const response = await fetch(`/api/projects/${projectId}/agents/runs?limit=30`);
     const payload = (await response.json()) as ApiEnvelope<AgentRunSummary[]>;
-    if (payload.success) setRuns(payload.data);
+    if (payload.success) {
+      setRuns(payload.data);
+      return payload.data;
+    }
+    return null;
   }, [projectId]);
 
-  const loadRunDetail = useCallback(
-    async (runId: string, agentType: AgentType) => {
-      const response = await fetch(`/api/agent-runs/${runId}`);
-      const payload = (await response.json()) as ApiEnvelope<AgentRunDetail>;
-      if (payload.success) {
-        setDetails((current) => ({ ...current, [agentType]: payload.data }));
-      }
-    },
-    [],
-  );
+  const refreshConsensusHistory = useCallback(async () => {
+    const response = await fetch(`/api/projects/${projectId}/agents/consensus/runs?limit=20`);
+    const payload = (await response.json()) as ApiEnvelope<ConsensusRunSummary[]>;
+    if (payload.success) setConsensusHistory(payload.data);
+  }, [projectId]);
+
+  const loadRunDetail = useCallback(async (runId: string, agentType: AgentType) => {
+    const response = await fetch(`/api/agent-runs/${runId}`);
+    const payload = (await response.json()) as ApiEnvelope<AgentRunDetail>;
+    if (payload.success) {
+      setDetails((current) => ({ ...current, [agentType]: payload.data }));
+    }
+  }, []);
+
+  const loadConsensusDetail = useCallback(async (consensusRunId: string) => {
+    const response = await fetch(`/api/consensus-runs/${consensusRunId}`);
+    const payload = (await response.json()) as ApiEnvelope<ConsensusRunDetail>;
+    if (payload.success) {
+      setConsensus(detailToConsensusApi(payload.data));
+    }
+  }, []);
 
   const beginAgentScan = useCallback((agentType: AgentType) => {
     setScanningAgents((current) => new Set(current).add(agentType));
@@ -224,7 +297,7 @@ export function IntelligencePage({
       agentType: AgentType,
       force = false,
       options?: { skipRouterRefresh?: boolean },
-    ): Promise<boolean> => {
+    ): Promise<"completed" | "failed" | "ollama_unavailable"> => {
       beginAgentScan(agentType);
       setOllamaUnavailable(false);
       try {
@@ -239,35 +312,87 @@ export function IntelligencePage({
           if (payload.error.code === "OLLAMA_UNAVAILABLE") {
             setOllamaUnavailable(true);
             toast.error(payload.error.message);
-            return false;
+            return "ollama_unavailable";
           }
           toast.error(payload.error.message);
-          return false;
+          return "failed";
         }
 
         if (payload.data.status === "failed") {
           toast.error(payload.data.error ?? "Agent scan failed.");
-        } else {
-          toast.success(`${AGENT_LABELS[agentType]} scan completed.`);
+          const latestRuns = await refreshRuns();
+          const previousCompleted = latestRuns?.find(
+            (run) =>
+              run.agentType === agentType &&
+              run.status === "COMPLETED" &&
+              run.id !== payload.data.runId,
+          );
+          // Prefer restoring a prior successful result so the tab isn't blank.
+          // If none exists, load the failed run so the UI can show the error.
+          await loadRunDetail(previousCompleted?.id ?? payload.data.runId, agentType);
+          if (!options?.skipRouterRefresh) {
+            router.refresh();
+          }
+          return "failed";
         }
 
+        toast.success(`${AGENT_TYPE_LABELS[agentType]} scan completed.`);
         await refreshRuns();
         await loadRunDetail(payload.data.runId, agentType);
-        // Invalidate the Router Cache so server components on sibling tabs
-        // (e.g. the project overview scores + enterprise risk gauge) reflect
-        // this run without a manual page refresh.
         if (!options?.skipRouterRefresh) {
           router.refresh();
         }
-        return payload.data.status === "completed";
+        return "completed";
       } catch {
         toast.error("Agent scan could not be started.");
-        return false;
+        return "failed";
       } finally {
         endAgentScan(agentType);
       }
     },
     [projectId, refreshRuns, loadRunDetail, beginAgentScan, endAgentScan, router],
+  );
+
+  const runConsensus = useCallback(
+    async (
+      force = false,
+      options?: { skipRouterRefresh?: boolean },
+    ): Promise<"completed" | "failed" | "ollama_unavailable"> => {
+      setConsensusRunning(true);
+      setOllamaUnavailable(false);
+      try {
+        const response = await fetch(`/api/projects/${projectId}/agents/consensus/run`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ force }),
+        });
+        const payload = (await response.json()) as ApiEnvelope<ConsensusRunApiResponse>;
+
+        if (!payload.success) {
+          if (payload.error.code === "OLLAMA_UNAVAILABLE") {
+            setOllamaUnavailable(true);
+            toast.error(payload.error.message);
+            return "ollama_unavailable";
+          }
+          toast.error(payload.error.message);
+          return "failed";
+        }
+
+        setConsensus(payload.data);
+        await refreshConsensusHistory();
+        toast.success("Consensus synthesis completed.");
+        if (!options?.skipRouterRefresh) {
+          router.refresh();
+        }
+        return "completed";
+      } catch {
+        toast.error("Consensus could not be started.");
+        return "failed";
+      } finally {
+        setConsensusRunning(false);
+      }
+    },
+    [projectId, refreshConsensusHistory, router],
   );
 
   const runAllAgents = useCallback(async () => {
@@ -279,56 +404,184 @@ export function IntelligencePage({
     let completed = 0;
     for (let index = 0; index < INTELLIGENCE_AGENT_TYPES.length; index += 1) {
       const agentType = INTELLIGENCE_AGENT_TYPES[index];
-      setActiveAgent(agentType);
-      const ok = await runAgent(agentType, true, { skipRouterRefresh: true });
+      setActiveTab(agentType);
+      const result = await runAgent(agentType, true, { skipRouterRefresh: true });
       setRunAllProgress(index + 1);
-      if (!ok) break;
+      if (result !== "completed") break;
       completed += 1;
     }
 
     setRunningAll(false);
     if (completed > 0) {
-      // Single refresh after the batch so overview scores update once.
       router.refresh();
     }
     if (completed === INTELLIGENCE_AGENT_TYPES.length) {
-      toast.success("Full intelligence scan finished.");
+      toast.success("Specialist intelligence scan finished.");
     } else if (completed > 0) {
-      toast.message("Full scan stopped early. Completed agents were updated.");
+      toast.message("Specialist scan stopped early. Completed agents were updated.");
     }
   }, [runAgent, router]);
 
+  const runFullAnalysis = useCallback(async () => {
+    setRunningFullAnalysis(true);
+    setFullAnalysisProgress(0);
+    setDetails({});
+    setConsensus(null);
+    setOllamaUnavailable(false);
+
+    let step = 0;
+    let specialistsCompleted = 0;
+    let stoppedForOllama = false;
+    const failedAgents: string[] = [];
+
+    // Run all 5 specialists even if one fails — consensus only needs ≥3.
+    for (const agentType of SPECIALIST_AGENT_TYPES) {
+      setActiveTab(agentType);
+      const result = await runAgent(agentType, true, { skipRouterRefresh: true });
+      step += 1;
+      setFullAnalysisProgress(step);
+      if (result === "completed") {
+        specialistsCompleted += 1;
+      } else if (result === "ollama_unavailable") {
+        stoppedForOllama = true;
+        break;
+      } else {
+        failedAgents.push(AGENT_TYPE_LABELS[agentType]);
+      }
+    }
+
+    let consensusOk = false;
+    let executiveOk = false;
+    let consensusFailed = false;
+    let executiveFailed = false;
+
+    if (!stoppedForOllama && specialistsCompleted >= 3) {
+      setActiveTab("CONSENSUS");
+      const consensusResult = await runConsensus(true, { skipRouterRefresh: true });
+      step += 1;
+      setFullAnalysisProgress(step);
+      consensusOk = consensusResult === "completed";
+      if (consensusResult === "failed") consensusFailed = true;
+      if (consensusResult === "ollama_unavailable") stoppedForOllama = true;
+
+      if (consensusOk) {
+        setActiveTab("EXECUTIVE");
+        const executiveResult = await runAgent("EXECUTIVE", true, { skipRouterRefresh: true });
+        step += 1;
+        setFullAnalysisProgress(step);
+        executiveOk = executiveResult === "completed";
+        if (executiveResult === "failed") executiveFailed = true;
+      }
+    } else if (!stoppedForOllama && specialistsCompleted > 0) {
+      toast.message(
+        `Only ${specialistsCompleted} specialist scan(s) completed${
+          failedAgents.length ? ` (failed: ${failedAgents.join(", ")})` : ""
+        }. Consensus needs at least 3 — re-run failed agents, then Full analysis or Consensus.`,
+      );
+      setActiveTab("CONSENSUS");
+    }
+
+    setRunningFullAnalysis(false);
+    router.refresh();
+    if (specialistsCompleted === SPECIALIST_AGENT_TYPES.length && consensusOk && executiveOk) {
+      toast.success("Full analysis finished.");
+    } else if (stoppedForOllama) {
+      toast.error("Full analysis stopped — Ollama is unavailable.");
+    } else if (consensusFailed) {
+      toast.message(
+        `Specialists finished, but consensus failed${failedAgents.length ? ` (also failed: ${failedAgents.join(", ")})` : ""}. Re-run Consensus from its tab.`,
+      );
+    } else if (executiveFailed) {
+      toast.message("Consensus completed, but the executive package failed. Re-run Executive from its tab.");
+    } else if (step > 0 && (consensusOk || specialistsCompleted > 0)) {
+      toast.message(
+        `Full analysis finished with some steps skipped or failed${
+          failedAgents.length ? ` (${failedAgents.join(", ")})` : ""
+        }. Completed work was saved.`,
+      );
+    }
+  }, [runAgent, runConsensus, router]);
+
   useEffect(() => {
+    const fullAnalysis = searchParams.get("fullAnalysis");
+    if (fullAnalysis === "1" && !fullAnalysisTriggeredRef.current) {
+      fullAnalysisTriggeredRef.current = true;
+      router.replace(`/dashboard/projects/${projectId}/intelligence`);
+      void runFullAnalysis();
+      return;
+    }
+
     const runAll = searchParams.get("runAll");
     if (runAll !== "1" || runAllTriggeredRef.current) return;
     runAllTriggeredRef.current = true;
     router.replace(`/dashboard/projects/${projectId}/intelligence`);
     void runAllAgents();
-  }, [searchParams, runAllAgents, router, projectId]);
+  }, [searchParams, runAllAgents, runFullAnalysis, router, projectId]);
 
   useEffect(() => {
     const runId = searchParams.get("run");
     if (!runId) return;
     const run = runs.find((item) => item.id === runId);
     if (run) {
-      setActiveAgent(run.agentType);
+      setActiveTab(run.agentType === "EXECUTIVE" ? "EXECUTIVE" : run.agentType);
       void loadRunDetail(run.id, run.agentType);
     }
   }, [searchParams, runs, loadRunDetail]);
 
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "consensus") setActiveTab("CONSENSUS");
+    if (tab === "executive") setActiveTab("EXECUTIVE");
+    const consensusId = searchParams.get("consensus");
+    if (consensusId) {
+      setActiveTab("CONSENSUS");
+      void loadConsensusDetail(consensusId);
+    }
+  }, [searchParams, loadConsensusDetail]);
+
+  const anyScanInProgress =
+    scanningAgents.size > 0 || runningAll || runningFullAnalysis || consensusRunning;
+
   const riskSummary = useMemo(() => {
     const detailList = INTELLIGENCE_AGENT_TYPES.map((agent) => details[agent]);
     const hasAnyDetail = detailList.some(Boolean);
-    return hasAnyDetail ? aggregateOpenFindingsBySeverity(detailList) : initialRiskSummary;
-  }, [details, initialRiskSummary]);
 
-  const showResults = !isActiveAgentScanning && !isWaitingInFullScan && Boolean(activeDetail);
+    // During a re-run, never fall back to the stale server snapshot from page load.
+    // Aggregate only from details present in client state (often empty at batch start).
+    if (anyScanInProgress) {
+      return aggregateOpenFindingsBySeverity(detailList);
+    }
+
+    return hasAnyDetail ? aggregateOpenFindingsBySeverity(detailList) : initialRiskSummary;
+  }, [details, initialRiskSummary, anyScanInProgress]);
+
+  const showResults =
+    activeAgent !== null &&
+    !isActiveAgentScanning &&
+    !isWaitingInFullScan &&
+    Boolean(activeDetail) &&
+    activeDetail?.status === "COMPLETED";
+  const showFailedResult =
+    activeAgent !== null &&
+    !isActiveAgentScanning &&
+    !isWaitingInFullScan &&
+    activeDetail?.status === "FAILED";
   const currentFindings = showResults ? (activeDetail?.findings ?? []) : [];
   const currentCitations = showResults ? (activeDetail?.citations ?? []) : [];
   const currentOutput = showResults ? (activeDetail?.output ?? null) : null;
   const currentScore = showResults ? (activeDetail?.score ?? null) : null;
   const currentConfidence = showResults ? (activeDetail?.confidence ?? null) : null;
-  const anyScanInProgress = scanningAgents.size > 0 || runningAll;
+
+  const fullAnalysisStepLabel = useMemo(() => {
+    if (fullAnalysisProgress < SPECIALIST_AGENT_TYPES.length) {
+      return AGENT_TYPE_LABELS[
+        SPECIALIST_AGENT_TYPES[Math.min(fullAnalysisProgress, SPECIALIST_AGENT_TYPES.length - 1)] ??
+          "FINANCIAL"
+      ];
+    }
+    if (fullAnalysisProgress === SPECIALIST_AGENT_TYPES.length) return "Consensus";
+    return "Executive";
+  }, [fullAnalysisProgress]);
 
   return (
     <div className="space-y-6">
@@ -339,7 +592,7 @@ export function IntelligencePage({
             <h2 className="font-display text-xl font-semibold tracking-tight">Intelligence Agents</h2>
           </div>
           <p className="text-sm text-muted-foreground">
-            Run specialist scans on {projectName}&apos;s data room with cited findings.
+            Run specialist scans, executive synthesis, and explainable consensus on {projectName}.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -352,6 +605,14 @@ export function IntelligencePage({
             <Scan className="h-4 w-4" aria-hidden="true" />
             Run all agents
           </Button>
+          <Button
+            type="button"
+            disabled={anyScanInProgress}
+            onClick={() => void runFullAnalysis()}
+          >
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Full analysis
+          </Button>
           <Button type="button" variant="outline" onClick={() => setShowHistory((value) => !value)}>
             <History className="h-4 w-4" aria-hidden="true" />
             Run history
@@ -359,15 +620,31 @@ export function IntelligencePage({
         </div>
       </div>
 
-      <ProjectRiskSummary counts={riskSummary} />
+      <ProjectRiskSummary counts={riskSummary} refreshing={anyScanInProgress} />
 
       {runningAll ? (
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="flex items-center justify-between gap-4 p-4">
-            <AgentThinking label={`Running full scan (${runAllProgress}/${INTELLIGENCE_AGENT_TYPES.length})`} />
+            <AgentThinking label={`Running specialist scan (${runAllProgress}/${INTELLIGENCE_AGENT_TYPES.length})`} />
             <span className="text-sm text-muted-foreground">
-              {AGENT_LABELS[INTELLIGENCE_AGENT_TYPES[Math.min(runAllProgress, INTELLIGENCE_AGENT_TYPES.length - 1)] ?? "FINANCIAL"]}
+              {
+                AGENT_TYPE_LABELS[
+                  INTELLIGENCE_AGENT_TYPES[
+                    Math.min(runAllProgress, INTELLIGENCE_AGENT_TYPES.length - 1)
+                  ] ?? "FINANCIAL"
+                ]
+              }
             </span>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {runningFullAnalysis ? (
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="flex items-center justify-between gap-4 p-4">
+            <AgentThinking
+              label={`Step ${Math.min(fullAnalysisProgress + (anyScanInProgress ? 1 : 0), FULL_ANALYSIS_TOTAL_STEPS)}/${FULL_ANALYSIS_TOTAL_STEPS}: ${fullAnalysisStepLabel}`}
+            />
           </CardContent>
         </Card>
       ) : null}
@@ -375,7 +652,8 @@ export function IntelligencePage({
       {ollamaUnavailable ? (
         <Card className="border-destructive/30 bg-destructive/5">
           <CardContent className="p-4 text-sm text-destructive">
-            Ollama is unavailable. Agent scans require a reachable Ollama endpoint configured on the server.
+            Ollama is unavailable. Intelligence synthesis requires a reachable Ollama endpoint configured on the
+            server.
           </CardContent>
         </Card>
       ) : null}
@@ -384,15 +662,15 @@ export function IntelligencePage({
         {INTELLIGENCE_AGENT_TYPES.map((agent) => {
           const scanning = isAgentScanning(agent);
           const agentDetail = details[agent];
-          const waitingInFullScan = runningAll && !scanning && agentDetail === undefined;
+          const waitingInFullScan = batchRunning && !scanning && agentDetail === undefined;
           const latest =
-            !runningAll && !scanning
+            !batchRunning && !scanning
               ? runs.find((run) => run.agentType === agent && run.status === "COMPLETED")
               : undefined;
           const tabScore =
             agentDetail?.score !== null && agentDetail?.score !== undefined
               ? agentDetail.score
-              : !runningAll && latest?.score !== null && latest?.score !== undefined
+              : !batchRunning && latest?.score !== null && latest?.score !== undefined
                 ? latest.score
                 : null;
 
@@ -401,18 +679,18 @@ export function IntelligencePage({
               key={agent}
               type="button"
               role="tab"
-              aria-selected={activeAgent === agent}
+              aria-selected={activeTab === agent}
               aria-busy={scanning || waitingInFullScan}
               className={cn(
                 "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors",
-                activeAgent === agent
+                activeTab === agent
                   ? "border-primary bg-primary/10 text-foreground"
                   : "border-border/60 text-muted-foreground hover:text-foreground",
                 (scanning || waitingInFullScan) && "border-primary/40",
               )}
-              onClick={() => setActiveAgent(agent)}
+              onClick={() => setActiveTab(agent)}
             >
-              {AGENT_LABELS[agent]}
+              {AGENT_TYPE_LABELS[agent]}
               {scanning ? (
                 <Loader2 className="h-3.5 w-3.5 motion-safe:animate-spin text-primary" aria-hidden="true" />
               ) : tabScore !== null ? (
@@ -421,118 +699,339 @@ export function IntelligencePage({
             </button>
           );
         })}
-        {COMING_SOON_AGENTS.map((agent) => (
-          <button
-            key={agent.id}
-            type="button"
-            role="tab"
-            aria-selected={false}
-            disabled
-            title={`Coming in ${agent.slice}`}
-            className="inline-flex cursor-not-allowed items-center gap-2 rounded-full border border-border/40 px-4 py-2 text-sm text-muted-foreground opacity-60"
-          >
-            {agent.label}
-            <span className="text-xs">Soon</span>
-          </button>
-        ))}
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "EXECUTIVE"}
+          aria-busy={isAgentScanning("EXECUTIVE")}
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors",
+            activeTab === "EXECUTIVE"
+              ? "border-primary bg-primary/10 text-foreground"
+              : "border-border/60 text-muted-foreground hover:text-foreground",
+            isAgentScanning("EXECUTIVE") && "border-primary/40",
+          )}
+          onClick={() => setActiveTab("EXECUTIVE")}
+        >
+          Executive
+          {isAgentScanning("EXECUTIVE") ? (
+            <Loader2 className="h-3.5 w-3.5 motion-safe:animate-spin text-primary" aria-hidden="true" />
+          ) : null}
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === "CONSENSUS"}
+          aria-busy={consensusRunning}
+          className={cn(
+            "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors",
+            activeTab === "CONSENSUS"
+              ? "border-primary bg-primary/10 text-foreground"
+              : "border-border/60 text-muted-foreground hover:text-foreground",
+            consensusRunning && "border-primary/40",
+          )}
+          onClick={() => setActiveTab("CONSENSUS")}
+        >
+          Consensus
+          {consensusRunning ? (
+            <Loader2 className="h-3.5 w-3.5 motion-safe:animate-spin text-primary" aria-hidden="true" />
+          ) : null}
+        </button>
       </div>
 
-      <Card>
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
-          <div>
-            <CardTitle>{AGENT_LABELS[activeAgent]} agent</CardTitle>
-            <CardDescription>
-              {isActiveAgentScanning
-                ? "Assessment in progress…"
-                : isWaitingInFullScan
-                  ? "Queued in full scan…"
-                  : activeDetail
-                    ? `Last completed ${new Date(activeDetail.completedAt ?? activeDetail.startedAt).toLocaleString()}`
-                    : activeRun
-                      ? `Last completed ${new Date(activeRun.completedAt ?? activeRun.startedAt).toLocaleString()}`
-                      : "No completed runs yet"}
-            </CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            {showResults && currentConfidence ? (
-              <Badge variant={confidenceBadgeVariant(currentConfidence)}>{currentConfidence}</Badge>
+      {activeTab === "CONSENSUS" ? (
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
+            <div>
+              <CardTitle>Consensus</CardTitle>
+              <CardDescription>
+                {consensus
+                  ? `Last synthesis ${new Date(
+                      consensusHistory.find((item) => item.id === consensus.consensusRunId)?.createdAt ??
+                        Date.now(),
+                    ).toLocaleString()}`
+                  : "Explainable multi-agent recommendation"}
+              </CardDescription>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {consensusHistory.length > 0 ? (
+                <label className="flex items-center gap-2 text-sm text-muted-foreground">
+                  History
+                  <select
+                    className="rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
+                    aria-label="Consensus run history"
+                    value={consensus?.consensusRunId ?? ""}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (value) void loadConsensusDetail(value);
+                    }}
+                  >
+                    {consensusHistory.map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {new Date(item.createdAt).toLocaleString()} · {item.decisionConfidence}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              ) : null}
+              <Button
+                type="button"
+                disabled={consensusRunning || batchRunning || completedSpecialists.size < 3}
+                onClick={() => void runConsensus(true)}
+              >
+                {consensusRunning ? (
+                  <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
+                ) : (
+                  <Play className="h-4 w-4" aria-hidden="true" />
+                )}
+                {consensusRunning ? "Running consensus…" : consensus ? "Re-run consensus" : "Run consensus"}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {completedSpecialists.size < 3 ? (
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-100">
+                Run at least 3 specialist agents before consensus
+                {missingSpecialists.length > 0
+                  ? ` (still needed: ${missingSpecialists.map((agent) => AGENT_TYPE_LABELS[agent]).join(", ")})`
+                  : ""}
+                .
+              </div>
             ) : null}
-            <Button
-              type="button"
-              disabled={isActiveAgentScanning || runningAll}
-              onClick={() => void runAgent(activeAgent, true)}
-            >
-              {isActiveAgentScanning ? (
-                <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
-              ) : (
-                <Play className="h-4 w-4" aria-hidden="true" />
-              )}
-              {isActiveAgentScanning ? "Running scan…" : activeRun ? "Re-run scan" : "Run scan"}
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {isActiveAgentScanning ? (
-            <div className="rounded-lg border border-primary/20 bg-primary/5 p-6">
-              <AgentThinking label={`Running ${AGENT_LABELS[activeAgent].toLowerCase()} assessment`} />
-              <p className="mt-3 text-sm text-muted-foreground">
-                Previous results are hidden until this scan completes.
+
+            {consensusRunning ? (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-6">
+                <AgentThinking label="Synthesizing consensus across specialist opinions" />
+              </div>
+            ) : null}
+
+            {!consensusRunning && !consensus ? (
+              <p className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
+                No consensus yet. Complete specialist scans, then run consensus to see per-agent opinions before the
+                final recommendation.
               </p>
-            </div>
-          ) : null}
+            ) : null}
 
-          {isWaitingInFullScan ? (
-            <div className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
-              This agent is queued in the full scan. Results will appear here when its turn completes.
-            </div>
-          ) : null}
+            {!consensusRunning && consensus ? (
+              <>
+                <div>
+                  <h3 className="mb-3 text-sm font-medium text-muted-foreground">Agent opinions</h3>
+                  <ConsensusOpinionGrid opinions={consensus.agentOpinions} />
+                </div>
 
-          {!isActiveAgentScanning && !isWaitingInFullScan && !activeDetail && !activeRun ? (
-            <p className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
-              No scans yet. Run the {AGENT_LABELS[activeAgent].toLowerCase()} agent to generate a score and findings.
-            </p>
-          ) : null}
-
-          {!isActiveAgentScanning && !isWaitingInFullScan && (activeDetail ?? activeRun) && currentConfidence === "INSUFFICIENT" ? (
-            <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-100">
-              Insufficient evidence in the data room for a confident {AGENT_LABELS[activeAgent].toLowerCase()} scan.
-              Upload and process more documents, then re-run.
-            </p>
-          ) : null}
-
-          {showResults ? (
-            <>
-              <AgentScoreGauge
-                score={currentScore}
-                label={`${AGENT_LABELS[activeAgent]} score`}
-                description={
-                  typeof currentOutput?.recommendation === "string" ? currentOutput.recommendation : undefined
-                }
-              />
-
-              <div>
-                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Breakdown</h3>
-                <AgentBreakdown agentType={activeAgent} output={currentOutput} />
-              </div>
-
-              <div>
-                <h3 className="mb-3 text-sm font-medium text-muted-foreground">Findings</h3>
-                <FindingsTable
-                  projectId={projectId}
-                  findings={currentFindings}
-                  citations={currentCitations}
+                <ConsensusConflictMatrix
+                  agreements={consensus.agreements}
+                  conflicts={consensus.conflicts}
                 />
-              </div>
-            </>
-          ) : null}
-        </CardContent>
-      </Card>
 
-      {showHistory ? (
+                <ConsensusRecommendation
+                  projectId={projectId}
+                  finalRecommendation={consensus.finalRecommendation}
+                  decisionConfidence={consensus.decisionConfidence}
+                  resolutionRationale={consensus.resolutionRationale}
+                  citations={consensus.citations}
+                />
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
+            <div>
+              <CardTitle>
+                {activeAgent ? `${AGENT_TYPE_LABELS[activeAgent]} agent` : "Agent"}
+              </CardTitle>
+              <CardDescription>
+                {isActiveAgentScanning
+                  ? "Assessment in progress…"
+                  : isWaitingInFullScan
+                    ? "Queued in full scan…"
+                    : showFailedResult
+                      ? `Failed ${new Date(activeDetail!.completedAt ?? activeDetail!.startedAt).toLocaleString()}`
+                      : activeDetail?.status === "COMPLETED"
+                        ? `Last completed ${new Date(activeDetail.completedAt ?? activeDetail.startedAt).toLocaleString()}`
+                        : activeRun
+                          ? `Last completed ${new Date(activeRun.completedAt ?? activeRun.startedAt).toLocaleString()}`
+                          : "No completed runs yet"}
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              {showResults && currentConfidence ? (
+                <Badge variant={confidenceBadgeVariant(currentConfidence)}>{currentConfidence}</Badge>
+              ) : null}
+              {activeAgent ? (
+                <Button
+                  type="button"
+                  disabled={isActiveAgentScanning || batchRunning}
+                  onClick={() => void runAgent(activeAgent, true)}
+                >
+                  {isActiveAgentScanning ? (
+                    <RefreshCw className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Play className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {isActiveAgentScanning
+                    ? "Running…"
+                    : activeAgent === "EXECUTIVE"
+                      ? activeRun
+                        ? "Re-run executive package"
+                        : "Run executive package"
+                      : activeRun
+                        ? "Re-run scan"
+                        : "Run scan"}
+                </Button>
+              ) : null}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {isActiveAgentScanning ? (
+              <div className="rounded-lg border border-primary/20 bg-primary/5 p-6">
+                <AgentThinking
+                  label={
+                    activeAgent === "EXECUTIVE"
+                      ? "Preparing executive decision package"
+                      : `Running ${AGENT_TYPE_LABELS[activeAgent!].toLowerCase()} assessment`
+                  }
+                />
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Previous results are hidden until this scan completes.
+                </p>
+              </div>
+            ) : null}
+
+            {isWaitingInFullScan ? (
+              <div className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
+                This agent is queued in the full analysis. Results will appear here when its turn completes.
+              </div>
+            ) : null}
+
+            {showFailedResult ? (
+              <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+                <p className="text-sm font-medium text-destructive">
+                  {AGENT_TYPE_LABELS[activeAgent!]} scan failed
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {activeDetail?.error?.trim() ||
+                    "The model returned an invalid response. Re-run the scan to try again."}
+                </p>
+                {activeRun ? (
+                  <p className="text-xs text-muted-foreground">
+                    A previous completed run is still available in history — switch away and back after a
+                    successful re-run, or open Run history.
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {!isActiveAgentScanning && !isWaitingInFullScan && !activeDetail && !activeRun ? (
+              <p className="rounded-lg border border-dashed border-border/60 p-6 text-sm text-muted-foreground">
+                {activeAgent === "EXECUTIVE"
+                  ? "No executive package yet. Run the executive agent to synthesize a Markdown decision report."
+                  : `No scans yet. Run the ${AGENT_TYPE_LABELS[activeAgent!].toLowerCase()} agent to generate a score and findings.`}
+              </p>
+            ) : null}
+
+            {!isActiveAgentScanning &&
+            !isWaitingInFullScan &&
+            (activeDetail ?? activeRun) &&
+            currentConfidence === "INSUFFICIENT" ? (
+              <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-100">
+                Insufficient evidence in the data room for a confident{" "}
+                {AGENT_TYPE_LABELS[activeAgent!].toLowerCase()} package. Upload and process more documents, then
+                re-run.
+              </p>
+            ) : null}
+
+            {showResults && activeAgent === "EXECUTIVE" ? (
+              <>
+                <AgentScoreGauge
+                  score={currentScore}
+                  label="Executive composite score"
+                  description={
+                    typeof currentOutput?.recommendation === "string"
+                      ? currentOutput.recommendation
+                      : undefined
+                  }
+                />
+                <ExecutiveReportView
+                  projectId={projectId}
+                  markdown={
+                    typeof currentOutput?.markdown === "string"
+                      ? currentOutput.markdown
+                      : typeof currentOutput?.executiveSummary === "string"
+                        ? currentOutput.executiveSummary
+                        : ""
+                  }
+                  citations={currentCitations}
+                  specialistRunIds={
+                    Array.isArray(currentOutput?.specialistRunIds)
+                      ? (currentOutput?.specialistRunIds as string[])
+                      : []
+                  }
+                  specialistContext={
+                    Array.isArray(currentOutput?.specialistContext)
+                      ? (currentOutput.specialistContext as Array<{
+                          agentType: string;
+                          runId: string;
+                          score: number | null;
+                          confidence: string;
+                          recommendation: string;
+                        }>)
+                      : []
+                  }
+                />
+                <div>
+                  <h3 className="mb-3 text-sm font-medium text-muted-foreground">Priority actions</h3>
+                  <FindingsTable
+                    projectId={projectId}
+                    findings={currentFindings}
+                    citations={currentCitations}
+                  />
+                </div>
+              </>
+            ) : null}
+
+            {showResults && activeAgent && activeAgent !== "EXECUTIVE" ? (
+              <>
+                <AgentScoreGauge
+                  score={currentScore}
+                  label={`${AGENT_TYPE_LABELS[activeAgent]} score`}
+                  description={
+                    typeof currentOutput?.recommendation === "string"
+                      ? currentOutput.recommendation
+                      : undefined
+                  }
+                />
+
+                <div>
+                  <h3 className="mb-3 text-sm font-medium text-muted-foreground">Breakdown</h3>
+                  <AgentBreakdown agentType={activeAgent} output={currentOutput} />
+                </div>
+
+                <div>
+                  <h3 className="mb-3 text-sm font-medium text-muted-foreground">Findings</h3>
+                  <FindingsTable
+                    projectId={projectId}
+                    findings={currentFindings}
+                    citations={currentCitations}
+                  />
+                </div>
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
+      )}
+
+      {showHistory && activeAgent ? (
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Run history</CardTitle>
-            <CardDescription>Past {AGENT_LABELS[activeAgent].toLowerCase()} scans for this project.</CardDescription>
+            <CardDescription>
+              Past {AGENT_TYPE_LABELS[activeAgent].toLowerCase()} scans for this project.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <AgentRunHistory projectId={projectId} runs={runs} activeAgent={activeAgent} />
