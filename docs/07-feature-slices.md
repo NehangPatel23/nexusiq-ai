@@ -63,15 +63,15 @@ Executive timeline, enterprise relationship graph. (Project **Risks** overview d
 Contradiction engine (citation-validated scan, resolution notes, promote-to-finding, bulk status), missing document checklist + folder deep links + follow-up export, and project **Risks** overview (enterprise score, heatmap, open findings + diligence gap rollups).
 
 ## Slice 14: Risk Simulator + Action Plan
-**Task:** [tasks/14-history.md](../tasks/14-history.md)  
-What-if scenarios, prioritized action plan kanban.
+**Task:** [tasks/14-history.md](../tasks/14-history.md) · **Status:** DONE  
+What-if scenarios (single Ollama JSON call from FINANCIAL+RISK baselines → `SimulationRun` deltas), prioritized action-plan kanban (CRUD, from-findings, suggest from executive priorityActions — no Ollama).
 
 ## Slice 15: History + Settings
-**Task:** [tasks/15-settings.md](../tasks/15-settings.md)  
+**Task:** [tasks/15-settings.md](../tasks/15-settings.md) · **Status:** NOT STARTED  
 Audit log, project comparison, settings hub (profile, security, notifications, AI, appearance, shortcuts), deferred deletion + 24h account/org recovery, purge job.
 
 ## Slice 16: Admin
-**Task:** [tasks/16-admin.md](../tasks/16-admin.md)  
+**Task:** [tasks/16-admin.md](../tasks/16-admin.md) · **Status:** NOT STARTED  
 Users, permissions, usage stats, health, reindex.
 
 ## Slice 17: Polish (parallel backlog)

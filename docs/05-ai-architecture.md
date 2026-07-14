@@ -114,11 +114,12 @@ Upload → Classify → Extract text (PDF.js/LibreOffice/Tesseract)
 5. Export follow-ups as markdown/CSV; deep-link uploads into expected folders
 
 ### Risk Simulator
-1. Load baseline agent scores
-2. Apply user scenario parameters (structured JSON)
-3. Re-run Financial + Risk agents with scenario context injected
-4. Compute delta vs baseline
-5. Store `SimulationRun`
+1. Require latest COMPLETED FINANCIAL + RISK `AgentRun`s (else `400 SIMULATION_PREREQUISITE`)
+2. `healthCheck`; if fail → `503 OLLAMA_UNAVAILABLE`
+3. Scenario-biased RAG retrieval + baseline summaries
+4. Single `ollama.chat({ format: "json" })` with `prompts/risk-simulator.md` (not sequential agent re-runs on MVP)
+5. Zod-validate output; compute score deltas; persist `SimulationRun` only (never overwrite live AgentRuns)
+6. Optional later: `mode: "deep"` re-runs FINANCIAL+RISK via `runAgent` with scenario preamble
 
 ---
 

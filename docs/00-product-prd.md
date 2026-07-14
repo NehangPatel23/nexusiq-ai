@@ -299,9 +299,10 @@ Combines all agent outputs into:
 - Auto-generate **follow-up request list** (exportable)
 
 ### 4.19 Risk Simulator
-- Scenario templates: revenue −20%, customer churn, lawsuit loss, price change
-- Re-run risk/financial agents with adjusted assumptions (structured what-if, not Monte Carlo cloud)
-- Updated recommendation + delta from baseline
+- Scenario templates: revenue −20%, customer churn, lawsuit loss, price change, custom
+- MVP: single Ollama JSON reassessment from FINANCIAL+RISK baselines + RAG context (not Monte Carlo)
+- Updated recommendation + delta from baseline; persist `SimulationRun` (never overwrite live AgentRuns)
+- Prerequisites: completed FINANCIAL + RISK agent runs; Ollama required to simulate
 
 ### 4.20 Smart Search
 - Natural language + keyword + semantic (hybrid)
@@ -321,10 +322,10 @@ Combines all agent outputs into:
 | PowerPoint summary | PPTX (template-based, LibreOffice or pptxgenjs) |
 
 ### 4.22 AI Action Plan
-- Prioritized action items from all agents
-- Assignee, impact estimate, priority, deadline
-- Links to source findings
-- Kanban + list views
+- Prioritized action items from findings + executive priorityActions (deterministic suggest; no Ollama required)
+- Assignee (org member), impact estimate, priority, deadline; soft delete
+- Links to source findings / documents
+- Status kanban (Todo / In Progress / Done) + add-from-finding
 
 ### 4.23 History
 - Past projects, comparison view (side-by-side scores)

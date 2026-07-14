@@ -79,7 +79,7 @@ Every page: header, sidebar, widgets, states (loading/empty/error), keyboard acc
 
 **Tabs:** Overview · Data Room · Intelligence · Chat · Search · Reports · Timeline · Graph · Risks · Contradictions · Missing · Simulator · Actions · History
 
-Live today: Overview, Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing. Remaining tabs are polished placeholders until slices 14–15.
+Live today: Overview, Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing, Simulator, Actions. History remains a polished placeholder until slice 15.
 
 **Overview tab:**
 - Deal metadata card (editable)
@@ -225,18 +225,20 @@ Each agent tab:
 
 ## Risk Simulator (`/dashboard/projects/[id]/simulator`)
 
-- Scenario picker + parameter sliders (revenue %, customer loss, etc.)
-- Run simulation → delta panel vs baseline
-- Updated risk score + recommendation diff
+- Scenario picker cards + parameter sliders/inputs (revenue %, customer loss, lawsuit, price, custom)
+- Prerequisites banner when FINANCIAL / RISK baselines missing → link to Intelligence
+- Run simulation → AgentThinking → delta panel (baseline vs simulated scores, confidence, recommendation, key impacts)
+- Run history to re-open past `SimulationRun`s
+- Ollama required for POST simulate; GET list/detail offline
 
 ---
 
 ## Action Plan (`/dashboard/projects/[id]/actions`)
 
-- Kanban: Critical / High / Medium / Low (or Todo / In Progress / Done)
-- Card: title, assignee, deadline, impact, source link
-- "+ Add from finding" shortcut
-
+- Kanban by status: Todo / In Progress / Done (priority badges; cancel soft-hidden)
+- Cards: title, assignee, deadline, impact, source finding link; drag-and-drop + status select
+- Stats strip + priority/assignee filters
+- "+ Add task", "+ Add from finding", "Suggest from intelligence" (deterministic; no Ollama)
 ---
 
 ## History (`/dashboard/history`)

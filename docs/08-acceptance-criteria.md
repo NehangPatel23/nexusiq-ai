@@ -106,10 +106,10 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Risks overview page — enterprise risk score, severity/category heatmap, open findings from agents
 
 ### 14 Simulator + Action Plan
-- [ ] What-if scenarios (revenue change, customer loss, etc.)
-- [ ] Delta vs baseline scores shown
-- [ ] Action plan kanban with assignee, priority, deadline, impact
-- [ ] Link actions to source findings
+- [x] What-if scenarios (revenue change, customer loss, etc.)
+- [x] Delta vs baseline scores shown
+- [x] Action plan kanban with assignee, priority, deadline, impact
+- [x] Link actions to source findings
 
 ### 15 History + Settings
 - [ ] Audit log with filters
@@ -141,8 +141,8 @@ Optional UX polish — see [tasks/17-polish.md](../tasks/17-polish.md). Not requ
 - [x] Run agents → View consensus → Chat with citations
 - [x] Generate report → Export PDF (also MD/XLSX/PPTX/ZIP; share links)
 - [x] View timeline, graph, contradictions, missing docs, risks overview
-- [ ] Run simulator → Create action items
-- [ ] No dead-end pages in journey (placeholders remain for slices 14–16)
+- [x] Run simulator → Create action items
+- [ ] No dead-end pages in journey (placeholders remain for slices 15–16)
 
 ---
 
