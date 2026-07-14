@@ -50,6 +50,8 @@ Worker VPS (or Mac during dev) → polls PENDING documents
 
 **Risk Simulator + Action Plan (slice 14):** Action Plan (Task CRUD / kanban / from-findings / suggest from executive `priorityActions`) runs on Vercel/Next.js **without Ollama**. Risk simulations (`POST .../simulations`) need `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel): load latest COMPLETED FINANCIAL + RISK AgentRuns as baseline, retrieve scenario-biased context, single `ollama.chat({ format: "json" })`, persist `SimulationRun` deltas only (never overwrite AgentRuns). Missing FINANCIAL/RISK baselines → `400 SIMULATION_PREREQUISITE` without calling Ollama; unreachable Ollama → `503 OLLAMA_UNAVAILABLE`. Simulate route uses `maxDuration = 120`. GET simulation list/detail never call Ollama. Deferred: public HTTPS Ollama for Vercel simulations if not already configured; OCI worker unchanged.
 
+**History + Settings (slice 15):** Org audit log, project comparison, profile/security/notifications/appearance/shortcuts are **offline** (Postgres only — no Ollama). AI Models settings configure chat/embed model + base URL via `SystemSetting`, with **env vars always winning when set** (production-safe on Vercel). `OLLAMA_API_KEY` stays server-only (never rendered; prefer Vercel env as source of truth). “Test connection” calls `healthCheck()` and returns connected/unreachable + **host only**. Localhost may use `http://localhost:11434` with no API key; Vercel uses HTTPS Ollama + API key. Deferred deletion: users/orgs are tombstoned for 24h (`deletedAt` + `purgeAfter`), recoverable until purge. Cron: `GET /api/cron/purge-deleted` (Bearer `CRON_SECRET`) **daily** at 04:00 UTC via `vercel.json` (Hobby-compatible; one cron/day), or `pnpm db:purge-deleted` locally.
+
 **Worker env (VPS):**
 
 ```bash
@@ -342,9 +344,9 @@ No Storage required. ~3 minutes.
 5. **Projects** (`/dashboard/projects`) — create project, grid/list, filters, project shell tabs
 6. **Workspaces** — org → Workspaces; create workspace; **View projects** filters by workspace
 7. **Organizations** — Settings → invite a second email (optional); tap **ⓘ** for role permissions
-8. **Sidebar** — open a project for Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing, Simulator, Actions (History remains placeholder for slice 15)
+8. **Sidebar** — open a project for Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing, Simulator, Actions, History; open **Settings** from global nav
 9. **Data Room** — upload, folders, preview (see Path B below)
-10. **Pitch** — multi-tenant diligence platform with cited agents + local report export; Ollama local by design ($0 API cost)
+10. **Pitch** — multi-tenant diligence platform with cited agents, audit history, deferred deletion, and local report export; Ollama local by design ($0 API cost)
 
 ### Path B — Data room demo (recommended narrative)
 
@@ -369,12 +371,14 @@ Uses Supabase **Postgres + Storage** for upload, preview, and folder structure �
 | 6 | **Share** (admin) → copy link → incognito | Read-only external data room |
 | 7 | **Intelligence** → run specialist or full analysis (Ollama) | Scores, findings, consensus |
 | 8 | **Timeline** → **Graph** → **Contradictions** → **Missing** → **Risks** → **Simulator** / **Actions** | Advanced diligence views; Simulator needs Ollama + baselines |
-| 9 | **Reports** → Risk Register / Board pack → PDF or ZIP | Local export; share link optional |
-| 10 | **Organizations** → members | RBAC, invites, roles |
+| 9 | **History** → filter audit events; **Compare projects** | Org/project activity with source labels |
+| 10 | **Reports** → Risk Register / Board pack → PDF or ZIP | Local export; share link optional |
+| 11 | **Settings** → Security / AI Models (optional) | Account delete tombstone; Ollama test connection |
+| 12 | **Organizations** → members | RBAC, invites, roles |
 
 **Script for judges:**
 
-> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, flags contradictions and missing evidence, models what-if risk scenarios, tracks diligence action items, synthesizes an explainable consensus, and exports board-ready PDF/Excel/PPTX packages. This deployment uses Supabase for database and document storage, and Vercel for the app. AI inference runs on Ollama by design—zero API cost and data stays private.”
+> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, flags contradictions and missing evidence, models what-if risk scenarios, tracks diligence action items, synthesizes an explainable consensus, keeps a full audit history with settings and deferred deletion, and exports board-ready PDF/Excel/PPTX packages. This deployment uses Supabase for database and document storage, and Vercel for the app. AI inference runs on Ollama by design—zero API cost and data stays private.”
 
 ### Path C — Two-browser invite demo (optional)
 
@@ -438,11 +442,11 @@ Neon does **not** include file storage—you would need a separate service for d
 - **Timeline + Graph** (view without Ollama; AI extract needs public Ollama)
 - **Contradictions + Missing + Risks** (risks/missing without Ollama; contradiction scan needs public Ollama)
 - **Risk Simulator + Action Plan** (Action Plan offline; simulations need public Ollama on Vercel)
-- Placeholder tabs: History (slice 15)
+- **History + Settings** (org/project audit + compare; settings shell; deferred deletion + purge cron; AI Models settings offline except test connection)
 
 ## Deferred
 
 - **OCI worker VPS** — document processing on Vercel (Slice 06 prod path). Checklist: [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md)
 - **Public Ollama HTTPS** — chat/agents/contradiction scan/simulations/narrative regenerate on Vercel if not already configured (slices 08+)
-- Remaining slices 15–16 (History/Settings, Admin)
+- Remaining slice **16** (Admin)
 - Contradiction scan on OCI worker for very large multi-batch rooms ([tasks/17-polish.md](../tasks/17-polish.md))

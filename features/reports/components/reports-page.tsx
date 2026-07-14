@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import {
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -329,57 +329,46 @@ export function ReportsPage({
 
   return (
     <div className="space-y-8">
-      <header className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/40 print:hidden">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(var(--primary)/0.12),transparent_55%)]"
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-wrap items-start justify-between gap-5 px-5 py-6 sm:px-6">
-          <div className="max-w-2xl">
-            <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Diligence export
-            </p>
-            <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-              Reports
-            </h1>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">
-              Assemble board-ready packages for{" "}
-              <span className="font-medium text-foreground">{projectName}</span> from the latest
-              agent, consensus, and findings output. Exports stay local — no Ollama required for
-              PDF, Markdown, Excel, or PowerPoint.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => void refreshReports()}
-              disabled={loading}
-              aria-label="Refresh reports"
-              className="bg-background/50"
-            >
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              )}
-              Refresh
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={reports.length < 2}
-              onClick={() => openCompare()}
-              className="bg-background/50"
-            >
-              <GitCompareArrows className="h-4 w-4" aria-hidden="true" />
-              Compare
-            </Button>
-            <ReportGenerateMenu onGenerate={openGenerate} generating={generating} />
-          </div>
-        </div>
-      </header>
+      <ProjectTabHeader
+        className="print:hidden"
+        icon={FileText}
+        title="Reports"
+        description={
+          <>
+            Assemble board-ready packages for{" "}
+            <span className="font-medium text-foreground">{projectName}</span> from the latest
+            agent, consensus, and findings output. Exports stay local — no Ollama required for PDF,
+            Markdown, Excel, or PowerPoint.
+          </>
+        }
+      >
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => void refreshReports()}
+          disabled={loading}
+          aria-label="Refresh reports"
+          className="bg-background/50"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+          )}
+          Refresh
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={reports.length < 2}
+          onClick={() => openCompare()}
+          className="bg-background/50"
+        >
+          <GitCompareArrows className="h-4 w-4" aria-hidden="true" />
+          Compare
+        </Button>
+        <ReportGenerateMenu onGenerate={openGenerate} generating={generating} />
+      </ProjectTabHeader>
 
       {showIntelBanner ? (
         <Card className="border-amber-500/30 bg-amber-500/[0.06] print:hidden">

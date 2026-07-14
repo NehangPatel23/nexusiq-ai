@@ -15,17 +15,17 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/slices-14%2F16_live-6366f1?style=flat-square" alt="Progress" />
+  <img src="https://img.shields.io/badge/slices-15%2F16_live-6366f1?style=flat-square" alt="Progress" />
   <img src="https://img.shields.io/badge/AI-Ollama_local-22c55e?style=flat-square" alt="Ollama" />
   <img src="https://img.shields.io/badge/stack-Next.js_15_·_Prisma_·_PostgreSQL-0ea5e9?style=flat-square" alt="Stack" />
-  <img src="https://img.shields.io/badge/tests-367_unit_·_11_e2e-8b5cf6?style=flat-square" alt="Tests" />
+  <img src="https://img.shields.io/badge/tests-unit_%2B_e2e-8b5cf6?style=flat-square" alt="Tests" />
 </p>
 
 ---
 
 ## Overview
 
-NexusIQ ingests a company **data room**, runs specialized AI agents in parallel (Financial, Legal, Compliance, Risk, Fraud), synthesizes an **explainable consensus**, surfaces **cross-document contradictions** and **missing evidence**, runs **what-if risk simulations**, tracks an **action-plan kanban**, and exports **board-ready reports** — every claim cited, every disagreement visible.
+NexusIQ ingests a company **data room**, runs specialized AI agents in parallel (Financial, Legal, Compliance, Risk, Fraud), synthesizes an **explainable consensus**, surfaces **cross-document contradictions** and **missing evidence**, runs **what-if risk simulations**, tracks an **action-plan kanban**, exports **board-ready reports**, and keeps a full **audit history** plus **settings / deferred deletion** — every claim cited, every disagreement visible.
 
 Built as a **solo, zero-API-cost** stack: Next.js on Vercel, PostgreSQL on Supabase, inference via local **Ollama**. No black-box recommendations.
 
@@ -39,28 +39,28 @@ Built as a **solo, zero-API-cost** stack: Next.js on Vercel, PostgreSQL on Supab
 |---|---|
 | **URL** | [nexusiq-ai-steel.vercel.app](https://nexusiq-ai-steel.vercel.app) |
 | **Try it** | Register → 3-step onboarding (org → workspace → project) → dashboard |
-| **Deep dive** | Project → **Data Room** → **Intelligence** → **Risks / Contradictions / Missing** → **Simulator / Actions** → **Reports** |
+| **Deep dive** | Project → **Data Room** → **Intelligence** → **History / Settings** → **Reports** |
 
-Cloud auth, orgs, workspaces, projects, data room, search, chat, intelligence, reports/export, timeline, graph, contradictions, missing-info, risks rollups, simulator, and action plan run on **Supabase + Vercel**. Chat / agent / contradiction scan / **simulations** need a reachable `OLLAMA_BASE_URL` (local or public HTTPS). Missing checklist, risks overview, Action Plan CRUD, and report **assembly/export** work without Ollama when intelligence already exists.
+Cloud auth, orgs, workspaces, projects, data room, search, chat, intelligence, reports/export, timeline, graph, contradictions, missing-info, risks rollups, simulator, action plan, **History**, and **Settings** run on **Supabase + Vercel**. Chat / agent / contradiction scan / **simulations** need a reachable `OLLAMA_BASE_URL` (local or public HTTPS). Missing checklist, risks overview, Action Plan CRUD, History, Settings (except AI “Test connection”), and report **assembly/export** work without Ollama when intelligence already exists.
 
 ---
 
 ## What's built today
 
-### Shipped (slices 01–14)
+### Shipped (slices 01–15)
 
 | Area | Features |
 |------|----------|
-| **Auth** | Register, login, logout, forgot/reset password, profile (name, avatar), protected routes |
-| **Organizations** | CRUD, hard delete, slug generation, 3-step onboarding (org → workspace → optional project) |
+| **Auth** | Register, login, logout, forgot/reset password, profile (name, avatar), protected routes; deferred account deletion + `/account/recover` |
+| **Organizations** | CRUD, slug generation, 3-step onboarding (org → workspace → optional project); org tombstone + 24h restore (“Recently deactivated”) |
 | **Members & RBAC** | Owner, Admin, Analyst, Reviewer, Viewer — `requireOrgRole()` on every API; role guide (ⓘ) on Members |
 | **Invites** | 7-day tokens, pending invite edit/cancel, accept via link or onboarding banner |
-| **Notifications** | In-app bell + dropdown + `/dashboard/notifications` (archive / restore / bulk actions); CRITICAL contradiction alerts; task assigned |
+| **Notifications** | In-app bell + dropdown + `/dashboard/notifications` (archive / restore / bulk actions); CRITICAL contradiction alerts; task assigned; prefs in Settings |
 | **Teams** | Create & list teams within an org |
 | **Workspaces** | CRUD per org, unique slug, optional team, soft delete + Deleted tab, workspace cards with project counts |
 | **Projects** | CRUD, five types, tags, deal status, default agent, pin/duplicate/bulk delete, workspace filter via URL |
 | **Dashboard** | Stats row, risk donut, activity feed, recent reports, quick actions, onboarding nudge, empty states |
-| **Project shell** | Overview, Data Room, Search, Intelligence, Chat, Reports, Timeline, Graph, Risks, Contradictions, Missing, Simulator, Actions live; History placeholder until slice 15 |
+| **Project shell** | Overview, Data Room, Search, Intelligence, Chat, Reports, Timeline, Graph, Risks, Contradictions, Missing, Simulator, Actions, History — Smart Search–style tab headers |
 | **Data room** | Folder tree, drag-drop upload/move, bulk upload, version history + compare, preview (PDF/image/text/Office/PPTX), tags & classification, filters, trash + retention, audit CSV, read-only share links, `?doc=&folder=&upload=` deep links |
 | **Document processing** | Classify → OCR → chunk → embed → NER (local / worker path; Vercel inline optional via env) |
 | **Search** | Hybrid keyword + semantic retrieval, filters, saved searches |
@@ -73,13 +73,14 @@ Cloud auth, orgs, workspaces, projects, data room, search, chat, intelligence, r
 | **Risk Simulator** | What-if scenarios (revenue / churn / lawsuit / price / custom) vs FINANCIAL+RISK baselines; score deltas, key impacts, run history; stores `SimulationRun` only |
 | **Action Plan** | Status kanban, assignees, priorities, due dates, from-finding + suggest-from-intelligence (no Ollama), soft delete |
 | **Reports & export** | Executive / Board / Investment Memo / Audit / Risk Register / Action Plan / PPTX; Markdown + PDF + XLSX + PPTX + ZIP; share links, compare, audience presets |
+| **History** | Org + project audit feed (filters, date range), activity source labels (Intelligence / Data Room / Reports / …), project compare (side-by-side scores) |
+| **Settings** | Shell tabs: Profile, Security (password + delete account), Notifications, AI Models (Ollama; env wins), Appearance, Shortcuts |
 | **UI shell** | Premium dark dashboard, collapsible sidebar, command palette, keyboard shortcuts (`N`, `/`, `U`), responsive layout |
 
-### Coming soon (slices 15–16)
+### Coming soon (slice 16)
 
 | Slice | Focus |
 |-------|--------|
-| 15 | History / settings / deferred deletion |
 | 16 | Admin health, usage, reindex |
 
 **Slice 17 (Polish)** — parallel UX backlog ([tasks/17-polish.md](./tasks/17-polish.md)); optional, non-blocking.
@@ -173,7 +174,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Open **[http://localhost:3000](http://localhost:3000)** → register → onboarding → project → **Data Room** → **Intelligence** → **Contradictions / Missing / Risks** → **Reports**.
+Open **[http://localhost:3000](http://localhost:3000)** → register → onboarding → project → **Data Room** → **Intelligence** → **History / Settings** → **Reports**.
 
 ### Useful commands
 
@@ -188,6 +189,7 @@ Open **[http://localhost:3000](http://localhost:3000)** → register → onboard
 | `pnpm db:studio` | Prisma Studio |
 | `pnpm db:migrate` | Apply Prisma migrations (`prisma migrate deploy`) |
 | `pnpm db:sync-to-supabase` | Copy local data → Supabase |
+| `pnpm db:purge-deleted` | Hard-delete users/orgs past 24h grace (`purgeAfter`) |
 | `pnpm db:purge-test-users` | Remove `*@test.com` fixtures |
 
 ---
@@ -197,8 +199,8 @@ Open **[http://localhost:3000](http://localhost:3000)** → register → onboard
 Hackathon / judge setup uses **Vercel + Supabase**:
 
 1. **Commit & push** your branch (migrations in `prisma/migrations/`)
-2. **Run migrations** against Supabase (Session pooler, port 5432) — includes contradictions / missing_items / `simulation_runs` / `tasks`
-3. Set env vars on Vercel (`DATABASE_URL` pooler :6543, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`, Supabase Storage keys)
+2. **Run migrations** against Supabase (Session pooler, port 5432) — includes Slice 15 `AuditLog` / `SystemSetting` / tombstone columns
+3. Set env vars on Vercel (`DATABASE_URL` pooler :6543, `AUTH_SECRET`, `NEXT_PUBLIC_APP_URL`, Supabase Storage keys; optional `CRON_SECRET` for purge cron)
 4. Verify `/api/health` returns `ok: true`
 5. **Optional:** `pnpm db:sync-to-supabase` after schema migrate; public `OLLAMA_BASE_URL` for chat/agents/contradiction scan/simulations on Vercel
 
@@ -214,9 +216,10 @@ Full walkthrough: **[docs/deployment.md](./docs/deployment.md)**
 4. **Intelligence** — run specialists / full analysis (needs Ollama) → Consensus + Executive
 5. **Contradictions / Missing / Risks** — cross-doc conflicts, checklist gaps, enterprise risk rollup
 6. **Simulator / Actions** — what-if deltas (needs Ollama + FINANCIAL/RISK baselines); action-plan kanban (offline)
-7. **Reports** — generate Risk Register (works offline once findings exist) or Board pack; download PDF / ZIP
-8. **Chat / Search** — cited Q&A and hybrid search (needs Ollama for semantic / chat)
-9. **Pitch** — multi-agent diligence with citations, simulations, action tracking, and local export at $0 API cost
+7. **History / Settings** — org audit + project compare; profile / security / AI models / appearance (offline except AI test)
+8. **Reports** — generate Risk Register (works offline once findings exist) or Board pack; download PDF / ZIP
+9. **Chat / Search** — cited Q&A and hybrid search (needs Ollama for semantic / chat)
+10. **Pitch** — multi-agent diligence with citations, simulations, audit history, and local export at $0 API cost
 
 Optional: **Share** data room or report → open token link in incognito.
 
@@ -242,14 +245,16 @@ nexusiq-ai/
 │   ├── missing/        # Slice 13
 │   ├── risks/          # Slice 13
 │   ├── simulator/      # Slice 14
-│   └── actions/        # Slice 14
+│   ├── actions/        # Slice 14
+│   ├── history/        # Slice 15
+│   └── settings/       # Slice 15
 ├── src/app/            # Next.js routes + API
 ├── src/lib/ai/         # Agents, consensus, contradictions, missing-info, simulator
 ├── src/lib/export/     # PDF / Markdown / XLSX / PPTX generators
 ├── prisma/             # Schema + migrations
 ├── demo/data-room/     # Synthetic diligence files for upload demos
-├── e2e/                # Playwright (auth → slice 14)
-├── scripts/            # demo:data-room, seed-sample-contradictions, db sync
+├── e2e/                # Playwright (auth → slice 15)
+├── scripts/            # demo:data-room, seed-sample-contradictions, db sync, purge-deleted
 ├── docs/               # PRD, architecture, deployment, acceptance criteria
 ├── tasks/              # Slice specs 01–17
 └── .cursor/rules/      # AI coding conventions
@@ -281,7 +286,7 @@ nexusiq-ai/
  ✅ 04 Projects      ✅ 05 Data Room        ✅ 06 Documents
  ✅ 07 Search         ✅ 08 Chat             ✅ 09 Agents
  ✅ 10 Consensus      ✅ 11 Reports          ✅ 12 Timeline + Graph
- ✅ 13 Contradictions ✅ 14 Simulator         ○ 15 History
+ ✅ 13 Contradictions ✅ 14 Simulator         ✅ 15 History + Settings
  ○ 16 Admin          ○ 17 Polish (parallel backlog)
 ```
 

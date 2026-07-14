@@ -6,7 +6,13 @@ import { Toaster } from "sonner";
 
 import { ConfirmProvider } from "@/hooks/use-confirm";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export function Providers({
+  children,
+  theme = "dark",
+}: {
+  children: React.ReactNode;
+  theme?: "dark" | "light";
+}) {
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -24,7 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <ConfirmProvider>
         {children}
         <Toaster
-          theme="dark"
+          theme={theme}
           position="bottom-right"
           duration={4500}
           toastOptions={{

@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 export function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const deletedNotice = searchParams.get("deleted") === "1";
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
@@ -61,6 +62,14 @@ export function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+        {deletedNotice && !error ? (
+          <div
+            role="status"
+            className="rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
+          >
+            Account scheduled for deletion. Sign in within 24 hours to restore it.
+          </div>
+        ) : null}
         {error && (
           <div
             role="alert"

@@ -235,8 +235,8 @@ View endpoints never require Ollama. Extract returns `503 OLLAMA_UNAVAILABLE` wh
 | POST | `/api/notifications/[id]/unarchive` | Restore archived notification to inbox |
 | DELETE | `/api/notifications/[id]` | Permanently delete notification |
 | POST | `/api/notifications/bulk` | Bulk read / archive / unarchive / delete (`{ action, ids }`) |
-| GET | `/api/organizations/[orgId]/audit` | Audit log |
-| GET | `/api/organizations/[orgId]/compare` | Compare projects |
+| GET | `/api/organizations/[orgId]/audit` | Org history feed (`AuditLog` ∪ Data Room audit; filters + `sourceLabel`) |
+| GET | `/api/organizations/[orgId]/compare` | Compare projects (side-by-side scores) |
 
 ---
 
@@ -245,10 +245,11 @@ View endpoints never require Ollama. Extract returns `503 OLLAMA_UNAVAILABLE` wh
 | Method | Path | Description |
 |--------|------|-------------|
 | GET/PATCH | `/api/settings/profile` | User profile |
-| GET/PATCH | `/api/settings/ai` | Ollama config |
-| GET | `/api/admin/health` | System health |
-| GET | `/api/admin/usage` | Usage stats |
-| POST | `/api/admin/reindex` | Reindex search |
+| GET/PATCH | `/api/settings/ai` | Ollama effective config (env wins; never returns API key) |
+| GET | `/api/cron/purge-deleted` | Purge expired tombstoned users/orgs (`Authorization: Bearer CRON_SECRET`) |
+| GET | `/api/admin/health` | System health (Slice 16) |
+| GET | `/api/admin/usage` | Usage stats (Slice 16) |
+| POST | `/api/admin/reindex` | Reindex search (Slice 16) |
 
 ---
 

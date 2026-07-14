@@ -1,5 +1,6 @@
 import { createNotification } from "@/features/organizations/lib/notifications";
 import { logDataRoomAudit } from "@/features/data-room/lib/audit";
+import { logAuditForProject } from "@/features/history/lib/audit";
 import {
   buildConsensusApiResponse,
   createConsensusRun,
@@ -48,12 +49,24 @@ export async function executeConsensusRun(input: {
     metadata: {
       consensusRunId: created.id,
       decisionConfidence: created.decisionConfidence,
+
       agentRunIds: created.agentRunIds,
       conflictCount: result.conflicts.length,
       usedModel: result.usedModel,
       summary: `Consensus completed · ${created.decisionConfidence}`,
     },
   }).catch(() => undefined);
+
+  void logAuditForProject(input.projectId, {
+    userId: input.triggeredById ?? null,
+    action: "CONSENSUS",
+    entityType: "ConsensusRun",
+    entityId: created.id,
+    metadata: {
+      projectId: input.projectId,
+      decisionConfidence: created.decisionConfidence,
+    },
+  });
 
   if (input.triggeredById) {
     await createNotification({

@@ -74,6 +74,8 @@ type DatePickerProps = {
   /** Optional min/max as YYYY-MM-DD */
   min?: string;
   max?: string;
+  /** Show a Clear control that emits an empty string. */
+  allowClear?: boolean;
 };
 
 export function DatePicker({
@@ -85,6 +87,7 @@ export function DatePicker({
   className,
   min,
   max,
+  allowClear = false,
 }: DatePickerProps) {
   const selected = toDateValue(value);
   const minDate = toDateValue(min);
@@ -423,21 +426,38 @@ export function DatePicker({
             )}
 
             <div className="flex items-center justify-between border-t border-border/50 pt-2">
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                className="h-8 text-xs"
-                onClick={() => {
-                  const today = startOfDay(new Date());
-                  onChange(toYmd(today));
-                  setCursor(today);
-                  setView("day");
-                  setOpen(false);
-                }}
-              >
-                Today
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    const today = startOfDay(new Date());
+                    onChange(toYmd(today));
+                    setCursor(today);
+                    setView("day");
+                    setOpen(false);
+                  }}
+                >
+                  Today
+                </Button>
+                {allowClear ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 text-xs text-muted-foreground"
+                    onClick={() => {
+                      onChange("");
+                      setView("day");
+                      setOpen(false);
+                    }}
+                  >
+                    Clear
+                  </Button>
+                ) : null}
+              </div>
               <Button
                 type="button"
                 size="sm"

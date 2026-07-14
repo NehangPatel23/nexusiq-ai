@@ -45,6 +45,7 @@ test.describe("simulator + action plan", () => {
       timeout: 15_000,
     });
     await expect(page.getByText(/No action items yet/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /Add task/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Add task$/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Create first task/i })).toBeVisible();
   });
 });

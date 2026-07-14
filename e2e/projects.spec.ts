@@ -88,8 +88,9 @@ test.describe("projects flow", () => {
     await expect(page.getByRole("heading", { name: projectA })).toBeVisible({ timeout: 15_000 });
 
     await page.goto("/dashboard/projects");
-    await page.getByRole("button", { name: /new project/i }).click();
+    await page.getByRole("button", { name: /new project|create project/i }).first().click();
     const secondCreateDialog = page.getByRole("dialog", { name: /create project/i });
+    await expect(secondCreateDialog).toBeVisible({ timeout: 15_000 });
     await secondCreateDialog.getByLabel("Name").fill(projectB);
     await selectComboboxOption(
       secondCreateDialog.getByLabel("Workspace", { exact: true }),

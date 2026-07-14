@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import {
   Dialog,
   DialogContent,
@@ -500,14 +501,11 @@ export function ContradictionsPageClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Contradictions</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Cross-document fact conflicts for {projectName}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+      <ProjectTabHeader
+        icon={AlertTriangle}
+        title="Contradictions"
+        description={`Cross-document fact conflicts for ${projectName}`}
+      >
           <Button
             type="button"
             variant="outline"
@@ -535,8 +533,7 @@ export function ContradictionsPageClient({
             )}
             Run contradiction scan
           </Button>
-        </div>
-      </div>
+      </ProjectTabHeader>
 
       {!insufficientDocs && rows.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">

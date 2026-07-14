@@ -109,13 +109,38 @@ export async function updateOrganizationAction(
 
 export async function deleteOrganizationAction(orgId: string): Promise<ActionResult> {
   try {
-    await requireOrgRole(orgId, "OWNER");
-    await deleteOrganization(orgId);
+    const session = await requireOrgRole(orgId, "OWNER");
+    await deleteOrganization(orgId, session.userId);
     revalidatePath("/dashboard/organizations");
     return { success: true };
   } catch (error) {
     if (error instanceof AuthError) {
       return actionError(error.code, error.message);
+    }
+    throw error;
+  }
+}
+
+export async function restoreOrganizationAction(orgId: string): Promise<ActionResult> {
+  try {
+    const session = await requireSession();
+    const { getTombstonedOrganizationForOwner, restoreOrganization } = await import(
+      "@/features/history/lib/purge"
+    );
+    const org = await getTombstonedOrganizationForOwner(orgId, session.userId);
+    if (!org) {
+      return actionError("FORBIDDEN", "Only owners can restore this organization within the grace period");
+    }
+    await restoreOrganization(orgId, session.userId);
+    revalidatePath("/dashboard/organizations");
+    revalidatePath(`/dashboard/organizations/${orgId}/settings`);
+    return { success: true };
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return actionError(error.code, error.message);
+    }
+    if (error instanceof Error) {
+      return actionError("RECOVERY_FAILED", error.message);
     }
     throw error;
   }

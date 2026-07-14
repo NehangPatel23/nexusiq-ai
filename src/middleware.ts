@@ -9,6 +9,7 @@ export const config = {
     "/dashboard/:path*",
     "/onboarding",
     "/invite/:path*",
+    "/account/recover",
     "/login",
     "/register",
     "/forgot-password",

@@ -14,7 +14,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useBackgroundTasks } from "@/features/actions/hooks/use-background-tasks";
+import {
+  startBackgroundFromFindings,
+  startBackgroundSuggest,
+} from "@/features/actions/lib/background-tasks-runner";
 import type { TaskView } from "@/features/actions/lib/tasks";
 import { cn } from "@/lib/utils";
 
@@ -151,6 +157,9 @@ export function ActionsPageClient({
   const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
   const [priorityFilter, setPriorityFilter] = useState<string>("ALL");
   const [assigneeFilter, setAssigneeFilter] = useState<string>("ALL");
+  const background = useBackgroundTasks(projectId);
+  const prevTasksStatus = useRef(background.status);
+  const bulkBusy = background.status === "running";
 
   const [addOpen, setAddOpen] = useState(false);
   const [findingOpen, setFindingOpen] = useState(false);
@@ -213,6 +222,19 @@ export function ActionsPageClient({
       linked: active.filter((t) => t.findingId).length,
     };
   }, [tasks]);
+
+  useEffect(() => {
+    if (prevTasksStatus.current === "running" && background.status === "idle") {
+      if (background.result?.tasks.length) {
+        setTasks((prev) => {
+          const existing = new Set(prev.map((t) => t.id));
+          const fresh = background.result!.tasks.filter((t) => !existing.has(t.id));
+          return fresh.length ? [...fresh, ...prev] : prev;
+        });
+      }
+    }
+    prevTasksStatus.current = background.status;
+  }, [background.status, background.result]);
 
   async function patchTask(taskId: string, body: Record<string, unknown>) {
     const response = await fetch(`/api/tasks/${taskId}`, {
@@ -285,34 +307,16 @@ export function ActionsPageClient({
   }
 
   async function addFromFindings(includeExecutiveActions: boolean, findingIds?: string[]) {
-    setBusy(true);
-    try {
-      const response = await fetch(`/api/projects/${projectId}/tasks/from-findings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          findingIds,
-          includeExecutiveActions,
-        }),
-      });
-      const json = (await response.json()) as ApiEnvelope<{
-        created: number;
-        tasks: TaskView[];
-      }>;
-      if (!json.success) {
-        toast.error(json.error.message);
-        return;
-      }
-      if (json.data.created === 0) {
-        toast.message("No new tasks to add (duplicates skipped)");
-      } else {
-        setTasks((prev) => [...json.data.tasks, ...prev]);
-        toast.success(`Added ${json.data.created} task${json.data.created === 1 ? "" : "s"}`);
-      }
-      setFindingOpen(false);
-    } finally {
-      setBusy(false);
+    if (includeExecutiveActions) {
+      startBackgroundSuggest(projectId);
+      return;
     }
+    if (!findingIds?.length) {
+      toast.error("Select at least one finding");
+      return;
+    }
+    const started = startBackgroundFromFindings(projectId, findingIds);
+    if (started) setFindingOpen(false);
   }
 
   async function handleDelete(taskId: string) {
@@ -337,41 +341,32 @@ export function ActionsPageClient({
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 border-b border-border/40 pb-5 lg:flex-row lg:items-end lg:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/30 bg-primary/10">
-              <ClipboardList className="h-4 w-4 text-primary" aria-hidden />
-            </span>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Action Plan</h1>
-              <p className="text-sm text-muted-foreground">{projectName}</p>
-            </div>
-          </div>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Prioritize diligence follow-ups, assign owners, and keep a clear link back to findings.
-            Works fully offline from Ollama.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+      <ProjectTabHeader
+        icon={ClipboardList}
+        title="Action Plan"
+        description="Prioritize diligence follow-ups, assign owners, and keep a clear link back to findings. Suggest / add-from-finding keep running if you navigate away. Works fully offline from Ollama."
+      >
           <Button variant="outline" onClick={() => void openFindingPicker()}>
             <Link2 className="mr-2 h-4 w-4" aria-hidden />
             Add from finding
           </Button>
           <Button
             variant="secondary"
-            disabled={busy}
+            disabled={busy || bulkBusy}
             onClick={() => void addFromFindings(true)}
           >
-            <Sparkles className="mr-2 h-4 w-4" aria-hidden />
+            {bulkBusy && background.kind === "suggest" ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
+            ) : (
+              <Sparkles className="mr-2 h-4 w-4" aria-hidden />
+            )}
             Suggest from intelligence
           </Button>
           <Button onClick={() => setAddOpen(true)}>
             <Plus className="mr-2 h-4 w-4" aria-hidden />
             Add task
           </Button>
-        </div>
-      </header>
+      </ProjectTabHeader>
 
       {tasks.length > 0 ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -433,12 +428,12 @@ export function ActionsPageClient({
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button onClick={() => setAddOpen(true)}>
               <Plus className="mr-2 h-4 w-4" aria-hidden />
-              Add task
+              Create first task
             </Button>
             <Button variant="outline" onClick={() => void openFindingPicker()}>
               Add from finding
             </Button>
-            <Button variant="secondary" disabled={busy} onClick={() => void addFromFindings(true)}>
+            <Button variant="secondary" disabled={busy || bulkBusy} onClick={() => void addFromFindings(true)}>
               Suggest from intelligence
             </Button>
           </div>
@@ -848,9 +843,12 @@ export function ActionsPageClient({
               Cancel
             </Button>
             <Button
-              disabled={busy || selectedFindingIds.length === 0}
+              disabled={busy || bulkBusy || selectedFindingIds.length === 0}
               onClick={() => void addFromFindings(false, selectedFindingIds)}
             >
+              {bulkBusy && background.kind === "from-findings" ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
               Add selected{selectedFindingIds.length ? ` (${selectedFindingIds.length})` : ""}
             </Button>
           </DialogFooter>

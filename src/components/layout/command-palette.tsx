@@ -37,6 +37,7 @@ const navigationCommands = [
   { label: "Chat", href: "/dashboard/chat", icon: MessageSquare },
   { label: "Reports", href: "/dashboard/reports", icon: FileText },
   { label: "History", href: "/dashboard/history", icon: BarChart3 },
+  { label: "Settings", href: "/dashboard/settings", icon: ClipboardList },
 ];
 
 const actionCommands = (

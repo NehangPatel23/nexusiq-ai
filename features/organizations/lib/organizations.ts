@@ -1,6 +1,7 @@
 import type { OrgRole, OrganizationMember } from "@prisma/client";
 import { cache } from "react";
 
+import { restoreOrganization, tombstoneOrganization } from "@/features/history/lib/purge";
 import { prisma } from "@/lib/db";
 
 import type { CreateOrganizationInput, UpdateOrganizationInput } from "../schemas";
@@ -96,23 +97,18 @@ export async function updateOrganization(organizationId: string, input: UpdateOr
   });
 }
 
-export async function deleteOrganization(organizationId: string) {
-  const invites = await prisma.invite.findMany({
-    where: { organizationId },
-    select: { token: true },
-  });
+/**
+ * Soft-delete (tombstone) an organization. Permanently removed after 24h by purge job.
+ */
+export async function deleteOrganization(organizationId: string, actorUserId?: string | null) {
+  return tombstoneOrganization(organizationId, actorUserId);
+}
 
-  if (invites.length > 0) {
-    await prisma.notification.deleteMany({
-      where: {
-        link: { in: invites.map((invite) => `/invite/${invite.token}`) },
-      },
-    });
-  }
-
-  return prisma.organization.delete({
-    where: { id: organizationId },
-  });
+export async function restoreDeletedOrganization(
+  organizationId: string,
+  actorUserId?: string | null,
+) {
+  return restoreOrganization(organizationId, actorUserId);
 }
 
 export async function listOrganizationMembers(organizationId: string) {

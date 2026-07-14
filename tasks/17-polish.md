@@ -19,9 +19,9 @@ Cross-cutting UX, enterprise data-room polish, and quality-of-life improvements 
 |-------|------------|
 | OCR, auto-classification, chunking, embeddings, NER | [06-documents.md](./06-documents.md) |
 | Full-text search across document content | [07-search.md](./07-search.md) |
-| Global audit log viewer (org-wide), account recovery | [15-settings.md](./15-settings.md) |
-| Permissions matrix, folder-level RBAC | [15-settings.md](./15-settings.md) / [16-admin.md](./16-admin.md) |
-| Redaction / legal hold workflows | Future compliance slice or 15 |
+| Global audit log viewer (org-wide), account recovery | Done — [15-settings.md](./15-settings.md) |
+| Permissions matrix, folder-level RBAC | [16-admin.md](./16-admin.md) (partial) / polish |
+| Redaction / legal hold workflows | Future compliance slice |
 
 ---
 

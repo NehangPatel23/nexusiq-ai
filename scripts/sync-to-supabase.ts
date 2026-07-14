@@ -125,7 +125,15 @@ async function importRemote(
     `);
 
     if (data.users.length > 0) {
-      await tx.user.createMany({ data: data.users });
+      await tx.user.createMany({
+        data: data.users.map((user) => ({
+          ...user,
+          notificationPrefs:
+            user.notificationPrefs === null || user.notificationPrefs === undefined
+              ? Prisma.DbNull
+              : (user.notificationPrefs as Prisma.InputJsonValue),
+        })),
+      });
     }
     if (data.passwordResetTokens.length > 0) {
       await tx.passwordResetToken.createMany({ data: data.passwordResetTokens });

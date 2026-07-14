@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { collectDocumentTags } from "@/features/data-room/lib/table-utils";
 import type { DataRoomDocument } from "@/features/data-room/lib/types";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import { searchDocumentsAction } from "@/features/search/actions";
 import type {
   SavedSearchItem,
@@ -286,57 +287,37 @@ export function SearchPage({
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-border/50 bg-gradient-to-br from-card/90 via-card/70 to-primary/5 p-6 md:p-8">
-        <div
-          className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/10 blur-3xl"
-          aria-hidden="true"
-        />
-        <div
-          className="pointer-events-none absolute -bottom-8 left-1/4 h-32 w-32 rounded-full bg-accent/10 blur-3xl"
-          aria-hidden="true"
-        />
-
-        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-primary/20 bg-primary/10">
-                <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-              </div>
-              <h1 className="font-display text-2xl font-semibold tracking-tight md:text-3xl">
-                Smart Search
-              </h1>
-            </div>
-            <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
-              Hybrid keyword and semantic search across processed documents. Find clauses,
-              figures, and risks with highlighted snippets and relevance scores.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary" className="gap-1">
-                <FileCheck className="h-3 w-3" aria-hidden="true" />
-                {readyDocCount} searchable doc{readyDocCount === 1 ? "" : "s"}
+      <ProjectTabHeader
+        icon={Sparkles}
+        title="Smart Search"
+        description="Hybrid keyword and semantic search across processed documents. Find clauses, figures, and risks with highlighted snippets and relevance scores."
+        meta={
+          <>
+            <Badge variant="secondary" className="gap-1">
+              <FileCheck className="h-3 w-3" aria-hidden="true" />
+              {readyDocCount} searchable doc{readyDocCount === 1 ? "" : "s"}
+            </Badge>
+            <OllamaStatusBadge status={ollamaStatus} />
+            {savedSearches.length > 0 && (
+              <Badge variant="outline">
+                {savedSearches.length} saved search{savedSearches.length === 1 ? "" : "es"}
               </Badge>
-              <OllamaStatusBadge status={ollamaStatus} />
-              {savedSearches.length > 0 && (
-                <Badge variant="outline">
-                  {savedSearches.length} saved search{savedSearches.length === 1 ? "" : "es"}
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <SavedSearchesMenu
-            projectId={projectId}
-            savedSearches={savedSearches}
-            query={query}
-            filters={filters}
-            mode={mode}
-            disabled={loading}
-            onApply={applySavedSearch}
-            onSaved={(item) => setSavedSearches((prev) => [item, ...prev])}
-            onDeleted={(id) => setSavedSearches((prev) => prev.filter((item) => item.id !== id))}
-          />
-        </div>
-      </div>
+            )}
+          </>
+        }
+      >
+        <SavedSearchesMenu
+          projectId={projectId}
+          savedSearches={savedSearches}
+          query={query}
+          filters={filters}
+          mode={mode}
+          disabled={loading}
+          onApply={applySavedSearch}
+          onSaved={(item) => setSavedSearches((prev) => [item, ...prev])}
+          onDeleted={(id) => setSavedSearches((prev) => prev.filter((item) => item.id !== id))}
+        />
+      </ProjectTabHeader>
 
       {(ollamaStatus === "unreachable" || ollamaStatus === "not_configured") &&
         mode !== "keyword" && (

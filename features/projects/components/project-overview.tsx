@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, FileQuestion, ShieldCheck } from "lucide-react";
+import { AlertTriangle, FileQuestion, LayoutDashboard, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { TagsInput } from "@/features/projects/components/tags-input";
 import { useProjectShell } from "@/features/projects/components/project-shell-context";
 import { updateProjectAction } from "@/features/projects/actions";
 import { ProjectTypeBadge } from "@/features/projects/components/project-type-badge";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import { AgentScoreGauge } from "@/features/intelligence/components/agent-score-gauge";
 import {
   DEFAULT_AGENTS,
@@ -141,10 +142,29 @@ export function ProjectOverview({
 
   return (
     <div className="space-y-6">
+      <ProjectTabHeader
+        icon={LayoutDashboard}
+        title="Overview"
+        description={
+          <>
+            Deal snapshot for {project.name} — scores, consensus, and metadata across{" "}
+            {project.workspace.organization.name}.
+          </>
+        }
+        meta={
+          <>
+            <ProjectTypeBadge type={project.type} />
+            {project.dealStatus ? (
+              <Badge variant="outline">{project.dealStatus}</Badge>
+            ) : null}
+          </>
+        }
+      />
+
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-4">
           <div>
-            <CardTitle>Deal metadata</CardTitle>
+            <CardTitle>Deal Metadata</CardTitle>
             <CardDescription>
               {project.workspace.organization.name} · {project.workspace.name}
             </CardDescription>

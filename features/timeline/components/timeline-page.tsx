@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import {
   Dialog,
   DialogContent,
@@ -502,44 +503,32 @@ export function TimelinePage({
 
   return (
     <div className="space-y-6" ref={listRef}>
-      <header className="relative overflow-hidden rounded-2xl border border-border/60 bg-[hsl(var(--glass))] p-5 shadow-sm backdrop-blur-md sm:p-6">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217_91%_60%/0.12),transparent_55%),radial-gradient(ellipse_at_bottom_left,hsl(262_83%_58%/0.08),transparent_50%)]"
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/10 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-primary">
-              <CalendarClock className="h-3 w-3" aria-hidden="true" />
-              Project chronology
-            </div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
-              Timeline
-            </h1>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Dated milestones for <span className="text-foreground/90">{projectName}</span> —
-              funding, legal, leadership, and commercial events with citations into the data room.
-            </p>
-          </div>
-          <div className="relative flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={openCreate}>
-              <CalendarPlus className="mr-2 h-4 w-4" aria-hidden="true" />
-              Add event
-            </Button>
-            <Button type="button" variant="outline" onClick={() => runExtract({ all: true })} disabled={extracting}>
-              Extract all
-            </Button>
-            <Button type="button" onClick={() => runExtract({})} disabled={extracting}>
-              {extracting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
-              )}
-              Extract events
-            </Button>
-          </div>
-        </div>
-      </header>
+      <ProjectTabHeader
+        icon={CalendarClock}
+        title="Timeline"
+        description={
+          <>
+            Dated milestones for <span className="text-foreground/90">{projectName}</span> —
+            funding, legal, leadership, and commercial events with citations into the data room.
+          </>
+        }
+      >
+        <Button type="button" variant="outline" onClick={openCreate}>
+          <CalendarPlus className="mr-2 h-4 w-4" aria-hidden="true" />
+          Add event
+        </Button>
+        <Button type="button" variant="outline" onClick={() => runExtract({ all: true })} disabled={extracting}>
+          Extract all
+        </Button>
+        <Button type="button" onClick={() => runExtract({})} disabled={extracting}>
+          {extracting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
+          )}
+          Extract events
+        </Button>
+      </ProjectTabHeader>
 
       <TimelineStats events={activeEvents} categoryMeta={STATS_CATEGORY_META} />
 

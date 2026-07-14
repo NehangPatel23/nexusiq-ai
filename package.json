@@ -14,6 +14,7 @@
     "db:sync-to-supabase": "tsx --env-file=.env scripts/sync-to-supabase.ts",
     "db:sync-contradictions": "tsx --env-file=.env scripts/sync-contradictions-to-supabase.ts",
     "db:purge-test-users": "tsx --env-file=.env scripts/purge-test-users.ts",
+    "db:purge-deleted": "tsx --env-file=.env scripts/purge-deleted.ts",
     "db:seed": "prisma db seed",
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",

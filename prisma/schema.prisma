@@ -156,6 +156,29 @@ enum RiskStatus {
   SUPERSEDED
 }
 
+enum AuditAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+  UPLOAD
+  PROCESS
+  SEARCH
+  CHAT
+  REPORT
+  AGENT_RUN
+  CONSENSUS
+  SIMULATION
+  USER_DELETED
+  USER_RECOVERED
+  USER_PURGED
+  ORG_DELETED
+  ORG_RECOVERED
+  ORG_PURGED
+  SETTINGS_UPDATE
+}
+
 enum FindingSeverity {
   CRITICAL
   HIGH
@@ -214,15 +237,18 @@ enum TimelineCategory {
 }
 
 model User {
-  id            String    @id @default(uuid())
-  email         String    @unique
-  name          String?
-  passwordHash  String    @map("password_hash")
-  image         String?
-  theme         String    @default("dark")
-  emailVerified DateTime? @map("email_verified")
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
+  id                String    @id @default(uuid())
+  email             String    @unique
+  name              String?
+  passwordHash      String    @map("password_hash")
+  image             String?
+  theme             String    @default("dark")
+  notificationPrefs Json?     @map("notification_prefs")
+  emailVerified     DateTime? @map("email_verified")
+  deletedAt         DateTime? @map("deleted_at")
+  purgeAfter        DateTime? @map("purge_after")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
 
   passwordResetTokens PasswordResetToken[]
   organizationMembers OrganizationMember[]
@@ -239,7 +265,10 @@ model User {
   reports             Report[]
   simulationRuns      SimulationRun[]
   assignedTasks       Task[]           @relation("TaskAssignee")
+  auditLogs           AuditLog[]
 
+  @@index([deletedAt])
+  @@index([purgeAfter])
   @@map("users")
 }
 
@@ -265,12 +294,15 @@ model Organization {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
+  purgeAfter  DateTime? @map("purge_after")
 
   members    OrganizationMember[]
   teams      Team[]
   invites    Invite[]
   workspaces Workspace[]
+  auditLogs  AuditLog[]
 
+  @@index([purgeAfter])
   @@map("organizations")
 }
 
@@ -880,4 +912,33 @@ model ReportShare {
   @@index([reportId])
   @@index([projectId])
   @@map("report_shares")
+}
+
+model AuditLog {
+  id             String      @id @default(uuid())
+  organizationId String      @map("organization_id")
+  userId         String?     @map("user_id")
+  action         AuditAction
+  entityType     String      @map("entity_type")
+  entityId       String?     @map("entity_id")
+  metadata       Json?
+  ipAddress      String?     @map("ip_address")
+  createdAt      DateTime    @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([organizationId, action])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_settings")
 }
