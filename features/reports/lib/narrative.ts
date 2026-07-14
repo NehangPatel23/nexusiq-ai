@@ -127,8 +127,7 @@ export async function generateNarrativeWithOllama(params: {
   ];
 
   try {
-    const result = await ollama.chat(messages, { maxTokens: 4096 });
-    const markdown = result.message.content.trim();
+    const markdown = (await ollama.chat(messages, { maxTokens: 4096 })).trim();
     const citations = parseAndValidateCitations(
       markdown,
       citationsToSearchChunks(params.ctx.citations),

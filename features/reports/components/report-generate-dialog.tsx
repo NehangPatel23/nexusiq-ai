@@ -75,8 +75,9 @@ export function ReportGenerateDialog({
 
   if (!reportType) return null;
 
-  const Icon = REPORT_TYPE_ICONS[reportType];
-  const narrative = isNarrativeReportType(reportType);
+  const selectedType = reportType;
+  const Icon = REPORT_TYPE_ICONS[selectedType];
+  const narrative = isNarrativeReportType(selectedType);
 
   function toggleFormat(format: ReportFormat) {
     if (format === "MARKDOWN") return;
@@ -87,7 +88,7 @@ export function ReportGenerateDialog({
 
   function handleConfirm() {
     onConfirm({
-      reportType,
+      reportType: selectedType,
       title: title.trim() || undefined,
       forceRegenerate: narrative ? forceRegenerate : false,
       formats: formats.includes("MARKDOWN") ? formats : ["MARKDOWN", ...formats],
@@ -102,16 +103,16 @@ export function ReportGenerateDialog({
             <span
               className={cn(
                 "inline-flex h-9 w-9 items-center justify-center rounded-xl border",
-                reportTypeAccent(reportType),
+                reportTypeAccent(selectedType),
               )}
               aria-hidden="true"
             >
               <Icon className="h-4 w-4" />
             </span>
-            Generate {REPORT_TYPE_LABELS[reportType]}
+            Generate {REPORT_TYPE_LABELS[selectedType]}
           </DialogTitle>
           <DialogDescription id="generate-report-desc">
-            {REPORT_TYPE_DESCRIPTIONS[reportType]}
+            {REPORT_TYPE_DESCRIPTIONS[selectedType]}
           </DialogDescription>
         </DialogHeader>
 
