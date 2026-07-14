@@ -67,8 +67,8 @@ Contradiction engine (citation-validated scan, resolution notes, promote-to-find
 What-if scenarios (single Ollama JSON call from FINANCIAL+RISK baselines → `SimulationRun` deltas), prioritized action-plan kanban (CRUD, from-findings, suggest from executive priorityActions — no Ollama).
 
 ## Slice 15: History + Settings
-**Task:** [tasks/15-settings.md](../tasks/15-settings.md) · **Status:** NOT STARTED  
-Audit log, project comparison, settings hub (profile, security, notifications, AI, appearance, shortcuts), deferred deletion + 24h account/org recovery, purge job.
+**Task:** [tasks/15-settings.md](../tasks/15-settings.md) · **Status:** DONE  
+Org + project audit history (filters, source labels), project compare, settings hub (profile, security, notifications, AI, appearance, shortcuts), deferred user/org deletion with 24h recovery + purge cron.
 
 ## Slice 16: Admin
 **Task:** [tasks/16-admin.md](../tasks/16-admin.md) · **Status:** NOT STARTED  

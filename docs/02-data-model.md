@@ -26,19 +26,19 @@ enum ConfidenceLevel { HIGH MEDIUM LOW INSUFFICIENT }
 enum NotificationType { PROCESSING_COMPLETE RISK_FOUND TASK_ASSIGNED MENTION SYSTEM }
 enum ReportType { EXECUTIVE BOARD INVESTMENT_MEMO AUDIT RISK_REGISTER ACTION_PLAN PPTX }
 enum TimelineCategory { FUNDING HIRING ACQUISITION LAWSUIT LEADERSHIP REVENUE CONTRACT OTHER }
-enum AuditAction { CREATE UPDATE DELETE LOGIN LOGOUT UPLOAD PROCESS SEARCH CHAT REPORT AGENT_RUN CONSENSUS SIMULATION }
+enum AuditAction { CREATE UPDATE DELETE LOGIN LOGOUT UPLOAD PROCESS SEARCH CHAT REPORT AGENT_RUN CONSENSUS SIMULATION USER_DELETED USER_RECOVERED USER_PURGED ORG_DELETED ORG_RECOVERED ORG_PURGED SETTINGS_UPDATE }
 ```
 
 ## Tenancy
 
 ### User
-- id, email (unique), name, passwordHash, image?, theme (dark|light), emailVerified?
+- id, email (unique), name, passwordHash, image?, theme (dark|light), notificationPrefs?, emailVerified?
+- deletedAt?, purgeAfter? (24h deferred account deletion)
 - createdAt, updatedAt
 
 ### Organization
 - id, name, slug (unique), description?, logoUrl?
-- createdAt, updatedAt, deletedAt?
-
+- createdAt, updatedAt, deletedAt?, purgeAfter? (24h deferred org deletion)
 ### OrganizationMember
 - id, organizationId, userId, role (OrgRole)
 - @@unique([organizationId, userId])
@@ -190,18 +190,21 @@ CREATE INDEX ON document_chunks USING ivfflat(embedding vector_cosine_ops);
 
 ## Soft Delete
 
-Default `deletedAt: null` on: Organization, Workspace, Project, Document, Folder, Task.
+Default `deletedAt: null` on: Organization, Workspace, Project, Document, Folder, Task, User.
+
+**Deferred hard delete (Slice 15):** User and Organization also set `purgeAfter` (now + 24h). Within the window, restore via `/account/recover` (user) or Organizations “Recently deactivated” (org). After `purgeAfter`, `purgeExpiredEntities()` hard-deletes (cron `GET /api/cron/purge-deleted` or `pnpm db:purge-deleted`).
 
 ## Relations Summary
 
 ```
-User ←→ OrganizationMember, TeamMember, Notification
+User ←→ OrganizationMember, TeamMember, Notification, AuditLog
 Organization → Team, Workspace, AuditLog, Invite
 Workspace → Project
 Project → Folder → Document → DocumentChunk
 Project → Entity, EntityRelation, AgentRun, ConsensusRun, Finding
 Project → Contradiction, MissingItem, SimulationRun
 Project → Chat, SavedSearch, Report, ReportShare, TimelineEvent, Task
+SystemSetting (global key/value; AI Models overlay when env unset)
 ```
 
 See [03-api-contracts.md](./03-api-contracts.md).

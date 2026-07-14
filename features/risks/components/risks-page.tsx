@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import { AgentScoreGauge } from "@/features/intelligence/components/agent-score-gauge";
 import { ProjectRiskSummary } from "@/features/intelligence/components/project-risk-summary";
 import {
@@ -259,12 +260,11 @@ export function RisksPageClient({
   if (!summary.hasAgentRuns) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Risks</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Enterprise risk overview for {projectName}
-          </p>
-        </div>
+        <ProjectTabHeader
+          icon={ShieldAlert}
+          title="Risks"
+          description={`Enterprise risk overview for ${projectName}`}
+        />
         <div className="rounded-xl border border-border/60 bg-card/40 px-4 py-10 text-center">
           <ShieldAlert className="mx-auto h-8 w-8 text-muted-foreground" aria-hidden="true" />
           <p className="mt-3 text-sm font-medium">Run Intelligence agents first</p>
@@ -281,14 +281,11 @@ export function RisksPageClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Risks</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Synthesis across agent findings for {projectName}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+      <ProjectTabHeader
+        icon={ShieldAlert}
+        title="Risks"
+        description={`Synthesis across agent findings for ${projectName}`}
+      >
           {summary.contradictionOpenCount > 0 ? (
             <Button asChild variant="outline" size="sm">
               <Link href={`/dashboard/projects/${projectId}/contradictions`}>
@@ -319,8 +316,7 @@ export function RisksPageClient({
               <ExternalLink className="h-3.5 w-3.5" />
             </Link>
           </Button>
-        </div>
-      </div>
+      </ProjectTabHeader>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
         <div className="rounded-xl border border-border/60 bg-card/40 p-4">

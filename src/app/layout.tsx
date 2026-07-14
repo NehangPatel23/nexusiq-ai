@@ -1,7 +1,9 @@
 import { Instrument_Sans, JetBrains_Mono, Sora } from "next/font/google";
+import type { Metadata } from "next";
 
 import { Providers } from "@/components/providers";
-import type { Metadata } from "next";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 import "./globals.css";
 
@@ -36,9 +38,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  let themeClass = "dark";
+  try {
+    const session = await auth();
+    if (session?.user?.id) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { theme: true },
+      });
+      if (user?.theme === "light") themeClass = "";
+    }
+  } catch {
+    // Auth may be unavailable during static generation
+  }
+
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={themeClass || undefined} suppressHydrationWarning>
       <body
         className={`${instrumentSans.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans`}
       >
@@ -48,7 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         >
           Skip to main content
         </a>
-        <Providers>{children}</Providers>
+        <Providers theme={themeClass === "dark" ? "dark" : "light"}>{children}</Providers>
       </body>
     </html>
   );

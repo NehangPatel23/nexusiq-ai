@@ -17,13 +17,14 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import {
   Select,
   SelectContent,
@@ -32,6 +33,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { AgentThinking } from "@/features/intelligence/components/agent-thinking";
+import { useBackgroundSimulation } from "@/features/simulator/hooks/use-background-simulation";
+import { startBackgroundSimulation } from "@/features/simulator/lib/background-simulation-runner";
 import {
   SCENARIO_PRESETS,
   scenarioNameSchema,
@@ -220,8 +223,10 @@ export function SimulatorPageClient({
   const [lawsuitAmount, setLawsuitAmount] = useState("");
   const [priceChangePct, setPriceChangePct] = useState(10);
   const [customNotes, setCustomNotes] = useState("");
-  const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const background = useBackgroundSimulation(projectId);
+  const prevSimStatus = useRef(background.status);
+  const running = background.status === "running";
 
   const selected = useMemo(
     () => simulations.find((s) => s.id === selectedId) ?? simulations[0] ?? null,
@@ -289,96 +294,91 @@ export function SimulatorPageClient({
     setPrerequisites(body.data.prerequisites);
   }
 
-  async function handleRun() {
+  useEffect(() => {
+    if (prevSimStatus.current === "running" && background.status === "idle") {
+      if (background.result) {
+        setSimulations((prev) => {
+          if (prev.some((run) => run.id === background.result!.id)) return prev;
+          return [background.result!, ...prev];
+        });
+        setSelectedId(background.result.id);
+        setError(null);
+      } else if (background.errorMessage) {
+        setError(background.errorMessage);
+      }
+      void refreshList();
+    }
+    prevSimStatus.current = background.status;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- transition-driven refresh
+  }, [background.status, background.result, background.errorMessage, projectId]);
+
+  useEffect(() => {
+    if (background.status === "running") {
+      setError(null);
+    } else if (background.errorMessage && !background.result) {
+      setError(background.errorMessage);
+    }
+  }, [background.status, background.errorMessage, background.result]);
+
+  function handleRun() {
     if (!prerequisites.ready) {
       toast.error("Run Financial and Risk agents first");
       return;
     }
-    setRunning(true);
     setError(null);
-    try {
-      const response = await fetch(`/api/projects/${projectId}/simulations`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          scenarioName,
-          parameters: buildParameters(),
-        }),
-      });
-      const body = (await response.json()) as ApiEnvelope<SimulationRunView>;
-      if (!body.success) {
-        setError(body.error.message);
-        toast.error(body.error.message);
-        return;
-      }
-      setSimulations((prev) => [body.data, ...prev]);
-      setSelectedId(body.data.id);
-      toast.success("Simulation complete");
-      await refreshList();
-    } catch {
-      setError("Failed to run simulation");
-      toast.error("Failed to run simulation");
-    } finally {
-      setRunning(false);
-    }
+    startBackgroundSimulation({
+      projectId,
+      scenarioName,
+      parameters: buildParameters(),
+    });
   }
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-4 border-b border-border/40 pb-5 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/30 bg-primary/10">
-              <FlaskConical className="h-4 w-4 text-primary" aria-hidden />
+      <ProjectTabHeader
+        icon={FlaskConical}
+        title="Risk Simulator"
+        description="Model what-if pressure on Financial and Risk baselines. Simulations keep running if you leave this tab. Results are saved separately — live agent scores stay unchanged."
+        meta={
+          <>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
+                prerequisites.financial
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                  : "border-border/60 bg-muted/40 text-muted-foreground",
+              )}
+            >
+              {prerequisites.financial ? (
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+              )}
+              Financial
             </span>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight">Risk Simulator</h1>
-              <p className="text-sm text-muted-foreground">{projectName}</p>
-            </div>
-          </div>
-          <p className="max-w-2xl text-sm text-muted-foreground">
-            Model what-if pressure on Financial and Risk baselines. Results are saved as separate
-            simulation runs — live agent scores stay unchanged.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2" aria-label="Baseline readiness">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
-              prerequisites.financial
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-                : "border-border/60 bg-muted/40 text-muted-foreground",
-            )}
-          >
-            {prerequisites.financial ? (
-              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-            ) : (
-              <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
-            )}
-            Financial
-          </span>
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
-              prerequisites.risk
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
-                : "border-border/60 bg-muted/40 text-muted-foreground",
-            )}
-          >
-            {prerequisites.risk ? (
-              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
-            ) : (
-              <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
-            )}
-            Risk
-          </span>
-          {simulations.length > 0 ? (
-            <Badge variant="outline" className="rounded-full">
-              {simulations.length} run{simulations.length === 1 ? "" : "s"}
-            </Badge>
-          ) : null}
-        </div>
-      </header>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
+                prerequisites.risk
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                  : "border-border/60 bg-muted/40 text-muted-foreground",
+              )}
+            >
+              {prerequisites.risk ? (
+                <CheckCircle2 className="h-3.5 w-3.5" aria-hidden />
+              ) : (
+                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+              )}
+              Risk
+            </span>
+            {simulations.length > 0 ? (
+              <Badge variant="outline" className="rounded-full">
+                {simulations.length} run{simulations.length === 1 ? "" : "s"}
+              </Badge>
+            ) : null}
+          </>
+        }
+      />
 
       {!prerequisites.ready ? (
         <div
@@ -584,7 +584,9 @@ export function SimulatorPageClient({
                 </>
               )}
             </Button>
-            {running ? <AgentThinking label="Reassessing financial and enterprise risk" /> : null}
+            {running ? (
+              <AgentThinking label="Modeling scenario impact — you can leave this tab" />
+            ) : null}
             {error ? (
               <p
                 className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"

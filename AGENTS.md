@@ -15,7 +15,7 @@ You are building **NexusIQ-AI** — an enterprise decision intelligence platform
 ## Product Scope
 
 Full enterprise MVP — no placeholder pages at journey end:
-Landing, Auth, Dashboard, Data Room, Multi-Agent Intelligence (Financial/Legal/Compliance/Risk/Fraud), Consensus, Chat, Search, Reports, Timeline, Graph, Contradictions, Missing Info, Risks overview, Simulator, Action Plan (**slices 01–14 shipped**); History, Admin (**slices 15–16 next**).
+Landing, Auth, Dashboard, Data Room, Multi-Agent Intelligence (Financial/Legal/Compliance/Risk/Fraud), Consensus, Chat, Search, Reports, Timeline, Graph, Contradictions, Missing Info, Risks overview, Simulator, Action Plan, History, Settings (**slices 01–15 shipped**); Admin (**slice 16 next**).
 
 ## AI Rules
 

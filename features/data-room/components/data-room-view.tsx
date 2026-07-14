@@ -14,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import { Input } from "@/components/ui/input";
 import { useProjectShell } from "@/features/projects/components/project-shell-context";
 import { cn } from "@/lib/utils";
@@ -891,13 +892,11 @@ export function DataRoomView({
 
   return (
     <div className="flex min-h-[calc(100vh-10rem)] flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          <h1 className="text-lg font-semibold tracking-tight">Data Room</h1>
-          <p className="text-sm text-muted-foreground">
-            Organize diligence files with folders, versions, and previews.
-          </p>
-        </div>
+      <ProjectTabHeader
+        icon={FolderOpen}
+        title="Data Room"
+        description="Organize diligence files with folders, versions, and previews."
+      >
         <div className="flex flex-wrap gap-2">
           {canManageDeleted && viewMode === "active" && (
             <>
@@ -960,7 +959,7 @@ export function DataRoomView({
             </Button>
           )}
         </div>
-      </div>
+      </ProjectTabHeader>
 
       <div className="flex gap-1 rounded-lg border border-border/50 bg-card/30 p-1">
         <button

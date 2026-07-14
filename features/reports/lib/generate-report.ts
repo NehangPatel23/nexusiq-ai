@@ -140,6 +140,15 @@ export async function generateReport(
     },
   });
 
+  const { logAuditForProject } = await import("@/features/history/lib/audit");
+  void logAuditForProject(options.projectId, {
+    userId: options.userId,
+    action: "REPORT",
+    entityType: "Report",
+    entityId: report.id,
+    metadata: { projectId: options.projectId, reportType: options.reportType, title },
+  });
+
   if (options.formats && options.formats.length > 0) {
     const { exportReportBinary } = await import("./export-report");
     const { reportFormatToExportKey } = await import("../schemas");

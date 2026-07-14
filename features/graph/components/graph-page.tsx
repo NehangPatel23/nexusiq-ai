@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import {
   Dialog,
   DialogContent,
@@ -632,67 +633,55 @@ export function GraphPage({
 
   return (
     <div className="space-y-5">
-      <header className="relative overflow-hidden rounded-2xl border border-border/60 bg-[hsl(var(--glass))] p-5 shadow-sm backdrop-blur-md sm:p-6">
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,hsl(262_83%_58%/0.12),transparent_55%),radial-gradient(ellipse_at_bottom_right,hsl(217_91%_60%/0.1),transparent_50%)]"
-          aria-hidden="true"
-        />
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="max-w-2xl space-y-2">
-            <div className="inline-flex items-center gap-2 rounded-full border border-violet-500/25 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-medium uppercase tracking-wide text-violet-200">
-              <Network className="h-3 w-3" aria-hidden="true" />
-              Relationship map
-            </div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight sm:text-[1.75rem]">
-              Relationship graph
-            </h1>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              People, organizations, and links across{" "}
-              <span className="text-foreground/90">{projectName}</span>. Seeded from document NER —
-              enrich with AI extract when you need deeper coverage.
-            </p>
-          </div>
-          <div className="relative flex flex-wrap gap-2">
-            <Button type="button" variant="outline" onClick={() => setAddOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
-              Add node
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={exportGraphJson}
-              disabled={graph.nodes.length === 0}
-            >
-              <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-              Export JSON
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setForceConfirmOpen(true)}
-              disabled={extracting || graph.nodes.length === 0}
-            >
-              Replace & extract
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => runExtract({ all: true })}
-              disabled={extracting}
-            >
-              Extract all
-            </Button>
-            <Button type="button" onClick={() => void runExtract({})} disabled={extracting}>
-              {extracting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
-              )}
-              Extract entities
-            </Button>
-          </div>
-        </div>
-      </header>
+      <ProjectTabHeader
+        icon={Network}
+        title="Relationship Graph"
+        description={
+          <>
+            People, organizations, and links across{" "}
+            <span className="text-foreground/90">{projectName}</span>. Seeded from document NER —
+            enrich with AI extract when you need deeper coverage.
+          </>
+        }
+      >
+        <Button type="button" variant="outline" onClick={() => setAddOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" aria-hidden="true" />
+          Add node
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={exportGraphJson}
+          disabled={graph.nodes.length === 0}
+        >
+          <Download className="mr-2 h-4 w-4" aria-hidden="true" />
+          Export JSON
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setForceConfirmOpen(true)}
+          disabled={extracting || graph.nodes.length === 0}
+        >
+          Replace & extract
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => runExtract({ all: true })}
+          disabled={extracting}
+        >
+          Extract all
+        </Button>
+        <Button type="button" onClick={() => void runExtract({})} disabled={extracting}>
+          {extracting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />
+          )}
+          Extract entities
+        </Button>
+      </ProjectTabHeader>
 
       <GraphStats graph={graph} />
 

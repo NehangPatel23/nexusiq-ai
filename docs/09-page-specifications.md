@@ -79,7 +79,7 @@ Every page: header, sidebar, widgets, states (loading/empty/error), keyboard acc
 
 **Tabs:** Overview · Data Room · Intelligence · Chat · Search · Reports · Timeline · Graph · Risks · Contradictions · Missing · Simulator · Actions · History
 
-Live today: Overview, Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing, Simulator, Actions. History remains a polished placeholder until slice 15.
+Live today: Overview, Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing, Simulator, Actions, History.
 
 **Overview tab:**
 - Deal metadata card (editable)
@@ -243,8 +243,11 @@ Each agent tab:
 
 ## History (`/dashboard/history`)
 
-- Org-wide audit log with filters
-- Project comparison mode (select 2 projects → score diff table)
+- Org-wide audit feed: `AuditLog` ∪ projected `DataRoomAuditEvent` rows
+- Filters: action, user, date range (custom DatePicker), project scope
+- Source labels by activity type (Intelligence, Reports, Data Room, Simulator, Auth, …) — not raw storage table
+- Project comparison mode (select 2+ projects → side-by-side scores)
+- Project tab: `/dashboard/projects/[projectId]/history` (same client, pre-filtered)
 
 ---
 
@@ -260,13 +263,24 @@ Each agent tab:
 
 ## Settings (`/dashboard/settings`)
 
-Tabs: Profile · Security · Notifications · AI Models · Appearance · Shortcuts
+Shell with sub-nav (not redirect-only):
+
+| Tab | Path | Notes |
+|-----|------|--------|
+| Profile | `/dashboard/settings/profile` | Name, avatar |
+| Security | `/dashboard/settings/security` | Change password; delete account (password confirm; blocked if sole org owner) |
+| Notifications | `/dashboard/settings/notifications` | In-app notification preferences |
+| AI Models | `/dashboard/settings/ai` | Ollama base URL + chat/embed models via `SystemSetting`; **env vars win when set**; API key never shown; test connection returns host only |
+| Appearance | `/dashboard/settings/appearance` | Dark/light (`User.theme`) |
+| Shortcuts | `/dashboard/settings/shortcuts` | Keyboard reference |
+
+Deferred deletion: user/org tombstone (`deletedAt` + `purgeAfter` = +24h) → `/account/recover` or org “Recently deactivated”; purge via `GET /api/cron/purge-deleted` or `pnpm db:purge-deleted`.
 
 ---
 
 ## Admin (`/dashboard/admin`)
 
-Owner only: health cards, queue status, user table, usage charts, reindex buttons.
+Owner only: health cards, queue status, user table, usage charts, reindex buttons. **Slice 16 — not started.**
 
 ---
 

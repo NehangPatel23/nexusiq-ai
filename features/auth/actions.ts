@@ -29,7 +29,10 @@ import {
   resetPasswordSchema,
   updateProfileSchema,
 } from "@/features/auth/schemas";
+import { isWithinGrace } from "@/features/history/lib/constants";
+import { logAudit } from "@/features/history/lib/audit";
 import { auth, signIn, signOut } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export type ActionResult<T = void> =
   | { success: true; data?: T }
@@ -125,7 +128,7 @@ export async function signInWithCredentials(
     return validationError(parsed.error.flatten().fieldErrors);
   }
 
-  const redirectTo =
+  let redirectTo =
     typeof input === "object" &&
     input !== null &&
     "redirectTo" in input &&
@@ -136,6 +139,19 @@ export async function signInWithCredentials(
   const existingUser = await findUserByEmail(parsed.data.email);
   if (existingUser) {
     await syncInviteNotificationsForEmail(existingUser.id, existingUser.email);
+
+    if (existingUser.deletedAt) {
+      if (!isWithinGrace(existingUser.purgeAfter)) {
+        return {
+          success: false,
+          error: {
+            code: "ACCOUNT_REMOVED",
+            message: "This account has been permanently removed.",
+          },
+        };
+      }
+      redirectTo = "/account/recover";
+    }
   }
 
   try {
@@ -164,6 +180,25 @@ export async function signInWithCredentials(
 }
 
 export async function signOutUser(): Promise<void> {
+  const session = await auth();
+  if (session?.user?.id) {
+    const memberships = await prisma.organizationMember.findMany({
+      where: { userId: session.user.id, organization: { deletedAt: null } },
+      select: { organizationId: true },
+      take: 5,
+    });
+    await Promise.all(
+      memberships.map((m) =>
+        logAudit({
+          organizationId: m.organizationId,
+          userId: session.user.id,
+          action: "LOGOUT",
+          entityType: "User",
+          entityId: session.user.id,
+        }),
+      ),
+    );
+  }
   await signOut({ redirectTo: "/login" });
 }
 

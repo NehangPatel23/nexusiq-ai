@@ -5,6 +5,7 @@ import { BackgroundAnalysisBanner } from "@/features/intelligence/components/bac
 import { RiskStateSync } from "@/features/intelligence/components/risk-state-sync";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
 import { BackgroundExtractBanner } from "@/features/projects/components/background-extract-banner";
+import { BackgroundSlice14Banner } from "@/features/projects/components/background-slice14-banner";
 import { ProjectShellHeader } from "@/features/projects/components/project-shell-header";
 import { ProjectShellProvider } from "@/features/projects/components/project-shell-context";
 import { ProjectShellNav } from "@/features/projects/components/project-shell-nav";
@@ -61,6 +62,7 @@ export default async function ProjectLayout({ children, params }: LayoutProps) {
         <ProjectShellNav projectId={projectId} />
         <BackgroundAnalysisBanner projectId={projectId} />
         <BackgroundExtractBanner projectId={projectId} />
+        <BackgroundSlice14Banner projectId={projectId} />
         <RiskStateSync projectId={projectId} />
         {children}
       </div>

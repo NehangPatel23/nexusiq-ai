@@ -8,6 +8,7 @@ import {
   Download,
   FileText,
   Loader2,
+  MessageSquare,
   MessageSquarePlus,
   MoreHorizontal,
   PanelRightClose,
@@ -27,7 +28,7 @@ import { toast } from "sonner";
 
 import { AppSelect } from "@/components/ui/app-select";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
@@ -784,29 +785,27 @@ export function ChatPage({ projectId, projectName, initialChats }: ChatPageProps
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Interactive Chat</h1>
-          <p className="text-sm text-muted-foreground">
-            Evidence-first answers across {projectName}&apos;s processed documents.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {activeChatId && (
-            <Button variant="outline" size="sm" onClick={() => void exportChat()}>
-              <Download aria-hidden="true" />
-              Export
-            </Button>
-          )}
-          <Button
-            size="sm"
-            onClick={() => void createNewChat().catch((createError: Error) => toast.error(createError.message))}
-          >
-            <MessageSquarePlus aria-hidden="true" />
-            New chat
+      <ProjectTabHeader
+        icon={MessageSquare}
+        title="Interactive Chat"
+        description={
+          <>Evidence-first answers across {projectName}&apos;s processed documents.</>
+        }
+      >
+        {activeChatId && (
+          <Button variant="outline" size="sm" onClick={() => void exportChat()}>
+            <Download aria-hidden="true" />
+            Export
           </Button>
-        </div>
-      </div>
+        )}
+        <Button
+          size="sm"
+          onClick={() => void createNewChat().catch((createError: Error) => toast.error(createError.message))}
+        >
+          <MessageSquarePlus aria-hidden="true" />
+          New chat
+        </Button>
+      </ProjectTabHeader>
 
       <div
         className={cn(

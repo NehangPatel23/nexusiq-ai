@@ -58,7 +58,7 @@ Enterprise decision intelligence — one developer, zero cost, production qualit
 
 | Day | Slice | Deliverable | Status |
 |-----|-------|-------------|--------|
-| 19 | 15 History + Settings | Audit, comparison, AI config | Pending |
+| 19 | 15 History + Settings | Audit, comparison, AI config, deferred deletion | Done |
 | 20 | 16 Admin | Health, usage, reindex | Pending |
 | 21–22 | QA | E2E flows, accessibility audit, bug fixes | Ongoing |
 

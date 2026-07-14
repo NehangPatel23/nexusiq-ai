@@ -329,21 +329,23 @@ Combines all agent outputs into:
 
 ### 4.23 History
 - Past projects, comparison view (side-by-side scores)
-- Trend analysis over time (within org)
-- Document version history
-- Full audit log (immutable)
+- Full audit log (immutable) — org-wide + per-project; source-labeled feed
+- Document / data-room events projected into the same History UI
+- Trend analysis over time (within org) — compare projects; richer trends optional polish
 
 ### 4.24 Admin
 - Users, organizations, permissions
 - Audit logs, usage stats (local aggregates)
 - System health: DB, Ollama, disk, processing queue
 - Reindex, re-embed maintenance
+- **Status:** Slice 16 — not started
 
 ### 4.25 Settings
 - Profile, security, notifications preferences
-- Ollama model configuration
+- Ollama model configuration (env overrides stored settings)
 - Keyboard shortcuts reference
 - Dark/light theme toggle
+- Deferred account deletion (24h recovery) + org tombstone restore
 
 ---
 

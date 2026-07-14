@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import { useBackgroundAnalysis } from "@/features/intelligence/hooks/use-background-analysis";
 import type { AgentRunDetail, AgentRunSummary } from "@/features/intelligence/lib/agent-runs";
 import {
@@ -763,19 +764,22 @@ export function IntelligencePage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="mb-2 flex items-center gap-2">
-            <Bot className="h-5 w-5 text-primary" aria-hidden="true" />
-            <h2 className="font-display text-xl font-semibold tracking-tight">Intelligence Agents</h2>
-          </div>
-          <p className="text-sm text-muted-foreground">
+      <ProjectTabHeader
+        icon={Bot}
+        title="Intelligence Agents"
+        description={
+          <>
             Run specialist scans, executive synthesis, and explainable consensus on {projectName}.
             {(runningFullAnalysis || runningAll) && (
-              <> You can leave this tab — analysis keeps running and you&apos;ll get a notification when it finishes.</>
+              <>
+                {" "}
+                You can leave this tab — analysis keeps running and you&apos;ll get a notification
+                when it finishes.
+              </>
             )}
-          </p>
-        </div>
+          </>
+        }
+      >
         <div className="flex flex-wrap gap-2">
           <Button
             type="button"
@@ -799,7 +803,7 @@ export function IntelligencePage({
             Run history
           </Button>
         </div>
-      </div>
+      </ProjectTabHeader>
 
       <ProjectRiskSummary counts={riskSummary} refreshing={anyScanInProgress} />
 

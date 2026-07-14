@@ -1,6 +1,7 @@
 import type { AgentRunStatus, AgentType } from "@prisma/client";
 
 import { logDataRoomAudit } from "@/features/data-room/lib/audit";
+import { logAuditForProject } from "@/features/history/lib/audit";
 import { AGENT_TYPE_LABELS } from "@/lib/ai/agents/types";
 import { prisma } from "@/lib/db";
 
@@ -31,6 +32,24 @@ export async function logAgentRunAudit(input: {
   const scoreText =
     input.score !== null && input.score !== undefined ? ` · score ${Math.round(input.score)}` : "";
 
+  const metadata = {
+    agentType: input.agentType,
+    runId: input.runId,
+    status: input.status,
+    score: input.score ?? null,
+    findingCount: input.findingCount ?? 0,
+    projectName: project?.name ?? null,
+    summary: `${label} scan ${input.status.toLowerCase()}${scoreText}`,
+  };
+
+  void logAuditForProject(input.projectId, {
+    userId: input.actorId ?? null,
+    action: "AGENT_RUN",
+    entityType: "AgentRun",
+    entityId: input.runId,
+    metadata: { ...metadata, projectId: input.projectId },
+  });
+
   return logDataRoomAudit({
     projectId: input.projectId,
     actorId: input.actorId ?? null,
@@ -38,14 +57,6 @@ export async function logAgentRunAudit(input: {
     resourceType: "PROJECT",
     resourceId: input.runId,
     resourceName: `${label} agent run`,
-    metadata: {
-      agentType: input.agentType,
-      runId: input.runId,
-      status: input.status,
-      score: input.score ?? null,
-      findingCount: input.findingCount ?? 0,
-      projectName: project?.name ?? null,
-      summary: `${label} scan ${input.status.toLowerCase()}${scoreText}`,
-    },
+    metadata,
   });
 }

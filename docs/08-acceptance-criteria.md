@@ -112,14 +112,14 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Link actions to source findings
 
 ### 15 History + Settings
-- [ ] Audit log with filters
-- [ ] Project comparison view
-- [ ] Settings shell: Profile, Security, Notifications, AI Models, Appearance, Shortcuts
-- [ ] Profile, password, AI model config, notification prefs
-- [ ] Account deletion with 24h grace period and recovery on re-login
-- [ ] Organization deletion tombstone + 24h recovery (revert immediate hard delete)
-- [ ] Purge job removes expired tombstoned users/orgs after 24h
-- [ ] Keyboard shortcuts page
+- [x] Audit log with filters
+- [x] Project comparison view
+- [x] Settings shell: Profile, Security, Notifications, AI Models, Appearance, Shortcuts
+- [x] Profile, password, AI model config, notification prefs
+- [x] Account deletion with 24h grace period and recovery on re-login
+- [x] Organization deletion tombstone + 24h recovery (revert immediate hard delete)
+- [x] Purge job removes expired tombstoned users/orgs after 24h
+- [x] Keyboard shortcuts page
 
 ### 16 Admin
 - [ ] Health: DB, Ollama, disk
@@ -142,7 +142,8 @@ Optional UX polish — see [tasks/17-polish.md](../tasks/17-polish.md). Not requ
 - [x] Generate report → Export PDF (also MD/XLSX/PPTX/ZIP; share links)
 - [x] View timeline, graph, contradictions, missing docs, risks overview
 - [x] Run simulator → Create action items
-- [ ] No dead-end pages in journey (placeholders remain for slices 15–16)
+- [x] View History → Settings (profile / security / AI)
+- [x] No dead-end pages in journey (placeholders remain for slice 16 Admin only)
 
 ---
 

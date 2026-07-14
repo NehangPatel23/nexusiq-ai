@@ -27,6 +27,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ProjectTabHeader } from "@/features/projects/components/project-tab-header";
 import {
   Select,
   SelectContent,
@@ -342,16 +343,11 @@ export function MissingPageClient({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">
-            Missing information
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Checklist gaps for {projectName} ({projectType.replace(/_/g, " ")})
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
+      <ProjectTabHeader
+        icon={FileQuestion}
+        title="Missing Information"
+        description={`Checklist gaps for ${projectName} (${projectType.replace(/_/g, " ")})`}
+      >
           <Button
             type="button"
             variant="outline"
@@ -379,8 +375,7 @@ export function MissingPageClient({
             )}
             Scan missing docs
           </Button>
-        </div>
-      </div>
+      </ProjectTabHeader>
 
       {readyDocumentCount === 0 ? (
         <div className="rounded-xl border border-border/60 bg-card/40 px-4 py-8 text-center">

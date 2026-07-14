@@ -1,3 +1,9 @@
+import {
+  resolveEffectiveOllamaConfig,
+  toOllamaClientConfig,
+} from "@/features/settings/lib/ollama-config";
+import { getOllamaSettingsOverlay } from "@/features/settings/lib/ollama-runtime";
+
 export type OllamaConfig = {
   baseUrl: string;
   chatModel: string;
@@ -42,13 +48,11 @@ export type OllamaChatOptions = {
 };
 
 function readConfig(): OllamaConfig {
-  const baseUrl = (process.env.OLLAMA_BASE_URL ?? "").replace(/\/$/, "");
+  const effective = resolveEffectiveOllamaConfig(getOllamaSettingsOverlay() ?? {});
+  const client = toOllamaClientConfig(effective);
   const chatTimeoutFromEnv = Number(process.env.OLLAMA_CHAT_TIMEOUT_MS);
   return {
-    baseUrl,
-    chatModel: process.env.OLLAMA_CHAT_MODEL ?? "llama3",
-    embedModel: process.env.OLLAMA_EMBED_MODEL ?? "nomic-embed-text",
-    apiKey: process.env.OLLAMA_API_KEY,
+    ...client,
     healthTimeoutMs: 2000,
     chatTimeoutMs:
       Number.isFinite(chatTimeoutFromEnv) && chatTimeoutFromEnv > 0
@@ -104,7 +108,9 @@ export function getOllamaHostOnly(baseUrl: string): string {
 }
 
 export function isOllamaConfigured(): boolean {
-  return Boolean(process.env.OLLAMA_BASE_URL?.trim());
+  if (process.env.OLLAMA_BASE_URL?.trim()) return true;
+  const overlay = getOllamaSettingsOverlay()?.baseUrl;
+  return Boolean(typeof overlay === "string" && overlay.trim());
 }
 
 export class OllamaClient {

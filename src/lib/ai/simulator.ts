@@ -296,6 +296,15 @@ export async function runSimulation(
     },
   });
 
+  const { logAuditForProject } = await import("@/features/history/lib/audit");
+  void logAuditForProject(input.projectId, {
+    userId: input.triggeredById ?? null,
+    action: "SIMULATION",
+    entityType: "SimulationRun",
+    entityId: row.id,
+    metadata: { projectId: input.projectId, scenarioName: input.scenarioName },
+  });
+
   return mapSimulationRow(row);
 }
 

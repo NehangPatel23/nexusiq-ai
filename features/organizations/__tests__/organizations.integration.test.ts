@@ -109,12 +109,17 @@ describe("organizations integration", () => {
     await deleteOrganization(tempOrg.id);
 
     expect(await getOrganizationById(tempOrg.id)).toBeNull();
-    expect(
-      await prisma.organization.findUnique({ where: { id: tempOrg.id } }),
-    ).toBeNull();
+    const tombstoned = await prisma.organization.findUnique({ where: { id: tempOrg.id } });
+    expect(tombstoned).not.toBeNull();
+    expect(tombstoned?.deletedAt).not.toBeNull();
+    expect(tombstoned?.purgeAfter).not.toBeNull();
+    // Memberships remain during grace period
     expect(
       await prisma.organizationMember.count({ where: { organizationId: tempOrg.id } }),
-    ).toBe(0);
+    ).toBeGreaterThan(0);
+
+    // Hard purge for cleanup
+    await prisma.organization.delete({ where: { id: tempOrg.id } });
   });
 
   it("enforces role hierarchy for viewer members", async () => {

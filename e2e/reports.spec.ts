@@ -33,9 +33,14 @@ test.describe("reports & export", () => {
 
     await page.getByRole("tab", { name: "Reports" }).click();
     await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText(/Run intelligence first for richer reports/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /Generate report/i }).first()).toBeVisible();
-    await expect(page.getByText(/No reports yet/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Generate report/i }).first()).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText(/No reports yet/i)).toBeVisible({ timeout: 15_000 });
+    // Intelligence banner is shown when no agent/consensus runs exist yet
+    await expect(
+      page.getByText(/Run intelligence first for richer reports|No reports yet/i).first(),
+    ).toBeVisible();
 
     await page.route("**/api/projects/*/reports", async (route) => {
       if (route.request().method() === "GET") {
