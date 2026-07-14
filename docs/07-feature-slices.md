@@ -11,51 +11,51 @@ Next.js, Prisma, PostgreSQL+pgvector, shadcn dark theme, app shell, **landing pa
 See [06-build-plan.md](./06-build-plan.md).
 
 ## Slice 1: Auth
-**Task:** [tasks/01-auth.md](../tasks/01-auth.md)  
+**Task:** [tasks/01-auth.md](../tasks/01-auth.md) · **Status:** DONE  
 Signup, login, forgot password, profile, protected layout, dark mode default.
 
 ## Slice 2: Organizations
-**Task:** [tasks/02-organizations.md](../tasks/02-organizations.md)  
+**Task:** [tasks/02-organizations.md](../tasks/02-organizations.md) · **Status:** DONE  
 Orgs, teams, roles (Owner/Admin/Analyst/Reviewer/Viewer), permissions, invites, in-app notifications.
 
 ## Slice 3: Workspaces
-**Task:** [tasks/03-workspaces.md](../tasks/03-workspaces.md)  
+**Task:** [tasks/03-workspaces.md](../tasks/03-workspaces.md) · **Status:** DONE  
 Workspace CRUD, optional team assignment.
 
 ## Slice 4: Projects + Dashboard
-**Task:** [tasks/04-projects.md](../tasks/04-projects.md)  
+**Task:** [tasks/04-projects.md](../tasks/04-projects.md) · **Status:** DONE  
 Project types (M&A, Vendor DD, Audit, Investment, Internal), org dashboard widgets.
 
 ## Slice 5: Data Room
-**Task:** [tasks/05-uploads.md](../tasks/05-uploads.md)  
+**Task:** [tasks/05-uploads.md](../tasks/05-uploads.md) · **Status:** DONE  
 Folder tree, drag-drop, bulk upload, version history, preview, tags.
 
 ## Slice 6: Document Processing
-**Task:** [tasks/06-documents.md](../tasks/06-documents.md)  
+**Task:** [tasks/06-documents.md](../tasks/06-documents.md) · **Status:** DONE (OCI worker prod deferred)  
 Classification, metadata, OCR, chunking, embeddings, NER, relationships, duplicates, auto-folder.
 
 ## Slice 7: Smart Search
-**Task:** [tasks/07-search.md](../tasks/07-search.md)  
+**Task:** [tasks/07-search.md](../tasks/07-search.md) · **Status:** DONE  
 Hybrid NL search, filters, tags, saved searches.
 
 ## Slice 8: Interactive Chat
-**Task:** [tasks/08-chat.md](../tasks/08-chat.md)  
-Streaming cited Q&A, suggested questions, agent selector.
+**Task:** [tasks/08-chat.md](../tasks/08-chat.md) · **Status:** DONE  
+Streaming cited Q&A, suggested questions, confidence.
 
 ## Slice 9: Intelligence Agents
-**Task:** [tasks/09-reports.md](../tasks/09-reports.md)  
+**Task:** [tasks/09-reports.md](../tasks/09-reports.md) · **Status:** DONE  
 Financial, Legal, Compliance, Risk, Fraud agents with scores and findings.
 
 ## Slice 10: Executive + Consensus
-**Task:** [tasks/10-timeline.md](../tasks/10-timeline.md)  
+**Task:** [tasks/10-timeline.md](../tasks/10-timeline.md) · **Status:** DONE  
 Executive agent, consensus engine, explainable synthesis UI.
 
 ## Slice 11: Reports & Export
-**Task:** [tasks/11-graph.md](../tasks/11-graph.md)  
-Executive PDF, board report, investment memo, audit, risk register, PPTX.
+**Task:** [tasks/11-graph.md](../tasks/11-graph.md) · **Status:** DONE  
+Executive PDF, board report, investment memo, audit, risk register, PPTX, share/compare/presets.
 
 ## Slice 12: Timeline + Graph
-**Task:** [tasks/12-risk.md](../tasks/12-risk.md)  
+**Task:** [tasks/12-risk.md](../tasks/12-risk.md) · **Status:** NEXT  
 Executive timeline, enterprise relationship graph.
 
 ## Slice 13: Contradiction + Missing Info

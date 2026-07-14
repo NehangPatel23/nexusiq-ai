@@ -42,6 +42,8 @@ Worker VPS (or Mac during dev) → polls PENDING documents
 
 **Executive + consensus (slice 10):** Executive and consensus also run on Vercel/Next.js against the same Ollama endpoint. Executive uses Markdown chat (not JSON); consensus uses a single `format: "json"` call. Fewer than 3 completed specialist runs returns `400 CONSENSUS_PREREQUISITE` without calling Ollama. Full analysis is browser-orchestrated (5 specialists → consensus → executive) via a module-level runner that survives in-app navigation; not one long serverless request. Each agent/consensus `route.ts` exports `maxDuration = 300` (Vercel Hobby still caps at 60s — use Pro for reliable long Ollama runs, or set `OLLAMA_CHAT_TIMEOUT_MS=50000` on Hobby so timed-out runs fail cleanly). The runner always continues to consensus/executive once ≥3 specialists succeed, retries failed steps once, and passes specialist run IDs into consensus. Closing the browser tab still stops the chain until a server-side job worker exists.
 
+**Reports & export (slice 11):** Report assembly and binary export (PDF / Markdown / XLSX / PPTX) run on Vercel/Next.js and **do not require Ollama** when intelligence already exists (latest AgentRuns + ConsensusRun + Findings). Narrative force-regenerate (`forceRegenerate`) and generating EXECUTIVE/BOARD/INVESTMENT_MEMO without an Executive AgentRun need `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel). Unreachable Ollama in those cases returns `503 OLLAMA_UNAVAILABLE`. Exports are CPU-heavy — generate/export routes use `maxDuration = 120` and persist binaries via `getStorage()` (local `STORAGE_PATH` or Supabase Storage), not ephemeral `/tmp` alone.
+
 **Worker env (VPS):**
 
 ```bash
@@ -326,9 +328,9 @@ No Storage required. ~3 minutes.
 5. **Projects** (`/dashboard/projects`) — create project, grid/list, filters, project shell tabs
 6. **Workspaces** — org → Workspaces; create workspace; **View projects** filters by workspace
 7. **Organizations** — Settings → invite a second email (optional); tap **ⓘ** for role permissions
-8. **Sidebar** — Intelligence, Chat, Reports tabs are placeholders inside a project shell
+8. **Sidebar** — open a project for Data Room, Intelligence, Chat, Search, and Reports (Timeline/Graph remain placeholders)
 9. **Data Room** — upload, folders, preview (see Path B below)
-10. **Pitch** — data room + multi-tenant UX live; Ollama runs locally by design ($0 API cost)
+10. **Pitch** — multi-tenant diligence platform with cited agents + local report export; Ollama local by design ($0 API cost)
 
 ### Path B — Data room demo (recommended narrative)
 
@@ -351,11 +353,13 @@ Uses Supabase **Postgres + Storage** for upload, preview, and folder structure �
 | 4 | **Upload** — drag `demo/data-room` folder or sample PDFs | Per-file progress; files in Supabase Storage when configured |
 | 5 | Select file → **preview**; try classification filter | PDF/text/Office inline preview |
 | 6 | **Share** (admin) → copy link → incognito | Read-only external data room |
-| 7 | **Organizations** → members | RBAC, invites, roles |
+| 7 | **Intelligence** → run specialist or full analysis (Ollama) | Scores, findings, consensus |
+| 8 | **Reports** → Risk Register / Board pack → PDF or ZIP | Local export; share link optional |
+| 9 | **Organizations** → members | RBAC, invites, roles |
 
 **Script for judges:**
 
-> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, and produces an explainable consensus report. This deployment uses Supabase for database and document storage, and Vercel for the app. The live demo shows authentication, organizations, workspaces, projects, and a full data room — upload, folders, preview, and share links. AI inference runs on Ollama locally by design—zero API cost and data stays private. Intelligence agents and document processing are the next slices.”
+> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, synthesizes an explainable consensus, and exports board-ready PDF/Excel/PPTX packages. This deployment uses Supabase for database and document storage, and Vercel for the app. AI inference runs on Ollama by design—zero API cost and data stays private.”
 
 ### Path C — Two-browser invite demo (optional)
 
@@ -415,9 +419,11 @@ Neon does **not** include file storage—you would need a separate service for d
 - **Smart search** (keyword plus Ollama-backed hybrid/semantic modes)
 - **Interactive chat** (project-scoped streaming, citations, confidence, and history; requires public Ollama)
 - **Intelligence agents** (specialist scans + executive package + explainable consensus; requires public Ollama on Vercel)
-- Placeholder tabs: Reports, Timeline, Graph, etc.
+- **Reports & export** (assemble from intelligence; PDF/MD/XLSX/PPTX/ZIP; share links + compare; narrative regenerate needs public Ollama)
+- Placeholder tabs: Timeline, Graph, Contradictions, Missing, Simulator, Actions, History
 
 ## Deferred
 
 - **OCI worker VPS** — document processing on Vercel (Slice 06 prod path). Checklist: [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md)
-- **Public Ollama HTTPS** — chat/agents on Vercel (slices 08+)
+- **Public Ollama HTTPS** — chat/agents/narrative regenerate on Vercel if not already configured (slices 08+)
+- Remaining slices 12–16 (Timeline, Graph, Contradictions, Simulator, History/Settings, Admin)

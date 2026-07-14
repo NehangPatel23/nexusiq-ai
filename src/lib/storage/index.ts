@@ -47,3 +47,24 @@ export function buildDocumentStorageKey(params: {
     safeName,
   ].join("/");
 }
+
+export function buildReportStorageKey(params: {
+  organizationId: string;
+  projectId: string;
+  reportId: string;
+  format: string;
+  fileName: string;
+}) {
+  const safeName = params.fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const safeFormat = params.format.replace(/[^a-zA-Z0-9._-]/g, "_").toLowerCase();
+  return [
+    "organizations",
+    params.organizationId,
+    "projects",
+    params.projectId,
+    "reports",
+    params.reportId,
+    safeFormat,
+    safeName,
+  ].join("/");
+}

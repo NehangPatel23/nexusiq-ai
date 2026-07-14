@@ -24,6 +24,10 @@ Ollama integration, six specialist agents, consensus engine, contradictions, mis
 | missing-info.ts | prompts/missing-info.md |
 | simulator.ts | prompts/risk-simulator.md |
 
+## Reports (`features/reports/` + `lib/export/`)
+
+Assemble Markdown from AgentRuns + ConsensusRun + Findings. Call Ollama only for force-regenerate narrative or missing executive narrative. PDF/XLSX/PPTX/MD export is local-only (`@react-pdf/renderer`, exceljs, pptxgenjs) and never calls Ollama.
+
 ## Consensus Requirements
 
 1. Run specialist agents first (sequential if RAM limited)

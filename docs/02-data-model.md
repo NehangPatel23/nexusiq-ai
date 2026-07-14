@@ -144,7 +144,15 @@ enum AuditAction { CREATE UPDATE DELETE LOGIN LOGOUT UPLOAD PROCESS SEARCH CHAT 
 
 ### Report
 - id, projectId, userId, title, reportType (ReportType), content (Text)
-- format?, filePath?, metadata (Json?), createdAt, updatedAt
+- format (ReportFormat, default MARKDOWN), filePath?, metadata (Json?), createdAt, updatedAt
+- metadata may include citations, sourceAgentRunIds, consensusRunId, formats { pdf, xlsx, pptx, md },
+  exportVersions, snapshotAsOf (agent runs + consensus pins), riskRegisterRows, actionPlanItems
+- shares → ReportShare[]
+
+### ReportShare
+- id, reportId, projectId, token (unique), label?, format? (ReportFormat lock), expiresAt?
+- createdById, createdAt, revokedAt?
+- Public surface: `/share/reports/[token]` + `/api/share/reports/[token]/export`
 
 ### TimelineEvent
 - id, projectId, title, description?, eventDate, category (TimelineCategory)
@@ -189,7 +197,7 @@ Workspace → Project
 Project → Folder → Document → DocumentChunk
 Project → Entity, EntityRelation, AgentRun, ConsensusRun, Finding
 Project → Contradiction, MissingItem, SimulationRun
-Project → Chat, SavedSearch, Report, TimelineEvent, Task
+Project → Chat, SavedSearch, Report, ReportShare, TimelineEvent, Task
 ```
 
 See [03-api-contracts.md](./03-api-contracts.md).

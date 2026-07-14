@@ -116,6 +116,14 @@ export function ExecutiveReportView({
       ) : null}
 
       <div className="space-y-4">
+        <div className="flex justify-end">
+          <Link
+            href={`/dashboard/projects/${projectId}/reports?generate=EXECUTIVE`}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Export as report →
+          </Link>
+        </div>
         {specialistContext.length > 0 ? (
           <div className="rounded-lg border border-border/60 bg-muted/10 p-4">
             <div className="mb-3 flex flex-wrap items-center gap-2">

@@ -34,7 +34,14 @@ export interface DashboardData {
     low: number;
   };
   recentActivity: DashboardActivityItem[];
-  recentReports: [];
+  recentReports: Array<{
+    id: string;
+    title: string;
+    projectId: string;
+    projectName: string;
+    reportType: string;
+    createdAt: string;
+  }>;
   upcomingTasks: [];
   recentProjectId: string | null;
   onboarding: {
@@ -61,6 +68,7 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     openRisks,
     riskOverview,
     agentRunActivity,
+    recentReportRows,
   ] = await Promise.all([
     countUserProjects(userId),
     listUserProjects(userId),
@@ -106,6 +114,30 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     countOpenFindingsForUser(userId),
     countOpenFindingsBySeverityForUser(userId),
     listRecentAgentRunActivity(userId, 10),
+    prisma.report.findMany({
+      where: {
+        project: {
+          deletedAt: null,
+          workspace: {
+            deletedAt: null,
+            organization: {
+              deletedAt: null,
+              members: { some: { userId } },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        projectId: true,
+        reportType: true,
+        createdAt: true,
+        project: { select: { name: true } },
+      },
+    }),
   ]);
 
   const primaryOrg = orgList[0] ?? null;
@@ -133,7 +165,14 @@ export async function getDashboardData(userId: string): Promise<DashboardData> {
     },
     riskOverview,
     recentActivity,
-    recentReports: [],
+    recentReports: recentReportRows.map((report) => ({
+      id: report.id,
+      title: report.title,
+      projectId: report.projectId,
+      projectName: report.project.name,
+      reportType: report.reportType,
+      createdAt: report.createdAt.toISOString(),
+    })),
     upcomingTasks: [],
     recentProjectId: projects[0]?.id ?? null,
     onboarding: {

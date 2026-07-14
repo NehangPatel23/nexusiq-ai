@@ -77,7 +77,9 @@ Every page: header, sidebar, widgets, states (loading/empty/error), keyboard acc
 
 ## Project Dashboard (`/dashboard/projects/[id]`)
 
-**Tabs:** Overview · Data Room · Intelligence · Chat · Reports · Timeline · Graph · Risks · Contradictions · Missing · Simulator · Actions · History
+**Tabs:** Overview · Data Room · Intelligence · Chat · Search · Reports · Timeline · Graph · Risks · Contradictions · Missing · Simulator · Actions · History
+
+Live today: Overview, Data Room, Intelligence, Chat, Search, Reports. Remaining tabs are polished placeholders until slices 12–15.
 
 **Overview tab:**
 - Deal metadata card (editable)
@@ -105,6 +107,8 @@ Every page: header, sidebar, widgets, states (loading/empty/error), keyboard acc
 
 ## Intelligence (`/dashboard/projects/[id]/intelligence`)
 
+**Status:** live (Slices 09–10)
+
 **Agent tabs:** Financial · Legal · Compliance · Risk · Fraud · Executive · Consensus
 
 Each agent tab:
@@ -123,6 +127,8 @@ Each agent tab:
 
 ## Chat (`/dashboard/projects/[id]/chat`)
 
+**Status:** live (Slice 08)
+
 - Left: chat sessions list
 - Center: messages, streaming, citation chips
 - Bottom: input + agent selector + suggested questions
@@ -134,6 +140,8 @@ Each agent tab:
 
 ## Smart Search (`/dashboard/projects/[id]/search`)
 
+**Status:** live (Slice 07)
+
 - Large search input, mode toggle (hybrid/semantic/keyword)
 - Filter bar: type, date, folder, tag
 - Saved searches dropdown + save button
@@ -143,9 +151,18 @@ Each agent tab:
 
 ## Reports (`/dashboard/projects/[id]/reports`)
 
-- Generate dropdown: Executive, Board, Investment Memo, Audit, Risk Register, Action Plan
-- History table with download (PDF/MD/XLSX/PPTX)
-- Generation progress modal
+**Status:** live (Slice 11)
+
+- Audience presets (Board pack, IC memo, Risk export, Exec brief) with eager formats
+- Quick generate grid + Generate dropdown for all report types
+- Generate dialog: custom title, force-regenerate (narrative), eager format pickers
+- Progress modal (assemble → generate → persist)
+- Prerequisites banner when intelligence / findings missing; per-type empty CTAs
+- Preview: Markdown / Risk Register / Action Plan cards, citations panel, print CSS
+- Snapshot “as of” AgentRun / Consensus chips; Share dialog (time-limited links)
+- History: search/filter, rename, duplicate, compare, download (PDF/MD/XLSX/PPTX/ZIP)
+- Finding status controls on Risk Register cards
+- Routes: `/dashboard/reports` (project picker / redirect), public `/share/reports/[token]`
 
 ---
 
