@@ -204,6 +204,8 @@ DATABASE_URL="postgresql://..." pnpm db:migrate
 
 Verify tables exist in **Supabase → Table Editor** (`users`, `organizations`, etc.).
 
+**Row Level Security:** All `public` tables have RLS enabled (migration `enable_rls`). NexusIQ accesses Postgres only via Prisma (`DATABASE_URL`); it does **not** use the Supabase Data API (PostgREST). RLS with no policies blocks `anon` / `authenticated` from reading tables (including `token` columns). Prisma’s pooler/`postgres` role still bypasses RLS. When adding a new table, enable RLS in the same migration (`ALTER TABLE … ENABLE ROW LEVEL SECURITY`). Re-run **Database → Linter** after deploy to confirm `rls_disabled_in_public` / `sensitive_columns_exposed` are clear.
+
 ### 4b. Sync local Docker data to Supabase (optional)
 
 Copy users, orgs, workspaces, projects, invites, etc. from local dev into Supabase so Vercel has the same test data:
