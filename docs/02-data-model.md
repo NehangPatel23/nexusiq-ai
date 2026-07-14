@@ -133,7 +133,7 @@ enum AuditAction { CREATE UPDATE DELETE LOGIN LOGOUT UPLOAD PROCESS SEARCH CHAT 
 ### SimulationRun
 - id, projectId, scenarioName, parameters (Json)
 - baselineScores (Json), simulatedScores (Json), delta (Json)
-- recommendation?, createdAt
+- recommendation?, keyImpacts?, confidence?, baselineRunIds[], triggeredById?, createdAt
 
 ## User Features
 

@@ -164,11 +164,14 @@ Contradiction scan returns `503 OLLAMA_UNAVAILABLE` when Ollama is down; scan ro
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/projects/[id]/simulations` | Run scenario |
-| GET | `/api/projects/[id]/simulations` | List runs |
+| POST | `/api/projects/[id]/simulations` | Run scenario (`scenarioName`, `parameters`) — requires Ollama + FINANCIAL/RISK baselines |
+| GET | `/api/projects/[id]/simulations` | List runs + prerequisite flags |
 | GET | `/api/simulations/[id]` | Get delta vs baseline |
 
-Request: `{ scenarioName, parameters: { revenueChange?: number, customerLoss?: string, ... } }`
+Request: `{ scenarioName: "revenue_decline"|"customer_churn"|"lawsuit_loss"|"price_change"|"custom", parameters: { revenueChangePct?, customerLost?, lawsuitOutcome?, amount?, priceChangePct?, notes? } }`
+
+Response includes `baselineScores`, `simulatedScores`, `delta`, `recommendation`, `keyImpacts`, `confidence`, `baselineRunIds`.  
+`400 SIMULATION_PREREQUISITE` when FINANCIAL/RISK not completed; `503 OLLAMA_UNAVAILABLE` when Ollama unreachable. Route `maxDuration = 120`.
 
 ---
 
@@ -216,7 +219,8 @@ View endpoints never require Ollama. Extract returns `503 OLLAMA_UNAVAILABLE` wh
 | Method | Path | Description |
 |--------|------|-------------|
 | GET/POST | `/api/projects/[id]/tasks` | Action items |
-| PATCH/DELETE | `/api/tasks/[id]` | Update/delete |
+| GET/POST | `/api/projects/[id]/tasks/from-findings` | List open findings / bulk create from findings + executive priorityActions |
+| PATCH/DELETE | `/api/tasks/[id]` | Update / soft-delete (`deletedAt`) |
 
 ---
 

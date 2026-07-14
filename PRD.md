@@ -113,24 +113,24 @@ User → Organization (teams, roles) → Workspace → Project (data room)
 
 ### MVP Feature Slices (strict order)
 
-| # | Slice | Scope |
-|---|-------|-------|
-| 1 | Auth | Signup, login, forgot password, profile |
-| 2 | Organizations | Teams, roles, permissions, invites, notifications |
-| 3 | Workspaces | Workspace CRUD |
-| 4 | Projects + Dashboard | Project types, dashboard widgets |
-| 5 | Data Room | Folders, bulk upload, versions |
-| 6 | Documents | Full processing pipeline |
-| 7 | Smart Search | Hybrid search, saved searches |
-| 8 | Chat | Interactive cited Q&A |
-| 9 | Intelligence Agents | Financial, Legal, Compliance, Risk, Fraud |
-| 10 | Executive + Consensus | Executive agent, consensus engine |
-| 11 | Reports & Export | PDF, board memo, Excel, PPTX |
-| 12 | Timeline + Graph | Executive timeline, relationship graph |
-| 13 | Contradiction + Missing | Cross-doc contradictions, missing docs |
-| 14 | Simulator + Actions | Risk simulator, action plan kanban |
-| 15 | History + Settings | Audit, comparison, AI config |
-| 16 | Admin | Health, usage, reindex |
+| # | Slice | Scope | Status |
+|---|-------|-------|--------|
+| 1 | Auth | Signup, login, forgot password, profile | Done |
+| 2 | Organizations | Teams, roles, permissions, invites, notifications | Done |
+| 3 | Workspaces | Workspace CRUD | Done |
+| 4 | Projects + Dashboard | Project types, dashboard widgets | Done |
+| 5 | Data Room | Folders, bulk upload, versions | Done |
+| 6 | Documents | Full processing pipeline | Done |
+| 7 | Smart Search | Hybrid search, saved searches | Done |
+| 8 | Chat | Interactive cited Q&A | Done |
+| 9 | Intelligence Agents | Financial, Legal, Compliance, Risk, Fraud | Done |
+| 10 | Executive + Consensus | Executive agent, consensus engine | Done |
+| 11 | Reports & Export | PDF, board memo, Excel, PPTX | Done |
+| 12 | Timeline + Graph | Executive timeline, relationship graph | Done |
+| 13 | Contradiction + Missing | Cross-doc contradictions, missing docs | Done |
+| 14 | Simulator + Actions | Risk simulator, action plan kanban | Done |
+| 15 | History + Settings | Audit, comparison, AI config | Pending |
+| 16 | Admin | Health, usage, reindex | Pending |
 
 One slice at a time. Each slice: DB + API + UI + tests before next.
 

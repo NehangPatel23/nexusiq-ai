@@ -52,7 +52,7 @@ Enterprise decision intelligence — one developer, zero cost, production qualit
 |-----|-------|-------------|--------|
 | 16 | 12 Timeline + Graph | Timeline view, force graph | Done |
 | 17 | 13 Contradictions + Missing + Risks | Cross-doc scan, missing info, Risks overview | Done |
-| 18 | 14 Simulator | Risk what-if, action plan kanban | Pending |
+| 18 | 14 Simulator | Risk what-if, action plan kanban | Done |
 
 ## Phase 6: Polish (Week 7)
 
@@ -84,7 +84,7 @@ pnpm install && pnpm db:migrate && pnpm dev
 ## MVP Complete When
 
 All 16 slices pass [08-acceptance-criteria.md](./08-acceptance-criteria.md).  
-Full journey: Landing → Auth → Dashboard → Upload → Intelligence → Contradictions / Missing / Risks → Export works end-to-end.
+Full journey: Landing → Auth → Dashboard → Upload → Intelligence → Contradictions / Missing / Risks → Simulator / Actions → Export works end-to-end.
 
 **Slice 17 (Polish)** is a parallel backlog ([tasks/17-polish.md](../tasks/17-polish.md)) — optional UX improvements; not required for MVP complete.
 

@@ -12,6 +12,7 @@ Several files contain intentional inconsistencies (e.g. investor update vs MD&A 
 3. Drag the entire `demo/data-room` folder (or select all files).
 4. Folder paths (`01-Financials`, `02-Legal`, etc.) are preserved on bulk upload.
 5. After documents are **READY**, open **Contradictions** (scan or seed) and **Missing** (checklist gaps map to these folder names).
+6. Run **Intelligence** (Financial + Risk at minimum) → **Simulator** for what-if scenarios → **Actions** for follow-up kanban.
 
 ## Sample contradictions
 

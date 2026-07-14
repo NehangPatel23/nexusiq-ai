@@ -117,6 +117,21 @@ enum ConfidenceLevel {
   INSUFFICIENT
 }
 
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+  CRITICAL
+}
+
 enum AgentType {
   FINANCIAL
   LEGAL
@@ -222,6 +237,8 @@ model User {
   agentRuns           AgentRun[]
   consensusRuns       ConsensusRun[]
   reports             Report[]
+  simulationRuns      SimulationRun[]
+  assignedTasks       Task[]           @relation("TaskAssignee")
 
   @@map("users")
 }
@@ -390,6 +407,8 @@ model Project {
   reports         Report[]
   reportShares    ReportShare[]
   timelineEvents  TimelineEvent[]
+  simulationRuns  SimulationRun[]
+  tasks           Task[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, deletedAt])
@@ -451,6 +470,7 @@ model Document {
   timelineEvents       TimelineEvent[]
   contradictionsAsDocA Contradiction[]   @relation("ContradictionDocA")
   contradictionsAsDocB Contradiction[]   @relation("ContradictionDocB")
+  tasks                Task[]
 
   @@index([projectId, folderId, deletedAt])
   @@index([projectId, deletedAt])
@@ -711,6 +731,7 @@ model Finding {
 
   project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   agentRun AgentRun? @relation(fields: [agentRunId], references: [id], onDelete: SetNull)
+  tasks    Task[]
 
   @@index([projectId, agentType])
   @@index([agentRunId])
@@ -767,6 +788,55 @@ model MissingItem {
 
   @@index([projectId, status])
   @@map("missing_items")
+}
+
+model SimulationRun {
+  id               String           @id @default(uuid())
+  projectId        String           @map("project_id")
+  scenarioName     String           @map("scenario_name")
+  parameters       Json
+  baselineScores   Json             @map("baseline_scores")
+  simulatedScores  Json             @map("simulated_scores")
+  delta            Json
+  recommendation   String?
+  keyImpacts       Json?            @map("key_impacts")
+  confidence       ConfidenceLevel?
+  baselineRunIds   String[]         @default([]) @map("baseline_run_ids")
+  triggeredById    String?          @map("triggered_by_id")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  triggeredBy User?   @relation(fields: [triggeredById], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@map("simulation_runs")
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  projectId   String       @map("project_id")
+  title       String
+  description String?
+  assigneeId  String?      @map("assignee_id")
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?    @map("due_date")
+  impact      String?
+  findingId   String?      @map("finding_id")
+  documentId  String?      @map("document_id")
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  deletedAt   DateTime?    @map("deleted_at")
+
+  project  Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assignee User?    @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  finding  Finding? @relation(fields: [findingId], references: [id], onDelete: SetNull)
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status, deletedAt])
+  @@index([assigneeId])
+  @@index([findingId])
+  @@map("tasks")
 }
 
 model Report {

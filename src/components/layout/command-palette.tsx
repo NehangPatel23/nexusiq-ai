@@ -4,8 +4,10 @@ import {
   AlertTriangle,
   BarChart3,
   Bot,
+  ClipboardList,
   FileQuestion,
   FileText,
+  FlaskConical,
   FolderOpen,
   LayoutDashboard,
   MessageSquare,
@@ -47,6 +49,8 @@ const actionCommands = (
   projectContradictionsHref: string,
   projectMissingHref: string,
   projectRisksHref: string,
+  projectSimulatorHref: string,
+  projectActionsHref: string,
 ) => [
   { label: "Upload to data room", icon: Upload, shortcut: "U", action: "upload-data-room" as const },
   { label: "Run full scan", href: projectIntelligenceHref, icon: Bot, action: "navigate" as const },
@@ -86,6 +90,18 @@ const actionCommands = (
     label: "Open risks overview",
     href: projectRisksHref,
     icon: ShieldAlert,
+    action: "navigate" as const,
+  },
+  {
+    label: "Run risk simulation",
+    href: projectSimulatorHref,
+    icon: FlaskConical,
+    action: "navigate" as const,
+  },
+  {
+    label: "Open action plan",
+    href: projectActionsHref,
+    icon: ClipboardList,
     action: "navigate" as const,
   },
 ];
@@ -147,6 +163,12 @@ export function CommandPalette() {
     : "/dashboard/projects";
   const projectRisksHref = projectId
     ? `/dashboard/projects/${projectId}/risks`
+    : "/dashboard/projects";
+  const projectSimulatorHref = projectId
+    ? `/dashboard/projects/${projectId}/simulator`
+    : "/dashboard/projects";
+  const projectActionsHref = projectId
+    ? `/dashboard/projects/${projectId}/actions`
     : "/dashboard/projects";
 
   const trimmedQuery = paletteQuery.trim();
@@ -220,6 +242,8 @@ export function CommandPalette() {
             projectContradictionsHref,
             projectMissingHref,
             projectRisksHref,
+            projectSimulatorHref,
+            projectActionsHref,
           ).map((command) => {
             const Icon = command.icon;
             const href =
