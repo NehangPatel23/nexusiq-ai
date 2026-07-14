@@ -93,10 +93,10 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Executive/Board PDF narrative polish (v5)
 
 ### 12 Timeline + Graph
-- [ ] Auto-extract events (funding, lawsuits, contracts, etc.)
-- [ ] Visual timeline with citations
-- [ ] Force-directed relationship graph
-- [ ] Node click → related documents
+- [x] Auto-extract events (funding, lawsuits, contracts, etc.)
+- [x] Visual timeline with citations
+- [x] Force-directed relationship graph
+- [x] Node click → related documents
 
 ### 13 Contradiction + Missing Info
 - [ ] Cross-doc contradiction scan with severity ranking

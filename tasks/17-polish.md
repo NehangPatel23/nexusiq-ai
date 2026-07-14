@@ -110,6 +110,27 @@ _Add new polish ideas here. Move to P0–P4 when prioritized._
 
 ---
 
+## Backlog — Timeline + Graph (post–Slice 12)
+
+- [x] Client-orchestrated multi-batch extract (“Extract all”) when >~25 date/entity-biased chunks
+- [ ] Move timeline/graph extract to OCI worker VPS for long CPU Ollama runs
+- [x] Background extract survives in-app navigation (module runner + project shell banner; closing browser tab still stops)
+- [x] Timeline + Graph UI polish — glass headers, derived summary stats, richer rail/cards/canvas chrome, empty states
+- [x] Manual graph node add/remove (POST/DELETE nodes APIs + UI)
+- [x] Manual graph relations — modal + canvas Connect mode (click source then target)
+- [ ] Global `/dashboard/timeline` and `/dashboard/graph` project pickers
+- [x] Keyboard nav list for timeline events; ARIA live region for graph selection beyond panel
+- [x] Graph clustering / type filters with density controls for large entity sets
+- [x] Export timeline as CSV / ICS; export graph as JSON
+- [x] Soft-delete / restore for timeline events (today hard delete)
+- [x] Timeline date range filter UI + year jump chips + pin/highlight key events
+- [x] Timeline ↔ Graph cross-links (event → graph search; entity detail → matching timeline events)
+- [x] Edit/rename graph nodes; edit relation type/confidence + reverse direction; edge labels on hover
+- [x] Restore fit-to-view (`zoomToFit`) on graph canvas
+- [x] Custom aesthetic DatePicker (timeline forms + filters)
+
+---
+
 ## Backlog — Intelligence / Consensus (post–Slice 10)
 
 - [ ] Stream agent runs (token progress) instead of silent 30–90s waits

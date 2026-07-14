@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 
 import { BackgroundAnalysisBanner } from "@/features/intelligence/components/background-analysis-banner";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
+import { BackgroundExtractBanner } from "@/features/projects/components/background-extract-banner";
 import { ProjectShellHeader } from "@/features/projects/components/project-shell-header";
 import { ProjectShellProvider } from "@/features/projects/components/project-shell-context";
 import { ProjectShellNav } from "@/features/projects/components/project-shell-nav";
@@ -58,6 +59,7 @@ export default async function ProjectLayout({ children, params }: LayoutProps) {
 
         <ProjectShellNav projectId={projectId} />
         <BackgroundAnalysisBanner projectId={projectId} />
+        <BackgroundExtractBanner projectId={projectId} />
         {children}
       </div>
     </ProjectShellProvider>

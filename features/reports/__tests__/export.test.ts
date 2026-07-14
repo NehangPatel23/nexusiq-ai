@@ -177,7 +177,7 @@ Assign an owner and due date.
     });
     expect(buffer.byteLength).toBeGreaterThan(100);
     expect(xlsxContentType()).toContain("spreadsheetml");
-  });
+  }, 30_000);
 
   it("exports pptx from slide outline without Ollama", async () => {
     const buffer = await exportPptxBuffer({

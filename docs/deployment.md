@@ -44,6 +44,8 @@ Worker VPS (or Mac during dev) → polls PENDING documents
 
 **Reports & export (slice 11):** Report assembly and binary export (PDF / Markdown / XLSX / PPTX) run on Vercel/Next.js and **do not require Ollama** when intelligence already exists (latest AgentRuns + ConsensusRun + Findings). Narrative force-regenerate (`forceRegenerate`) and generating EXECUTIVE/BOARD/INVESTMENT_MEMO without an Executive AgentRun need `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel). Unreachable Ollama in those cases returns `503 OLLAMA_UNAVAILABLE`. Exports are CPU-heavy — generate/export routes use `maxDuration = 120` and persist binaries via `getStorage()` (local `STORAGE_PATH` or Supabase Storage), not ephemeral `/tmp` alone.
 
+**Timeline + Graph (slice 12):** Viewing the timeline (`GET .../timeline`) and relationship graph (`GET .../graph`) runs on Vercel/Next.js and **does not require Ollama** — graph nodes/edges come from existing Slice 06 NER `Entity` / `EntityRelation` rows. AI extract (`POST .../timeline/extract`, `POST .../graph/extract`) needs `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel); unreachable Ollama returns `503 OLLAMA_UNAVAILABLE`. Zero retrieved chunks returns `200` with an empty result and message without calling Ollama. Extract routes use `maxDuration = 120`.
+
 **Worker env (VPS):**
 
 ```bash

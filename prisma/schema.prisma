@@ -165,6 +165,17 @@ enum ReportFormat {
   PPTX
 }
 
+enum TimelineCategory {
+  FUNDING
+  HIRING
+  ACQUISITION
+  LAWSUIT
+  LEADERSHIP
+  REVENUE
+  CONTRACT
+  OTHER
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -354,6 +365,7 @@ model Project {
   findings        Finding[]
   reports         Report[]
   reportShares    ReportShare[]
+  timelineEvents  TimelineEvent[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, deletedAt])
@@ -412,6 +424,7 @@ model Document {
   duplicates      Document[]        @relation("DocumentDuplicates")
   versions        DocumentVersion[]
   chunks          DocumentChunk[]
+  timelineEvents  TimelineEvent[]
 
   @@index([projectId, folderId, deletedAt])
   @@index([projectId, deletedAt])
@@ -487,10 +500,35 @@ model DocumentChunk {
 
   document          Document         @relation(fields: [documentId], references: [id], onDelete: Cascade)
   sourceRelations   EntityRelation[] @relation("SourceChunk")
+  timelineEvents    TimelineEvent[]
 
   @@unique([documentId, chunkIndex])
   @@index([documentId])
   @@map("document_chunks")
+}
+
+model TimelineEvent {
+  id            String           @id @default(uuid())
+  projectId     String           @map("project_id")
+  title         String
+  description   String?
+  eventDate     DateTime         @map("event_date")
+  category      TimelineCategory
+  sourceChunkId String?          @map("source_chunk_id")
+  documentId    String?          @map("document_id")
+  isManual      Boolean          @default(false) @map("is_manual")
+  pinned        Boolean          @default(false)
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  deletedAt     DateTime?        @map("deleted_at")
+
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceChunk DocumentChunk?  @relation(fields: [sourceChunkId], references: [id], onDelete: SetNull)
+  document    Document?       @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, eventDate])
+  @@index([projectId, deletedAt, eventDate])
+  @@map("timeline_events")
 }
 
 model Entity {
