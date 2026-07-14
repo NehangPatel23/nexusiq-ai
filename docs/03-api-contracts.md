@@ -191,10 +191,17 @@ Export/generate routes use `maxDuration = 120`; binaries persist via `getStorage
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET/POST | `/api/projects/[id]/timeline` | Events |
-| POST | `/api/projects/[id]/timeline/extract` | AI extract |
-| GET | `/api/projects/[id]/graph` | Nodes + edges |
-| POST | `/api/projects/[id]/graph/extract` | AI extract |
+| GET/POST | `/api/projects/[id]/timeline` | List / create events (`?category=&from=&to=&q=&trash=active\|archived\|all`) |
+| PATCH/DELETE | `/api/timeline/[id]` | Update (incl. `pinned`, `{ restore: true }`) / soft-delete; `?permanent=1` hard-delete |
+| POST | `/api/projects/[id]/timeline/extract` | AI extract (`{ force?, all?, seedQuery? }`) |
+| GET | `/api/projects/[id]/graph` | Nodes + edges (NER, no Ollama) |
+| POST | `/api/projects/[id]/graph/extract` | AI enrich (`{ force?, all?, seedQuery? }`; force replaces all) |
+| POST | `/api/projects/[id]/graph/nodes` | Create manual node `{ name, type }` |
+| GET/PATCH/DELETE | `/api/projects/[id]/graph/nodes/[entityId]` | Detail / rename-type / remove (+ cascade relations) |
+| POST | `/api/projects/[id]/graph/relations` | Create relation `{ sourceEntityId, targetEntityId, relationType, confidence? }` |
+| PATCH/DELETE | `/api/projects/[id]/graph/relations/[relationId]` | Update type/confidence/`reverse` / remove |
+
+View endpoints never require Ollama. Extract returns `503 OLLAMA_UNAVAILABLE` when health check fails; empty retrieval returns `200` with message without calling Ollama. Extract routes use `maxDuration = 120`.
 
 ---
 

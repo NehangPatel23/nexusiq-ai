@@ -7,6 +7,7 @@ import {
   FolderOpen,
   LayoutDashboard,
   MessageSquare,
+  Network,
   Search,
   Upload,
 } from "lucide-react";
@@ -38,6 +39,8 @@ const actionCommands = (
   projectChatHref: string,
   projectIntelligenceHref: string,
   projectReportsHref: string,
+  projectTimelineHref: string,
+  projectGraphHref: string,
 ) => [
   { label: "Upload to data room", icon: Upload, shortcut: "U", action: "upload-data-room" as const },
   { label: "Run full scan", href: projectIntelligenceHref, icon: Bot, action: "navigate" as const },
@@ -47,6 +50,18 @@ const actionCommands = (
     label: "Generate executive report",
     href: projectReportsHref,
     icon: FileText,
+    action: "navigate" as const,
+  },
+  {
+    label: "Extract timeline events",
+    href: projectTimelineHref,
+    icon: BarChart3,
+    action: "navigate" as const,
+  },
+  {
+    label: "Open relationship graph",
+    href: projectGraphHref,
+    icon: Network,
     action: "navigate" as const,
   },
 ];
@@ -94,6 +109,12 @@ export function CommandPalette() {
   const projectReportsHref = projectId
     ? `/dashboard/projects/${projectId}/reports?generate=EXECUTIVE`
     : "/dashboard/reports";
+  const projectTimelineHref = projectId
+    ? `/dashboard/projects/${projectId}/timeline?extract=1`
+    : "/dashboard/projects";
+  const projectGraphHref = projectId
+    ? `/dashboard/projects/${projectId}/graph`
+    : "/dashboard/projects";
 
   const trimmedQuery = paletteQuery.trim();
   const showQuerySearch = trimmedQuery.length >= 2 && Boolean(projectId);
@@ -161,6 +182,8 @@ export function CommandPalette() {
             projectChatHref,
             projectIntelligenceHref,
             projectReportsHref,
+            projectTimelineHref,
+            projectGraphHref,
           ).map((command) => {
             const Icon = command.icon;
             const href =
