@@ -12,12 +12,15 @@ import {
   Upload,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { startTransition, useEffect } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { ActivityFeed } from "@/features/projects/components/activity-feed";
 import { DashboardOnboardingNudge } from "@/features/projects/components/dashboard-onboarding-nudge";
 import { RiskOverviewDonut } from "@/features/projects/components/risk-overview-donut";
 import type { DashboardData } from "@/features/projects/lib/dashboard";
+import { subscribeRiskStateChanged } from "@/features/intelligence/lib/risk-state-events";
 import { BrandBadge } from "@/components/brand/brand-badge";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -44,7 +47,16 @@ interface DashboardHomeProps {
 
 export function DashboardHome({ data }: DashboardHomeProps) {
   const reduceMotion = useReducedMotion();
+  const router = useRouter();
   const hasProjects = data.stats.projectCount > 0;
+
+  useEffect(() => {
+    return subscribeRiskStateChanged(() => {
+      startTransition(() => {
+        router.refresh();
+      });
+    });
+  }, [router]);
 
   const stats = [
     { label: "Projects", value: data.stats.projectCount, icon: FolderPlus },

@@ -30,7 +30,7 @@ Cross-cutting UX, enterprise data-room polish, and quality-of-life improvements 
 - [ ] **In-app audit log viewer** — Filterable table on data room (actor, action, date, resource); complements CSV export
 - [ ] **Folder-scoped share links** — Share a folder subtree only, not whole project
 - [ ] **M&A folder templates** — One-click standard tree (Financial / Legal / HR / Tax / IP / Corporate)
-- [ ] **Checklist ↔ folder mapping** — Link checklist items to expected folder paths; “missing in `/Financial`”
+- [x] **Checklist ↔ folder mapping** — Link checklist items to expected folder paths; data-room deep links (`?folder=…&upload=1`) from Missing page gap rows
 - [ ] **Bulk tag / bulk classify** — Multi-select → apply tags or classification in one action
 
 ---
@@ -128,6 +128,19 @@ _Add new polish ideas here. Move to P0–P4 when prioritized._
 - [x] Edit/rename graph nodes; edit relation type/confidence + reverse direction; edge labels on hover
 - [x] Restore fit-to-view (`zoomToFit`) on graph canvas
 - [x] Custom aesthetic DatePicker (timeline forms + filters)
+
+---
+
+## Backlog — Contradiction + Missing + Risks (post–Slice 13)
+
+- [x] Contradiction scan survives in-app navigation (background extract runner + project shell banner)
+- [x] Missing-info scan background runner (same module pattern; wired into Missing page + banner)
+- [x] Reject unmatched contradiction citations at scan time (`alignContradictionEvidence`; remap chunks or drop)
+- [x] CRITICAL contradiction notifications (`RISK_FOUND`) after scan
+- [x] Checklist ↔ folder mapping + data-room `?folder=&upload=1` deep links
+- [x] Contradiction resolution workflow — resolution note, promote-to-finding, bulk status update, fact-type filter, multi-select
+- [x] Risks + Overview diligence-gap rollups — open contradiction/missing counts surfaced on Risks page and Project Overview
+- [ ] Move contradiction scan to OCI worker for very large multi-batch rooms
 
 ---
 

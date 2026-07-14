@@ -148,6 +148,28 @@ enum FindingSeverity {
   LOW
 }
 
+enum ContradictionStatus {
+  OPEN
+  ACKNOWLEDGED
+  RESOLVED
+  DISMISSED
+}
+
+enum ContradictionFactType {
+  DATE
+  AMOUNT
+  PARTY
+  METRIC
+  OTHER
+}
+
+enum MissingItemStatus {
+  OPEN
+  REQUESTED
+  RESOLVED
+  NOT_APPLICABLE
+}
+
 enum ReportType {
   EXECUTIVE
   BOARD
@@ -363,6 +385,8 @@ model Project {
   agentRuns       AgentRun[]
   consensusRuns   ConsensusRun[]
   findings        Finding[]
+  contradictions  Contradiction[]
+  missingItems    MissingItem[]
   reports         Report[]
   reportShares    ReportShare[]
   timelineEvents  TimelineEvent[]
@@ -422,9 +446,11 @@ model Document {
   nextVersions    Document[]        @relation("DocumentVersions")
   duplicateOf     Document?         @relation("DocumentDuplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
   duplicates      Document[]        @relation("DocumentDuplicates")
-  versions        DocumentVersion[]
-  chunks          DocumentChunk[]
-  timelineEvents  TimelineEvent[]
+  versions             DocumentVersion[]
+  chunks               DocumentChunk[]
+  timelineEvents       TimelineEvent[]
+  contradictionsAsDocA Contradiction[]   @relation("ContradictionDocA")
+  contradictionsAsDocB Contradiction[]   @relation("ContradictionDocB")
 
   @@index([projectId, folderId, deletedAt])
   @@index([projectId, deletedAt])
@@ -689,6 +715,58 @@ model Finding {
   @@index([projectId, agentType])
   @@index([agentRunId])
   @@map("findings")
+}
+
+model Contradiction {
+  id                 String                 @id @default(uuid())
+  projectId          String                 @map("project_id")
+  subject            String
+  factType           ContradictionFactType  @map("fact_type")
+  valueA             String                 @map("value_a")
+  valueB             String                 @map("value_b")
+  documentAId        String                 @map("document_a_id")
+  chunkAId           String                 @map("chunk_a_id")
+  documentBId        String                 @map("document_b_id")
+  chunkBId           String                 @map("chunk_b_id")
+  explanation        String
+  severity           FindingSeverity
+  status             ContradictionStatus    @default(OPEN)
+  resolutionNote     String?                @map("resolution_note")
+  statusChangedById  String?                @map("status_changed_by_id")
+  statusChangedAt    DateTime?              @map("status_changed_at")
+  promotedFindingId  String?                @map("promoted_finding_id")
+  createdAt          DateTime               @default(now()) @map("created_at")
+  updatedAt          DateTime               @updatedAt @map("updated_at")
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  documentA Document @relation("ContradictionDocA", fields: [documentAId], references: [id], onDelete: Cascade)
+  documentB Document @relation("ContradictionDocB", fields: [documentBId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status, severity])
+  @@index([projectId, createdAt])
+  @@index([chunkAId])
+  @@index([chunkBId])
+  @@map("contradictions")
+}
+
+model MissingItem {
+  id           String            @id @default(uuid())
+  projectId    String            @map("project_id")
+  category     String
+  title        String
+  description  String
+  expectedType String?           @map("expected_type")
+  framework    String?
+  followUpText String?           @map("follow_up_text")
+  severity     FindingSeverity?
+  status       MissingItemStatus @default(OPEN)
+  createdAt    DateTime          @default(now()) @map("created_at")
+  updatedAt    DateTime          @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@map("missing_items")
 }
 
 model Report {

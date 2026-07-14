@@ -44,22 +44,22 @@ export const PROJECT_TAB_SLICES = {
   risks: {
     title: "Risks",
     description: "Enterprise risk score, category heatmap, and open findings from all agents.",
-    slice: 12,
-    sliceLabel: "Timeline + Graph",
+    slice: 13,
+    sliceLabel: "Contradiction + Missing Info + Risks",
     highlights: ["Risk score", "Severity heatmap", "Open findings"],
   },
   contradictions: {
     title: "Contradictions",
     description: "Cross-document contradiction scan with severity ranking and resolution workflow.",
     slice: 13,
-    sliceLabel: "Contradiction + Missing Info",
+    sliceLabel: "Contradiction + Missing Info + Risks",
     highlights: ["Cross-doc scan", "Severity ranking", "Status workflow"],
   },
   missing: {
     title: "Missing Information",
     description: "Detect missing documents by project type and export follow-up requests.",
     slice: 13,
-    sliceLabel: "Contradiction + Missing Info",
+    sliceLabel: "Contradiction + Missing Info + Risks",
     highlights: ["Missing doc detection", "Follow-up export", "Status workflow"],
   },
   simulator: {

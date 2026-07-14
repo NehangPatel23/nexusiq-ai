@@ -100,17 +100,18 @@ Upload → Classify → Extract text (PDF.js/LibreOffice/Tesseract)
 `financial`, `legal`, `tax`, `hr`, `operational`, `compliance`, `contract`, `correspondence`, `other`
 
 ### Contradiction Engine
-1. Extract structured facts (dates, amounts, party names, metrics) per document
-2. Cluster facts by subject
-3. Compare values across docs
-4. Flag mismatches → rank by severity + business impact
-5. Store `Contradiction` records with both source chunks
+1. Retrieve hybrid chunks across project documents
+2. Mine structured facts (dates, amounts, parties, metrics) and ask Ollama for inconsistencies
+3. Validate ownership + **require both values to appear in retrieved chunk text** (remap chunk IDs when needed; drop unmatched citations)
+4. Rank by severity; store `Contradiction` with both source chunks
+5. Support resolution notes, promote-to-finding, and CRITICAL `RISK_FOUND` notifications
 
 ### Missing Information Engine
-1. Load expected document checklist by project type (M&A, Vendor DD, Audit)
-2. Match uploaded classifications against checklist
-3. Run compliance framework requirements
-4. Generate `MissingItem` records + follow-up request text
+1. Load expected document checklist by project type (M&A, Vendor DD, Audit, …) including `expectedFolderPath`
+2. Match uploaded classifications / name hints against checklist
+3. Optionally pull compliance framework gaps from latest Compliance agent run
+4. Generate `MissingItem` records + follow-up request text (optional Ollama polish)
+5. Export follow-ups as markdown/CSV; deep-link uploads into expected folders
 
 ### Risk Simulator
 1. Load baseline agent scores

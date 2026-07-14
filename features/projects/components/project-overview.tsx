@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle, FileQuestion, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 const AGENT_LABELS: Record<AgentType, string> = {
   FINANCIAL: "Financial",
@@ -53,6 +55,8 @@ type ProjectOverviewProps = {
   agentScores?: Partial<Record<AgentType, number | null>>;
   enterpriseRiskScore?: number | null;
   latestConsensus?: OverviewConsensusSummary | null;
+  contradictionOpenCount?: number;
+  missingOpenCount?: number;
 };
 
 function confidenceBadgeVariant(confidence: ConfidenceLevel) {
@@ -66,6 +70,8 @@ export function ProjectOverview({
   agentScores = {},
   enterpriseRiskScore = null,
   latestConsensus = null,
+  contradictionOpenCount = 0,
+  missingOpenCount = 0,
 }: ProjectOverviewProps) {
   const { project, setProject, canEdit } = useProjectShell();
   const [editing, setEditing] = useState(false);
@@ -310,6 +316,59 @@ export function ProjectOverview({
             label="Enterprise risk"
             description="Composite score from the latest Risk agent assessment"
           />
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/60 bg-card/40">
+        <CardHeader>
+          <CardTitle className="text-base">Diligence gaps</CardTitle>
+          <CardDescription>
+            Cross-document conflicts and outstanding checklist items
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-2">
+          <Link
+            href={`/dashboard/projects/${project.id}/contradictions`}
+            className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-background/50 px-4 py-3 transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            <div className="flex items-center gap-2.5">
+              <AlertTriangle
+                className={cn(
+                  "h-4 w-4",
+                  contradictionOpenCount > 0 ? "text-rose-400" : "text-muted-foreground",
+                )}
+                aria-hidden="true"
+              />
+              <span className="text-sm font-medium">Contradictions</span>
+            </div>
+            <span className="font-display text-lg font-semibold tabular-nums">
+              {contradictionOpenCount}
+            </span>
+          </Link>
+          <Link
+            href={`/dashboard/projects/${project.id}/missing`}
+            className="flex items-center justify-between gap-3 rounded-lg border border-border/50 bg-background/50 px-4 py-3 transition-colors hover:border-primary/40 hover:bg-primary/5"
+          >
+            <div className="flex items-center gap-2.5">
+              <FileQuestion
+                className={cn(
+                  "h-4 w-4",
+                  missingOpenCount > 0 ? "text-amber-400" : "text-muted-foreground",
+                )}
+                aria-hidden="true"
+              />
+              <span className="text-sm font-medium">Missing info</span>
+            </div>
+            <span className="font-display text-lg font-semibold tabular-nums">
+              {missingOpenCount}
+            </span>
+          </Link>
+          {contradictionOpenCount === 0 && missingOpenCount === 0 ? (
+            <p className="col-span-full flex items-center gap-1.5 text-xs text-muted-foreground">
+              <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+              No open diligence gaps detected yet.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { BackgroundAnalysisBanner } from "@/features/intelligence/components/background-analysis-banner";
+import { RiskStateSync } from "@/features/intelligence/components/risk-state-sync";
 import { getOrganizationMembership } from "@/features/organizations/lib/authorization";
 import { BackgroundExtractBanner } from "@/features/projects/components/background-extract-banner";
 import { ProjectShellHeader } from "@/features/projects/components/project-shell-header";
@@ -60,6 +61,7 @@ export default async function ProjectLayout({ children, params }: LayoutProps) {
         <ProjectShellNav projectId={projectId} />
         <BackgroundAnalysisBanner projectId={projectId} />
         <BackgroundExtractBanner projectId={projectId} />
+        <RiskStateSync projectId={projectId} />
         {children}
       </div>
     </ProjectShellProvider>

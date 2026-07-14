@@ -127,6 +127,8 @@ export function DataRoomView({
   const { canEdit } = useProjectShell();
   const searchParams = useSearchParams();
   const deepLinkHandled = useRef(false);
+  const folderDeepLinkHandled = useRef(false);
+  const uploadDeepLinkHandled = useRef(false);
   const previewHighlight = searchParams.get("highlight");
   const processingWasActiveRef = useRef(false);
   const processingToastIdRef = useRef<string | number | null>(null);
@@ -577,9 +579,12 @@ export function DataRoomView({
   ]);
 
   useEffect(() => {
+    if (deepLinkHandled.current || documents.length === 0) return;
     const docId = searchParams.get("doc");
-    if (!docId || deepLinkHandled.current || documents.length === 0) return;
-    const doc = documents.find((d) => d.id === docId);
+    const docsParam = searchParams.get("docs");
+    const targetId = docId ?? docsParam?.split(",")[0]?.trim() ?? null;
+    if (!targetId) return;
+    const doc = documents.find((d) => d.id === targetId);
     if (doc) {
       deepLinkHandled.current = true;
       setSelectedDoc(doc);
@@ -587,6 +592,39 @@ export function DataRoomView({
       setPreviewPanelOpen(true);
     }
   }, [searchParams, documents]);
+
+  useEffect(() => {
+    if (folderDeepLinkHandled.current) return;
+    const folderParam = searchParams.get("folder");
+    if (!folderParam) return;
+    const flat = flattenFolders(tree);
+    if (flat.length === 0) return;
+    const needle = folderParam.toLowerCase();
+    const match = flat.find(
+      (f) =>
+        f.name.toLowerCase() === needle ||
+        f.path.toLowerCase() === needle ||
+        f.path
+          .split("/")
+          .map((segment) => segment.trim().toLowerCase())
+          .includes(needle),
+    );
+    folderDeepLinkHandled.current = true;
+    if (match) {
+      setSelectedFolderId(match.id);
+      setFolderPanelOpen(true);
+    }
+  }, [searchParams, tree]);
+
+  useEffect(() => {
+    if (uploadDeepLinkHandled.current) return;
+    if (searchParams.get("upload") !== "1") return;
+    uploadDeepLinkHandled.current = true;
+    if (canUpload) {
+      setReplaceDocumentId(null);
+      setUploadOpen(true);
+    }
+  }, [searchParams, canUpload]);
 
   useEffect(() => {
     if (focusedIndex !== null && focusedIndex >= visibleDocuments.length) {

@@ -17,6 +17,7 @@ enum RiskStatus { OPEN ACKNOWLEDGED RESOLVED DISMISSED }
 enum TaskStatus { TODO IN_PROGRESS DONE CANCELLED }
 enum TaskPriority { LOW MEDIUM HIGH URGENT CRITICAL }
 enum ContradictionStatus { OPEN ACKNOWLEDGED RESOLVED DISMISSED }
+enum ContradictionFactType { DATE AMOUNT PARTY METRIC OTHER }
 enum MissingItemStatus { OPEN REQUESTED RESOLVED NOT_APPLICABLE }
 enum AgentType { FINANCIAL LEGAL COMPLIANCE RISK FRAUD EXECUTIVE CONSENSUS }
 enum ChatAgentType { GENERAL FINANCIAL LEGAL COMPLIANCE RISK FRAUD }
@@ -120,11 +121,14 @@ enum AuditAction { CREATE UPDATE DELETE LOGIN LOGOUT UPLOAD PROCESS SEARCH CHAT 
 ### Contradiction
 - id, projectId, subject, factType, valueA, valueB
 - documentAId, chunkAId, documentBId, chunkBId
-- explanation, severity, status (ContradictionStatus), createdAt
+- explanation, severity (FindingSeverity), status (ContradictionStatus)
+- resolutionNote?, statusChangedById?, statusChangedAt?, promotedFindingId?
+- createdAt, updatedAt
 
 ### MissingItem
 - id, projectId, category, title, description, expectedType?
-- framework?, followUpText?, status (MissingItemStatus), createdAt
+- framework?, followUpText?, severity? (FindingSeverity), status (MissingItemStatus), createdAt, updatedAt
+- Checklist rows also expose `expectedFolderPath` (app-level; maps to data-room folder names)
 
 ### SimulationRun
 - id, projectId, scenarioName, parameters (Json)

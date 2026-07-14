@@ -98,11 +98,12 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Force-directed relationship graph
 - [x] Node click → related documents
 
-### 13 Contradiction + Missing Info
-- [ ] Cross-doc contradiction scan with severity ranking
-- [ ] Missing document detection by project type
-- [ ] Follow-up request export
-- [ ] Full status workflow on findings (OPEN → closed paths; Risk Register already supports status PATCH)
+### 13 Contradiction + Missing Info + Risks
+- [x] Cross-doc contradiction scan with severity ranking
+- [x] Missing document detection by project type
+- [x] Follow-up request export
+- [x] Full status workflow on findings (OPEN → closed paths; Risk Register already supports status PATCH)
+- [x] Risks overview page — enterprise risk score, severity/category heatmap, open findings from agents
 
 ### 14 Simulator + Action Plan
 - [ ] What-if scenarios (revenue change, customer loss, etc.)
@@ -139,9 +140,9 @@ Optional UX polish — see [tasks/17-polish.md](../tasks/17-polish.md). Not requ
 - [x] Create project → Upload data room → Processing completes (local / worker; Vercel inline optional)
 - [x] Run agents → View consensus → Chat with citations
 - [x] Generate report → Export PDF (also MD/XLSX/PPTX/ZIP; share links)
-- [ ] View timeline, graph, contradictions, missing docs
+- [x] View timeline, graph, contradictions, missing docs, risks overview
 - [ ] Run simulator → Create action items
-- [ ] No dead-end pages in journey (placeholders remain for slices 12–16)
+- [ ] No dead-end pages in journey (placeholders remain for slices 14–16)
 
 ---
 

@@ -55,12 +55,12 @@ Executive agent, consensus engine, explainable synthesis UI.
 Executive PDF, board report, investment memo, audit, risk register, PPTX, share/compare/presets.
 
 ## Slice 12: Timeline + Graph
-**Task:** [tasks/12-risk.md](../tasks/12-risk.md) · **Status:** NEXT  
-Executive timeline, enterprise relationship graph.
+**Task:** [tasks/12-risk.md](../tasks/12-risk.md) · **Status:** DONE  
+Executive timeline, enterprise relationship graph. (Project **Risks** overview deferred to Slice 13.)
 
-## Slice 13: Contradiction + Missing Info
-**Task:** [tasks/13-tasks.md](../tasks/13-tasks.md)  
-Contradiction engine, missing document detection, follow-up requests.
+## Slice 13: Contradiction + Missing Info + Risks
+**Task:** [tasks/13-tasks.md](../tasks/13-tasks.md) · **Status:** DONE  
+Contradiction engine (citation-validated scan, resolution notes, promote-to-finding, bulk status), missing document checklist + folder deep links + follow-up export, and project **Risks** overview (enterprise score, heatmap, open findings + diligence gap rollups).
 
 ## Slice 14: Risk Simulator + Action Plan
 **Task:** [tasks/14-history.md](../tasks/14-history.md)  
