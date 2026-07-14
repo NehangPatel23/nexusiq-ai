@@ -79,7 +79,34 @@ Cross-cutting UX, enterprise data-room polish, and quality-of-life improvements 
 
 _Add new polish ideas here. Move to P0–P4 when prioritized._
 
-- [ ] _(none yet)_
+- [ ] **Notification bell unread badge stale after mark-all-read** — After “Mark all read” / bulk mark read on `/dashboard/notifications`, the topbar bell still shows `9+` until a full refresh; sync `unreadCount` via `nexusiq:notifications-changed` (or optimistic clear) so the badge drops immediately
+
+---
+
+## Backlog — Reports / export (post–Slice 11)
+
+- [x] **Aesthetic PDF export** — Cover page, accent bar, callout, footnotes; redesigned `@react-pdf/renderer` output aligned with product typography (still black-on-white for print)
+- [x] **Aesthetic PPTX export (Action Plan / board decks)** — Cover, section dividers, score cards, severity-tagged item slides with context + how-to-close, citation footers; deck built from report metadata (action/risk rows) rather than raw markdown lines
+- [x] Force-regenerate UI, custom title, eager format pickers, rename/duplicate, history search/filter
+- [x] Multi-sheet XLSX (Summary + Findings), ZIP bulk download, print CSS, data-room citation links, per-type empty CTAs
+- [x] Risk Register + Action Plan rich cards (severity badges, humanized categories, citation links, context + how-to-close, print layout)
+- [x] Share / time-limited report links (public view + format-locked download; audit on create/revoke/export)
+- [x] Compare two report versions (section diff + side-by-side previews)
+- [x] Snapshot “as of” AgentRun / Consensus chips on report preview
+- [x] Executive / Board PDF narrative polish (recommendation callouts + key-list boxes; exporter v5)
+- [x] Audience presets (Board pack, IC memo, Risk export, Exec brief) with eager formats
+- [x] Finding status controls on Risk Register (OPEN / ACKNOWLEDGED / RESOLVED / DISMISSED)
+- [x] Export + generate activity in project audit (`REPORT_GENERATED`, `REPORT_EXPORTED`, share events)
+- [ ] Password / org-only report shares — optional PIN or require logged-in org member (token-only today)
+- [ ] Share analytics — view/download counts per report share link
+- [ ] Email “copy mailto” — prefilled subject + share URL (no paid mail API)
+- [ ] Scheduled regenerate — cron/local job to refresh Board pack weekly (pairs with OCI worker later)
+- [ ] Word-level report compare diff (beyond section list + preview panes)
+- [ ] Pin custom AgentRun set at generate time (today pins “latest”; UI to pick older runs)
+- [ ] Watermark / “draft vs final” flag on PDF cover + footer
+- [ ] DOCX export — local-only Word generation (PRD mentions Word; not MVP Slice 11)
+- [ ] Command palette: “Share current report”, “Compare reports”, audience presets
+- [ ] Intelligence → Reports deep links — “Export as Board pack” from Consensus/Executive tabs
 
 ---
 

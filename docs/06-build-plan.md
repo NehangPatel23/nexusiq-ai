@@ -6,61 +6,61 @@ Enterprise decision intelligence — one developer, zero cost, production qualit
 
 ## Phase 0: Foundation (Days 1–2)
 
-- [ ] Next.js 14+ App Router, TypeScript strict, pnpm
-- [ ] Tailwind + shadcn/ui dark theme + design tokens
-- [ ] Prisma + PostgreSQL Docker + pgvector extension
-- [ ] App shell: sidebar, topbar, command palette skeleton
-- [ ] **Landing page** (`/`) — hero, features, CTA
-- [ ] ESLint, Prettier, Vitest, Playwright, axe
-- [ ] `.env.example`, `docker-compose.yml`
-- [ ] Verify `pnpm build && pnpm dev`
+- [x] Next.js 14+ App Router, TypeScript strict, pnpm
+- [x] Tailwind + shadcn/ui dark theme + design tokens
+- [x] Prisma + PostgreSQL Docker + pgvector extension
+- [x] App shell: sidebar, topbar, command palette skeleton
+- [x] **Landing page** (`/`) — hero, features, CTA
+- [x] ESLint, Prettier, Vitest, Playwright, axe
+- [x] `.env.example`, `docker-compose.yml`
+- [x] Verify `pnpm build && pnpm dev`
 
 ## Phase 1: Platform Core (Week 1)
 
-| Day | Slice | Deliverable |
-|-----|-------|-------------|
-| 1 | 01 Auth | Signup, login, forgot password, profile, middleware |
-| 2 | 02 Organizations | Orgs, teams, roles, invites, notifications table |
-| 3 | 03 Workspaces | Workspace CRUD |
-| 4–5 | 04 Projects + Dashboard | Project types, dashboard widgets, onboarding |
+| Day | Slice | Deliverable | Status |
+|-----|-------|-------------|--------|
+| 1 | 01 Auth | Signup, login, forgot password, profile, middleware | Done |
+| 2 | 02 Organizations | Orgs, teams, roles, invites, notifications table | Done |
+| 3 | 03 Workspaces | Workspace CRUD | Done |
+| 4–5 | 04 Projects + Dashboard | Project types, dashboard widgets, onboarding | Done |
 
 ## Phase 2: Data Room (Week 2)
 
-| Day | Slice | Deliverable |
-|-----|-------|-------------|
-| 6 | 05 Data Room | Folders, bulk upload, versions, preview |
-| 7–8 | 06 Processing | Classification, OCR, chunk, embed, NER, duplicates |
+| Day | Slice | Deliverable | Status |
+|-----|-------|-------------|--------|
+| 6 | 05 Data Room | Folders, bulk upload, versions, preview | Done |
+| 7–8 | 06 Processing | Classification, OCR, chunk, embed, NER, duplicates | Done (OCI worker prod deferred) |
 
 ## Phase 3: Search & Chat (Week 3)
 
-| Day | Slice | Deliverable |
-|-----|-------|-------------|
-| 9 | 07 Search | Hybrid search, saved searches |
-| 10–11 | 08 Chat | Streaming cited Q&A, suggested questions |
+| Day | Slice | Deliverable | Status |
+|-----|-------|-------------|--------|
+| 9 | 07 Search | Hybrid search, saved searches | Done |
+| 10–11 | 08 Chat | Streaming cited Q&A, suggested questions | Done |
 
 ## Phase 4: Intelligence Agents (Week 4–5)
 
-| Day | Slice | Deliverable |
-|-----|-------|-------------|
-| 12–13 | 09 Agents | Financial, Legal, Compliance, Risk, Fraud |
-| 14 | 10 Consensus | Executive agent + consensus engine UI |
-| 15 | 11 Reports | PDF, board memo, Excel, PPTX export |
+| Day | Slice | Deliverable | Status |
+|-----|-------|-------------|--------|
+| 12–13 | 09 Agents | Financial, Legal, Compliance, Risk, Fraud | Done |
+| 14 | 10 Consensus | Executive agent + consensus engine UI | Done |
+| 15 | 11 Reports | PDF, board memo, Excel, PPTX export | Done |
 
 ## Phase 5: Advanced Intelligence (Week 6)
 
-| Day | Slice | Deliverable |
-|-----|-------|-------------|
-| 16 | 12 Timeline + Graph | Timeline view, force graph |
-| 17 | 13 Contradictions | Cross-doc scan, missing info engine |
-| 18 | 14 Simulator | Risk what-if, action plan kanban |
+| Day | Slice | Deliverable | Status |
+|-----|-------|-------------|--------|
+| 16 | 12 Timeline + Graph | Timeline view, force graph | Next |
+| 17 | 13 Contradictions | Cross-doc scan, missing info engine | Pending |
+| 18 | 14 Simulator | Risk what-if, action plan kanban | Pending |
 
 ## Phase 6: Polish (Week 7)
 
-| Day | Slice | Deliverable |
-|-----|-------|-------------|
-| 19 | 15 History + Settings | Audit, comparison, AI config |
-| 20 | 16 Admin | Health, usage, reindex |
-| 21–22 | QA | E2E flows, accessibility audit, bug fixes |
+| Day | Slice | Deliverable | Status |
+|-----|-------|-------------|--------|
+| 19 | 15 History + Settings | Audit, comparison, AI config | Pending |
+| 20 | 16 Admin | Health, usage, reindex | Pending |
+| 21–22 | QA | E2E flows, accessibility audit, bug fixes | Ongoing |
 
 ---
 

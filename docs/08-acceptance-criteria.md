@@ -83,9 +83,14 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Never black-box final recommendation
 
 ### 11 Reports & Export
-- [ ] Generate: executive, board, investment memo, audit, risk register
-- [ ] Export: PDF, Markdown, Excel, PPTX (local generation)
-- [ ] Report history with download
+- [x] Generate: executive, board, investment memo, audit, risk register
+- [x] Export: PDF, Markdown, Excel, PPTX (local generation)
+- [x] Report history with download
+- [x] Custom title, force-regenerate, eager formats, rename/duplicate, search/filter
+- [x] ZIP bulk download, print CSS, citation links to data room, per-type empty CTAs
+- [x] Share links, version compare, snapshot as-of chips, audience presets
+- [x] Finding status from Risk Register; report generate/export/share audit events
+- [x] Executive/Board PDF narrative polish (v5)
 
 ### 12 Timeline + Graph
 - [ ] Auto-extract events (funding, lawsuits, contracts, etc.)
@@ -97,7 +102,7 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [ ] Cross-doc contradiction scan with severity ranking
 - [ ] Missing document detection by project type
 - [ ] Follow-up request export
-- [ ] Status workflow on findings
+- [ ] Full status workflow on findings (OPEN → closed paths; Risk Register already supports status PATCH)
 
 ### 14 Simulator + Action Plan
 - [ ] What-if scenarios (revenue change, customer loss, etc.)
@@ -130,13 +135,13 @@ Optional UX polish — see [tasks/17-polish.md](../tasks/17-polish.md). Not requ
 
 ## End-to-End Journey Test
 
-- [ ] Landing → Register → Onboarding → Dashboard
-- [ ] Create project → Upload data room → Processing completes
-- [ ] Run agents → View consensus → Chat with citations
-- [ ] Generate report → Export PDF
+- [x] Landing → Register → Onboarding → Dashboard
+- [x] Create project → Upload data room → Processing completes (local / worker; Vercel inline optional)
+- [x] Run agents → View consensus → Chat with citations
+- [x] Generate report → Export PDF (also MD/XLSX/PPTX/ZIP; share links)
 - [ ] View timeline, graph, contradictions, missing docs
 - [ ] Run simulator → Create action items
-- [ ] No dead-end pages in journey
+- [ ] No dead-end pages in journey (placeholders remain for slices 12–16)
 
 ---
 

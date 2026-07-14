@@ -27,12 +27,14 @@ function AppShellInner({ children, user, breadcrumbs }: AppShellProps) {
       <Sidebar />
       <div
         className={cn(
-          "relative transition-[padding] duration-300 ease-out",
+          "relative transition-[padding] duration-300 ease-out print:pl-0",
           collapsed ? "pl-[4.25rem]" : "pl-sidebar",
         )}
       >
-        <Topbar user={user} breadcrumbs={breadcrumbs} />
-        <main id="main-content" className="page-content">
+        <div className="print:hidden">
+          <Topbar user={user} breadcrumbs={breadcrumbs} />
+        </div>
+        <main id="main-content" className="page-content print:overflow-visible print:p-0">
           {children}
         </main>
       </div>

@@ -170,9 +170,20 @@ Request: `{ scenarioName, parameters: { revenueChange?: number, customerLoss?: s
 
 | Method | Path | Description |
 |--------|------|-------------|
-| GET/POST | `/api/projects/[id]/reports` | List/generate |
-| GET | `/api/reports/[id]` | Get report |
-| GET | `/api/reports/[id]/export` | Download PDF/MD/XLSX/PPTX |
+| GET/POST | `/api/projects/[id]/reports` | List / generate (`reportType`, `title?`, `forceRegenerate?`, `formats?`) |
+| POST | `/api/projects/[id]/reports/compare` | Compare two reports (section diff + previews) |
+| GET/PATCH/DELETE | `/api/reports/[id]` | Get / rename / delete report |
+| POST | `/api/reports/[id]?action=duplicate` | Duplicate report |
+| GET | `/api/reports/[id]/export` | Download PDF/MD/XLSX/PPTX or `format=zip` |
+| GET/POST | `/api/reports/[id]/shares` | List / create time-limited share links |
+| DELETE | `/api/reports/[id]/shares/[shareId]` | Revoke share link |
+| GET | `/api/share/reports/[token]` | Public share metadata + markdown body |
+| GET | `/api/share/reports/[token]/export` | Public export download (format lock honored) |
+| PATCH | `/api/findings/[id]` | Update finding status (`OPEN` / `ACKNOWLEDGED` / `RESOLVED` / `DISMISSED`) |
+
+Generate response includes `{ reportId, title, reportType, contentPreview?, status, createdAt, insufficientContext? }`.  
+`503 OLLAMA_UNAVAILABLE` only when narrative generation requires Ollama and it is unreachable.  
+Export/generate routes use `maxDuration = 120`; binaries persist via `getStorage()`.
 
 ---
 

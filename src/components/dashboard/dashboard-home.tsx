@@ -150,15 +150,39 @@ export function DashboardHome({ data }: DashboardHomeProps) {
               <CardDescription>Generated reports across your projects</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col items-center justify-center py-8 text-center">
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-secondary/50">
-                  <FileText className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+              {data.recentReports.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl border border-border/60 bg-secondary/50">
+                    <FileText className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                  </div>
+                  <p className="text-sm font-medium">No reports yet</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Generate executive summaries and risk registers after running intelligence
+                    agents.
+                  </p>
                 </div>
-                <p className="text-sm font-medium">No reports yet</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Generate executive summaries and risk registers after running intelligence agents.
-                </p>
-              </div>
+              ) : (
+                <ul className="divide-y divide-border/40" role="list">
+                  {data.recentReports.map((report) => (
+                    <li
+                      key={report.id}
+                      className="flex flex-wrap items-center justify-between gap-2 py-3 first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{report.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {report.projectName} · {new Date(report.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <Button asChild variant="ghost" size="sm">
+                        <Link href={`/dashboard/projects/${report.projectId}/reports`}>
+                          Open
+                        </Link>
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </CardContent>
           </Card>
         </motion.div>

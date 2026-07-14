@@ -33,11 +33,22 @@ const navigationCommands = [
   { label: "History", href: "/dashboard/history", icon: BarChart3 },
 ];
 
-const actionCommands = (projectSearchHref: string, projectChatHref: string, projectIntelligenceHref: string) => [
+const actionCommands = (
+  projectSearchHref: string,
+  projectChatHref: string,
+  projectIntelligenceHref: string,
+  projectReportsHref: string,
+) => [
   { label: "Upload to data room", icon: Upload, shortcut: "U", action: "upload-data-room" as const },
   { label: "Run full scan", href: projectIntelligenceHref, icon: Bot, action: "navigate" as const },
   { label: "New chat", href: projectChatHref, icon: MessageSquare, action: "navigate" as const },
   { label: "Search documents", href: projectSearchHref, icon: Search, action: "navigate" as const },
+  {
+    label: "Generate executive report",
+    href: projectReportsHref,
+    icon: FileText,
+    action: "navigate" as const,
+  },
 ];
 
 export function CommandPalette() {
@@ -80,6 +91,9 @@ export function CommandPalette() {
   const projectIntelligenceHref = projectId
     ? `/dashboard/projects/${projectId}/intelligence?fullAnalysis=1`
     : "/dashboard/intelligence";
+  const projectReportsHref = projectId
+    ? `/dashboard/projects/${projectId}/reports?generate=EXECUTIVE`
+    : "/dashboard/reports";
 
   const trimmedQuery = paletteQuery.trim();
   const showQuerySearch = trimmedQuery.length >= 2 && Boolean(projectId);
@@ -142,7 +156,12 @@ export function CommandPalette() {
           })}
         </CommandGroup>
         <CommandGroup heading="Actions">
-          {actionCommands(projectSearchHref, projectChatHref, projectIntelligenceHref).map((command) => {
+          {actionCommands(
+            projectSearchHref,
+            projectChatHref,
+            projectIntelligenceHref,
+            projectReportsHref,
+          ).map((command) => {
             const Icon = command.icon;
             const href =
               command.label === "Search documents" && trimmedQuery && projectId

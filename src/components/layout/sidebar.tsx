@@ -64,7 +64,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border/50 bg-card/50 backdrop-blur-xl transition-[width] duration-300 ease-out",
+        "fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-border/50 bg-card/50 backdrop-blur-xl transition-[width] duration-300 ease-out print:hidden",
         collapsed ? "w-[4.25rem]" : "w-sidebar",
       )}
       aria-label="Main navigation"

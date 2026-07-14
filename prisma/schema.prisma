@@ -76,12 +76,17 @@ enum DataRoomAuditAction {
   SHARE_REVOKED
   AGENT_RUN_COMPLETED
   AGENT_RUN_FAILED
+  REPORT_GENERATED
+  REPORT_EXPORTED
+  REPORT_SHARE_CREATED
+  REPORT_SHARE_REVOKED
 }
 
 enum DataRoomResourceType {
   DOCUMENT
   FOLDER
   PROJECT
+  REPORT
 }
 
 enum SearchMode {
@@ -143,6 +148,23 @@ enum FindingSeverity {
   LOW
 }
 
+enum ReportType {
+  EXECUTIVE
+  BOARD
+  INVESTMENT_MEMO
+  AUDIT
+  RISK_REGISTER
+  ACTION_PLAN
+  PPTX
+}
+
+enum ReportFormat {
+  MARKDOWN
+  PDF
+  XLSX
+  PPTX
+}
+
 model User {
   id            String    @id @default(uuid())
   email         String    @unique
@@ -161,10 +183,12 @@ model User {
   documentVersions    DocumentVersion[]
   dataRoomAuditEvents DataRoomAuditEvent[]
   dataRoomShares      DataRoomShare[]
+  reportShares        ReportShare[]
   savedSearches       SavedSearch[]
   chats               Chat[]
   agentRuns           AgentRun[]
   consensusRuns       ConsensusRun[]
+  reports             Report[]
 
   @@map("users")
 }
@@ -328,6 +352,8 @@ model Project {
   agentRuns       AgentRun[]
   consensusRuns   ConsensusRun[]
   findings        Finding[]
+  reports         Report[]
+  reportShares    ReportShare[]
 
   @@unique([workspaceId, slug])
   @@index([workspaceId, deletedAt])
@@ -625,4 +651,47 @@ model Finding {
   @@index([projectId, agentType])
   @@index([agentRunId])
   @@map("findings")
+}
+
+model Report {
+  id         String       @id @default(uuid())
+  projectId  String       @map("project_id")
+  userId     String       @map("user_id")
+  title      String
+  reportType ReportType   @map("report_type")
+  content    String
+  format     ReportFormat @default(MARKDOWN)
+  filePath   String?      @map("file_path")
+  metadata   Json?
+  createdAt  DateTime     @default(now()) @map("created_at")
+  updatedAt  DateTime     @updatedAt @map("updated_at")
+
+  project Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shares  ReportShare[]
+
+  @@index([projectId, createdAt])
+  @@index([userId])
+  @@map("reports")
+}
+
+model ReportShare {
+  id          String        @id @default(uuid())
+  reportId    String        @map("report_id")
+  projectId   String        @map("project_id")
+  token       String        @unique
+  label       String?
+  format      ReportFormat?
+  expiresAt   DateTime?     @map("expires_at")
+  createdById String        @map("created_by_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  revokedAt   DateTime?     @map("revoked_at")
+
+  report    Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy User    @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+  @@index([projectId])
+  @@map("report_shares")
 }

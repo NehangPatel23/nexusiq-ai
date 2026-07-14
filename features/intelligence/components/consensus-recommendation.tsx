@@ -41,7 +41,15 @@ export function ConsensusRecommendation({
           <CardTitle className="text-base">Final recommendation</CardTitle>
           <p className="mt-2 text-sm text-foreground/90">{finalRecommendation}</p>
         </div>
-        <Badge variant={confidenceVariant(decisionConfidence)}>{decisionConfidence}</Badge>
+        <div className="flex flex-col items-end gap-2">
+          <Badge variant={confidenceVariant(decisionConfidence)}>{decisionConfidence}</Badge>
+          <Link
+            href={`/dashboard/projects/${projectId}/reports?generate=EXECUTIVE`}
+            className="text-xs font-medium text-primary hover:underline"
+          >
+            Export as report →
+          </Link>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {citations.length > 0 ? (
