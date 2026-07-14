@@ -79,7 +79,7 @@ Every page: header, sidebar, widgets, states (loading/empty/error), keyboard acc
 
 **Tabs:** Overview · Data Room · Intelligence · Chat · Search · Reports · Timeline · Graph · Risks · Contradictions · Missing · Simulator · Actions · History
 
-Live today: Overview, Data Room, Intelligence, Chat, Search, Reports. Remaining tabs are polished placeholders until slices 12–15.
+Live today: Overview, Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing. Remaining tabs are polished placeholders until slices 14–15.
 
 **Overview tab:**
 - Deal metadata card (editable)
@@ -87,6 +87,7 @@ Live today: Overview, Data Room, Intelligence, Chat, Search, Reports. Remaining 
 - Agent score cards (Financial, Legal, Compliance, Risk, Fraud)
 - Enterprise risk score gauge
 - Latest consensus recommendation
+- Diligence gaps card (open contradictions + missing items)
 - Quick links row
 
 ---
@@ -184,20 +185,41 @@ Each agent tab:
 
 ---
 
+## Risks (`/dashboard/projects/[id]/risks`)
+
+**Status:** Live (Slice 13)
+
+- Enterprise risk score gauge (rollup across agent findings / consensus)
+- Severity / category heatmap
+- Open findings list with editable severity/status badges (synced app-wide)
+- Filters by agent type, severity, and status
+- Links to open contradictions and missing items when counts > 0
+- Finding status workflow (OPEN → ACKNOWLEDGED → RESOLVED/DISMISSED)
+
+---
+
 ## Contradictions (`/dashboard/projects/[id]/contradictions`)
 
-- Severity-sorted table: fact, doc A, doc B, explanation, status
-- "Run contradiction scan" button
-- Detail drawer with side-by-side excerpts
+**Status:** Live (Slice 13)
+
+- Summary cards (open / critical-high / acknowledged / closed)
+- Severity-sorted table with explanation preview, source docs, value chips
+- Filters: status, severity, fact type; multi-select + bulk status update
+- Background contradiction scan (survives in-app navigation)
+- Detail dialog: side-by-side evidence with value highlights, severity/status editors, resolution note, promote-to-finding
+- Scan rejects citations where values are not found in retrieved chunk text
 
 ---
 
 ## Missing Information (`/dashboard/projects/[id]/missing`)
 
-- Checklist of expected vs found documents
-- Gap cards with framework mapping
-- "Generate follow-up requests" → exportable list
-- Mark resolved / not applicable
+**Status:** Live (Slice 13)
+
+- Coverage progress + expected-vs-found checklist (folder path badges)
+- Gap cards with framework / category / severity / status badges
+- “Upload to close gap” → data room `?folder=&upload=1`
+- Background missing scan; export follow-ups (markdown / CSV)
+- Mark requested / resolved / not applicable
 
 ---
 

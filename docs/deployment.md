@@ -46,6 +46,8 @@ Worker VPS (or Mac during dev) → polls PENDING documents
 
 **Timeline + Graph (slice 12):** Viewing the timeline (`GET .../timeline`) and relationship graph (`GET .../graph`) runs on Vercel/Next.js and **does not require Ollama** — graph nodes/edges come from existing Slice 06 NER `Entity` / `EntityRelation` rows. AI extract (`POST .../timeline/extract`, `POST .../graph/extract`) needs `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel); unreachable Ollama returns `503 OLLAMA_UNAVAILABLE`. Zero retrieved chunks returns `200` with an empty result and message without calling Ollama. Extract routes use `maxDuration = 120`.
 
+**Contradiction + Missing Info + Risks (slice 13):** Risks overview and missing-info checklist scan run on Vercel/Next.js **without Ollama** (Postgres findings / classifications / project-type checklists). Missing-info may optionally polish follow-up text via Ollama when configured; if Ollama is down, template `followUpText` is kept. Contradiction scan (`POST .../contradictions/scan`) **requires** `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel), rejects unmatched citations, emits CRITICAL notifications, and returns `503 OLLAMA_UNAVAILABLE` when unreachable; fewer than two READY documents returns `200` with `created: 0` without calling Ollama. Scan route uses `maxDuration = 120`. Status PATCH, bulk update, promote-to-finding, list/export endpoints never call Ollama. Risks summary includes `contradictionOpenCount` and `missingOpenCount`.
+
 **Worker env (VPS):**
 
 ```bash
@@ -330,7 +332,7 @@ No Storage required. ~3 minutes.
 5. **Projects** (`/dashboard/projects`) — create project, grid/list, filters, project shell tabs
 6. **Workspaces** — org → Workspaces; create workspace; **View projects** filters by workspace
 7. **Organizations** — Settings → invite a second email (optional); tap **ⓘ** for role permissions
-8. **Sidebar** — open a project for Data Room, Intelligence, Chat, Search, and Reports (Timeline/Graph remain placeholders)
+8. **Sidebar** — open a project for Data Room, Intelligence, Chat, Search, Reports, Timeline, Graph, Risks, Contradictions, Missing (Simulator / Actions / History remain placeholders)
 9. **Data Room** — upload, folders, preview (see Path B below)
 10. **Pitch** — multi-tenant diligence platform with cited agents + local report export; Ollama local by design ($0 API cost)
 
@@ -356,12 +358,13 @@ Uses Supabase **Postgres + Storage** for upload, preview, and folder structure �
 | 5 | Select file → **preview**; try classification filter | PDF/text/Office inline preview |
 | 6 | **Share** (admin) → copy link → incognito | Read-only external data room |
 | 7 | **Intelligence** → run specialist or full analysis (Ollama) | Scores, findings, consensus |
-| 8 | **Reports** → Risk Register / Board pack → PDF or ZIP | Local export; share link optional |
-| 9 | **Organizations** → members | RBAC, invites, roles |
+| 8 | **Contradictions / Missing / Risks** | Cross-doc conflicts, checklist gaps, enterprise risk rollup |
+| 9 | **Reports** → Risk Register / Board pack → PDF or ZIP | Local export; share link optional |
+| 10 | **Organizations** → members | RBAC, invites, roles |
 
 **Script for judges:**
 
-> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, synthesizes an explainable consensus, and exports board-ready PDF/Excel/PPTX packages. This deployment uses Supabase for database and document storage, and Vercel for the app. AI inference runs on Ollama by design—zero API cost and data stays private.”
+> “NexusIQ ingests a data room, runs five specialized agents in parallel with citations, flags contradictions and missing evidence, synthesizes an explainable consensus, and exports board-ready PDF/Excel/PPTX packages. This deployment uses Supabase for database and document storage, and Vercel for the app. AI inference runs on Ollama by design—zero API cost and data stays private.”
 
 ### Path C — Two-browser invite demo (optional)
 
@@ -416,16 +419,19 @@ Neon does **not** include file storage—you would need a separate service for d
 - Landing, auth, 3-step onboarding, dashboard
 - Organizations (CRUD, members, invites, teams, notifications)
 - Workspaces (CRUD, soft delete, restore, workspace cards with project counts)
-- Projects (CRUD, types, tags, deal status, pin/duplicate/bulk delete, 13-tab project shell)
-- **Data room** (folders, upload, preview, versions, tags, trash, share links, audit export)
+- Projects (CRUD, types, tags, deal status, pin/duplicate/bulk delete, project shell tabs)
+- **Data room** (folders, upload, preview, versions, tags, trash, share links, audit export, deep links)
 - **Smart search** (keyword plus Ollama-backed hybrid/semantic modes)
 - **Interactive chat** (project-scoped streaming, citations, confidence, and history; requires public Ollama)
 - **Intelligence agents** (specialist scans + executive package + explainable consensus; requires public Ollama on Vercel)
 - **Reports & export** (assemble from intelligence; PDF/MD/XLSX/PPTX/ZIP; share links + compare; narrative regenerate needs public Ollama)
-- Placeholder tabs: Timeline, Graph, Contradictions, Missing, Simulator, Actions, History
+- **Timeline + Graph** (view without Ollama; AI extract needs public Ollama)
+- **Contradictions + Missing + Risks** (risks/missing without Ollama; contradiction scan needs public Ollama)
+- Placeholder tabs: Simulator, Actions, History (slices 14–15)
 
 ## Deferred
 
 - **OCI worker VPS** — document processing on Vercel (Slice 06 prod path). Checklist: [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md)
-- **Public Ollama HTTPS** — chat/agents/narrative regenerate on Vercel if not already configured (slices 08+)
-- Remaining slices 12–16 (Timeline, Graph, Contradictions, Simulator, History/Settings, Admin)
+- **Public Ollama HTTPS** — chat/agents/contradiction scan/narrative regenerate on Vercel if not already configured (slices 08+)
+- Remaining slices 14–16 (Simulator + Action Plan, History/Settings, Admin)
+- Contradiction scan on OCI worker for very large multi-batch rooms ([tasks/17-polish.md](../tasks/17-polish.md))

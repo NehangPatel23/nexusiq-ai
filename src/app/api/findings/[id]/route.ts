@@ -27,6 +27,7 @@ export async function PATCH(request: Request, context: RouteContext) {
       findingId: id,
       userId: session.userId,
       status: parsed.data.status,
+      severity: parsed.data.severity,
     });
 
     return apiSuccess({ finding });

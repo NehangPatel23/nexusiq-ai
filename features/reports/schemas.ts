@@ -38,9 +38,16 @@ export const compareReportsBodySchema = z.object({
   rightReportId: z.string().min(1),
 });
 
-export const updateFindingStatusBodySchema = z.object({
-  status: z.enum(["OPEN", "ACKNOWLEDGED", "RESOLVED", "DISMISSED"]),
-});
+export const findingSeveritySchema = z.enum(["CRITICAL", "HIGH", "MEDIUM", "LOW"]);
+
+export const updateFindingStatusBodySchema = z
+  .object({
+    status: z.enum(["OPEN", "ACKNOWLEDGED", "RESOLVED", "DISMISSED"]).optional(),
+    severity: findingSeveritySchema.optional(),
+  })
+  .refine((data) => data.status !== undefined || data.severity !== undefined, {
+    message: "Provide status and/or severity",
+  });
 
 export const exportFormatQuerySchema = z.enum(["pdf", "md", "xlsx", "pptx", "markdown", "zip"]);
 

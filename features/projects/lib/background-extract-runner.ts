@@ -4,7 +4,14 @@ type ApiEnvelope<T> =
   | { success: true; data: T }
   | { success: false; error: { code: string; message: string } };
 
-export type BackgroundExtractKind = "timeline" | "graph";
+export type BackgroundExtractKind = "timeline" | "graph" | "contradictions" | "missing";
+
+export const BACKGROUND_EXTRACT_KINDS: BackgroundExtractKind[] = [
+  "timeline",
+  "graph",
+  "contradictions",
+  "missing",
+];
 
 export type TimelineExtractResult = {
   created: number;
@@ -19,6 +26,26 @@ export type GraphExtractResult = {
   message?: string;
 };
 
+export type ContradictionScanResult = {
+  created: number;
+  skipped: number;
+  dismissedStale?: number;
+  message?: string;
+};
+
+export type MissingScanResult = {
+  created: number;
+  skipped: number;
+  closedResolved?: number;
+  message?: string;
+};
+
+export type BackgroundExtractResult =
+  | TimelineExtractResult
+  | GraphExtractResult
+  | ContradictionScanResult
+  | MissingScanResult;
+
 export type BackgroundExtractSnapshot = {
   projectId: string;
   kind: BackgroundExtractKind;
@@ -26,7 +53,7 @@ export type BackgroundExtractSnapshot = {
   force: boolean;
   ollamaUnavailable: boolean;
   errorMessage: string | null;
-  result: TimelineExtractResult | GraphExtractResult | null;
+  result: BackgroundExtractResult | null;
   generation: number;
 };
 
@@ -95,7 +122,42 @@ function patch(
 }
 
 function kindLabel(kind: BackgroundExtractKind): string {
-  return kind === "timeline" ? "Timeline extraction" : "Graph extraction";
+  switch (kind) {
+    case "timeline":
+      return "Timeline extraction";
+    case "graph":
+      return "Graph extraction";
+    case "contradictions":
+      return "Contradiction scan";
+    case "missing":
+      return "Missing-info scan";
+  }
+}
+
+function kindHref(projectId: string, kind: BackgroundExtractKind): string {
+  switch (kind) {
+    case "timeline":
+      return `/dashboard/projects/${projectId}/timeline`;
+    case "graph":
+      return `/dashboard/projects/${projectId}/graph`;
+    case "contradictions":
+      return `/dashboard/projects/${projectId}/contradictions`;
+    case "missing":
+      return `/dashboard/projects/${projectId}/missing`;
+  }
+}
+
+function viewLabel(kind: BackgroundExtractKind): string {
+  switch (kind) {
+    case "timeline":
+      return "View Timeline";
+    case "graph":
+      return "View Graph";
+    case "contradictions":
+      return "View Contradictions";
+    case "missing":
+      return "View Missing Info";
+  }
 }
 
 function finishToast(params: {
@@ -105,7 +167,7 @@ function finishToast(params: {
   href: string;
 }) {
   const action = {
-    label: params.kind === "timeline" ? "View Timeline" : "View Graph",
+    label: viewLabel(params.kind),
     onClick: () => {
       window.location.assign(params.href);
     },
@@ -113,6 +175,45 @@ function finishToast(params: {
   if (params.tone === "success") toast.success(params.message, { action });
   else if (params.tone === "error") toast.error(params.message, { action });
   else toast.message(params.message, { action });
+}
+
+function extractPath(projectId: string, kind: BackgroundExtractKind): string {
+  switch (kind) {
+    case "timeline":
+      return `/api/projects/${projectId}/timeline/extract`;
+    case "graph":
+      return `/api/projects/${projectId}/graph/extract`;
+    case "contradictions":
+      return `/api/projects/${projectId}/contradictions/scan`;
+    case "missing":
+      return `/api/projects/${projectId}/missing/scan`;
+  }
+}
+
+function successMessage(kind: BackgroundExtractKind, data: BackgroundExtractResult): string {
+  if (kind === "timeline") {
+    const d = data as TimelineExtractResult;
+    return (
+      `Extracted ${d.created} event${d.created === 1 ? "" : "s"}` +
+      (d.skipped ? ` (${d.skipped} skipped)` : "")
+    );
+  }
+  if (kind === "graph") {
+    const d = data as GraphExtractResult;
+    return `Upserted entities and created ${d.relationsCreated} relation${
+      d.relationsCreated === 1 ? "" : "s"
+    }`;
+  }
+  if (kind === "contradictions") {
+    const d = data as ContradictionScanResult;
+    return d.created > 0
+      ? `Found ${d.created} contradiction${d.created === 1 ? "" : "s"}`
+      : "Contradiction scan complete";
+  }
+  const d = data as MissingScanResult;
+  return d.created > 0
+    ? `Identified ${d.created} gap${d.created === 1 ? "" : "s"}`
+    : "Missing-info scan complete";
 }
 
 async function readJson<T>(response: Response): Promise<ApiEnvelope<T>> {
@@ -136,9 +237,9 @@ export function isBackgroundExtractRunning(
 export function listRunningBackgroundExtracts(
   projectId: string,
 ): BackgroundExtractSnapshot[] {
-  return (["timeline", "graph"] as const)
-    .map((kind) => getBackgroundExtractSnapshot(projectId, kind))
-    .filter((snap) => snap.status === "running");
+  return BACKGROUND_EXTRACT_KINDS.map((kind) => getBackgroundExtractSnapshot(projectId, kind)).filter(
+    (snap) => snap.status === "running",
+  );
 }
 
 export function subscribeBackgroundExtract(
@@ -156,13 +257,13 @@ export function subscribeBackgroundExtract(
   };
 }
 
-/** Subscribe to both timeline and graph jobs for project-shell banners. */
+/** Subscribe to all background jobs for project-shell banners. */
 export function subscribeAllBackgroundExtracts(
   projectId: string,
   listener: (running: BackgroundExtractSnapshot[]) => void,
 ): () => void {
   const notify = () => listener(listRunningBackgroundExtracts(projectId));
-  const unsubs = (["timeline", "graph"] as const).map((kind) =>
+  const unsubs = BACKGROUND_EXTRACT_KINDS.map((kind) =>
     subscribeBackgroundExtract(projectId, kind, () => notify()),
   );
   return () => {
@@ -196,65 +297,22 @@ export function startBackgroundExtract(params: {
     generation,
   });
 
-  const href =
-    kind === "timeline"
-      ? `/dashboard/projects/${projectId}/timeline`
-      : `/dashboard/projects/${projectId}/graph`;
+  const href = kindHref(projectId, kind);
 
   void (async () => {
     try {
-      const path =
-        kind === "timeline"
-          ? `/api/projects/${projectId}/timeline/extract`
-          : `/api/projects/${projectId}/graph/extract`;
-      const response = await fetch(path, {
+      const body =
+        kind === "contradictions" || kind === "missing" ? { force } : { force, all };
+
+      const response = await fetch(extractPath(projectId, kind), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force, all }),
+        body: JSON.stringify(body),
       });
 
       if (getJob(projectId, kind).generation !== generation) return;
 
-      if (kind === "timeline") {
-        const payload = await readJson<TimelineExtractResult>(response);
-        if (!payload.success) {
-          const ollama = payload.error.code === "OLLAMA_UNAVAILABLE";
-          patch(projectId, kind, {
-            status: "idle",
-            ollamaUnavailable: ollama,
-            errorMessage: payload.error.message,
-            result: null,
-          });
-          finishToast({
-            kind,
-            tone: "error",
-            message: payload.error.message,
-            href,
-          });
-          return;
-        }
-        patch(projectId, kind, {
-          status: "idle",
-          ollamaUnavailable: false,
-          errorMessage: null,
-          result: payload.data,
-        });
-        if (payload.data.message) {
-          finishToast({ kind, tone: "message", message: payload.data.message, href });
-        } else {
-          finishToast({
-            kind,
-            tone: "success",
-            message:
-              `Extracted ${payload.data.created} event${payload.data.created === 1 ? "" : "s"}` +
-              (payload.data.skipped ? ` (${payload.data.skipped} skipped)` : ""),
-            href,
-          });
-        }
-        return;
-      }
-
-      const payload = await readJson<GraphExtractResult>(response);
+      const payload = await readJson<BackgroundExtractResult>(response);
       if (!payload.success) {
         const ollama = payload.error.code === "OLLAMA_UNAVAILABLE";
         patch(projectId, kind, {
@@ -271,21 +329,21 @@ export function startBackgroundExtract(params: {
         });
         return;
       }
+
       patch(projectId, kind, {
         status: "idle",
         ollamaUnavailable: false,
         errorMessage: null,
         result: payload.data,
       });
-      if (payload.data.message) {
+
+      if ("message" in payload.data && payload.data.message) {
         finishToast({ kind, tone: "message", message: payload.data.message, href });
       } else {
         finishToast({
           kind,
           tone: "success",
-          message: `Upserted entities and created ${payload.data.relationsCreated} relation${
-            payload.data.relationsCreated === 1 ? "" : "s"
-          }`,
+          message: successMessage(kind, payload.data),
           href,
         });
       }
@@ -303,3 +361,5 @@ export function startBackgroundExtract(params: {
 
   return true;
 }
+
+export { kindLabel, kindHref, viewLabel };

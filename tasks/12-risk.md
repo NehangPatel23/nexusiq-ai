@@ -20,3 +20,4 @@ docs/08-acceptance-criteria.md § 12
 ## Notes
 - GET timeline / GET graph work offline (no Ollama). Extract endpoints require `OLLAMA_BASE_URL` (+ `OLLAMA_API_KEY` on Vercel).
 - Deferred: move extract to OCI worker VPS; public HTTPS Ollama for reliable Vercel prod extract latency.
+- **Risks** tab (enterprise risk score / heatmap) deferred to Slice 13 — see [tasks/13-tasks.md](./13-tasks.md).

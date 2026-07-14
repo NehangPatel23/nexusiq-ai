@@ -1,6 +1,6 @@
 "use client";
 
-import type { AgentType, ConfidenceLevel } from "@prisma/client";
+import type { AgentType, ConfidenceLevel, FindingSeverity, RiskStatus } from "@prisma/client";
 import { Bot, History, Loader2, Play, RefreshCw, Scan, Sparkles } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -27,6 +27,7 @@ import {
   aggregateOpenFindingsBySeverity,
   type FindingSeverityCounts,
 } from "@/features/intelligence/lib/severity-summary";
+import { subscribeRiskStateChanged } from "@/features/intelligence/lib/risk-state-events";
 import type { ChatCitation } from "@/lib/ai/citations";
 import {
   AGENT_TYPE_LABELS,
@@ -676,6 +677,54 @@ export function IntelligencePage({
     return hasAnyDetail ? aggregateOpenFindingsBySeverity(detailList) : initialRiskSummary;
   }, [details, initialRiskSummary, anyScanInProgress]);
 
+  function patchFindingSeverity(findingId: string, severity: FindingSeverity) {
+    setDetails((current) => {
+      const next = { ...current };
+      for (const agent of INTELLIGENCE_AGENT_TYPES) {
+        const detail = next[agent];
+        if (!detail?.findings?.some((f) => f.id === findingId)) continue;
+        next[agent] = {
+          ...detail,
+          findings: detail.findings.map((f) =>
+            f.id === findingId ? { ...f, severity } : f,
+          ),
+        };
+      }
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    return subscribeRiskStateChanged((detail) => {
+      if (detail.projectId !== projectId || detail.entity !== "finding") return;
+      setDetails((current) => {
+        const next = { ...current };
+        let changed = false;
+        for (const agent of INTELLIGENCE_AGENT_TYPES) {
+          const agentDetail = next[agent];
+          if (!agentDetail?.findings?.some((f) => f.id === detail.id)) continue;
+          changed = true;
+          next[agent] = {
+            ...agentDetail,
+            findings: agentDetail.findings.map((f) => {
+              if (f.id !== detail.id) return f;
+              return {
+                ...f,
+                ...(detail.severity
+                  ? { severity: detail.severity as FindingSeverity }
+                  : {}),
+                ...(detail.status
+                  ? { status: detail.status as RiskStatus }
+                  : {}),
+              };
+            }),
+          };
+        }
+        return changed ? next : current;
+      });
+    });
+  }, [projectId]);
+
   const showResults =
     activeAgent !== null &&
     !isActiveAgentScanning &&
@@ -1135,6 +1184,7 @@ export function IntelligencePage({
                     projectId={projectId}
                     findings={currentFindings}
                     citations={currentCitations}
+                    onSeverityChange={patchFindingSeverity}
                   />
                 </div>
               </>
@@ -1163,6 +1213,7 @@ export function IntelligencePage({
                     projectId={projectId}
                     findings={currentFindings}
                     citations={currentCitations}
+                    onSeverityChange={patchFindingSeverity}
                   />
                 </div>
               </>

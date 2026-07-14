@@ -7,29 +7,17 @@ import { CheckCircle2, ExternalLink, ListChecks, ShieldAlert } from "lucide-reac
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { dataRoomCitationHref } from "@/features/chat/lib/citation-links";
+import {
+  RiskStatusSelect,
+  SeveritySelect,
+  severityBadgeVariant,
+} from "@/features/intelligence/components/severity-status-selects";
+import { dispatchRiskStateChanged } from "@/features/intelligence/lib/risk-state-events";
 import type { ChatCitation } from "@/lib/ai/citations";
 
 import type { RiskRegisterRow } from "../lib/assemble-shared";
 import { humanizeLabel, resolveCitationIndex } from "../lib/assemble-shared";
-
-const SEVERITY_VARIANT: Record<
-  FindingSeverity | "UNKNOWN",
-  "destructive" | "default" | "secondary" | "outline" | "warning"
-> = {
-  CRITICAL: "destructive",
-  HIGH: "destructive",
-  MEDIUM: "warning",
-  LOW: "secondary",
-  UNKNOWN: "outline",
-};
 
 const STATUS_OPTIONS: RiskStatus[] = ["OPEN", "ACKNOWLEDGED", "RESOLVED", "DISMISSED"];
 
@@ -96,6 +84,13 @@ export function ReportRiskRegister({
     }
     return initial;
   });
+  const [severities, setSeverities] = useState<Record<string, FindingSeverity | "UNKNOWN">>(() => {
+    const initial: Record<string, FindingSeverity | "UNKNOWN"> = {};
+    for (const row of rows) {
+      if (row.findingId) initial[row.findingId] = row.severity;
+    }
+    return initial;
+  });
   const [savingId, setSavingId] = useState<string | null>(null);
 
   async function updateStatus(findingId: string, status: RiskStatus) {
@@ -117,10 +112,50 @@ export function ReportRiskRegister({
         toast.error(json.error?.message ?? "Failed to update status");
         return;
       }
+      dispatchRiskStateChanged({
+        projectId,
+        entity: "finding",
+        id: findingId,
+        status,
+      });
       toast.success(`Marked ${status.toLowerCase().replace(/_/g, " ")}`);
     } catch {
       setStatuses((prev) => ({ ...prev, [findingId]: previous ?? "OPEN" }));
       toast.error("Failed to update status");
+    } finally {
+      setSavingId(null);
+    }
+  }
+
+  async function updateSeverity(findingId: string, severity: FindingSeverity) {
+    setSavingId(findingId);
+    const previous = severities[findingId];
+    setSeverities((prev) => ({ ...prev, [findingId]: severity }));
+    try {
+      const res = await fetch(`/api/findings/${findingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ severity }),
+      });
+      const json = (await res.json()) as {
+        success: boolean;
+        error?: { message: string };
+      };
+      if (!res.ok || !json.success) {
+        setSeverities((prev) => ({ ...prev, [findingId]: previous ?? "UNKNOWN" }));
+        toast.error(json.error?.message ?? "Failed to update severity");
+        return;
+      }
+      dispatchRiskStateChanged({
+        projectId,
+        entity: "finding",
+        id: findingId,
+        severity,
+      });
+      toast.success(`Severity set to ${severity.toLowerCase()}`);
+    } catch {
+      setSeverities((prev) => ({ ...prev, [findingId]: previous ?? "UNKNOWN" }));
+      toast.error("Failed to update severity");
     } finally {
       setSavingId(null);
     }
@@ -172,6 +207,9 @@ export function ReportRiskRegister({
           const status = row.findingId
             ? (statuses[row.findingId] ?? normalizeStatus(row.status))
             : normalizeStatus(row.status);
+          const severity = row.findingId
+            ? (severities[row.findingId] ?? row.severity)
+            : row.severity;
 
           return (
             <li
@@ -187,30 +225,32 @@ export function ReportRiskRegister({
                     {row.title}
                   </h4>
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <Badge variant={SEVERITY_VARIANT[row.severity]}>{row.severity}</Badge>
+                <div className="flex flex-wrap items-center gap-2">
                   {row.findingId ? (
-                    <Select
+                    <SeveritySelect
+                      value={severity === "UNKNOWN" ? null : severity}
+                      disabled={savingId === row.findingId}
+                      ariaLabel={`Severity for ${row.title}`}
+                      onChange={(value) => void updateSeverity(row.findingId!, value)}
+                      className="report-print-hide"
+                    />
+                  ) : (
+                    <Badge variant={severityBadgeVariant(severity)}>{severity}</Badge>
+                  )}
+                  <Badge
+                    variant={severityBadgeVariant(severity)}
+                    className="hidden print:inline-flex"
+                  >
+                    {severity}
+                  </Badge>
+                  {row.findingId ? (
+                    <RiskStatusSelect
                       value={status}
                       disabled={savingId === row.findingId}
-                      onValueChange={(value) =>
-                        void updateStatus(row.findingId!, value as RiskStatus)
-                      }
-                    >
-                      <SelectTrigger
-                        className="report-print-hide h-7 w-[9.5rem] text-xs"
-                        aria-label={`Status for ${row.title}`}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STATUS_OPTIONS.map((option) => (
-                          <SelectItem key={option} value={option}>
-                            {option.charAt(0) + option.slice(1).toLowerCase().replace(/_/g, " ")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                      ariaLabel={`Status for ${row.title}`}
+                      onChange={(value) => void updateStatus(row.findingId!, value)}
+                      className="report-print-hide"
+                    />
                   ) : (
                     <Badge variant="outline" className="border-border/60 normal-case tracking-normal">
                       {row.status}

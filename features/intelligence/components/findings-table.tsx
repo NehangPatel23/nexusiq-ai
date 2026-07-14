@@ -3,12 +3,14 @@
 import type { FindingSeverity } from "@prisma/client";
 import { ChevronDown } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ChatCitation } from "@/lib/ai/citations";
 import { dataRoomCitationHref } from "@/features/chat/lib/citation-links";
+import { SeveritySelect } from "@/features/intelligence/components/severity-status-selects";
+import { dispatchRiskStateChanged } from "@/features/intelligence/lib/risk-state-events";
+import type { ChatCitation } from "@/lib/ai/citations";
 import { cn } from "@/lib/utils";
 
 import { EvidencePanel } from "./evidence-panel";
@@ -27,17 +29,65 @@ type FindingsTableProps = {
   projectId: string;
   findings: FindingRow[];
   citations: ChatCitation[];
+  onSeverityChange?: (findingId: string, severity: FindingSeverity) => void;
 };
 
-const SEVERITY_VARIANT: Record<FindingSeverity, "destructive" | "default" | "secondary" | "outline"> = {
-  CRITICAL: "destructive",
-  HIGH: "destructive",
-  MEDIUM: "default",
-  LOW: "secondary",
-};
-
-export function FindingsTable({ projectId, findings, citations }: FindingsTableProps) {
+export function FindingsTable({
+  projectId,
+  findings,
+  citations,
+  onSeverityChange,
+}: FindingsTableProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [severities, setSeverities] = useState<Record<string, FindingSeverity | null>>(() => {
+    const initial: Record<string, FindingSeverity | null> = {};
+    for (const finding of findings) initial[finding.id] = finding.severity;
+    return initial;
+  });
+  const [savingId, setSavingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (savingId) return;
+    setSeverities(() => {
+      const next: Record<string, FindingSeverity | null> = {};
+      for (const finding of findings) next[finding.id] = finding.severity;
+      return next;
+    });
+  }, [findings, savingId]);
+
+  async function updateSeverity(findingId: string, severity: FindingSeverity) {
+    setSavingId(findingId);
+    const previous = severities[findingId] ?? null;
+    setSeverities((prev) => ({ ...prev, [findingId]: severity }));
+    onSeverityChange?.(findingId, severity);
+    try {
+      const res = await fetch(`/api/findings/${findingId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ severity }),
+      });
+      const json = (await res.json()) as { success: boolean; error?: { message: string } };
+      if (!res.ok || !json.success) {
+        setSeverities((prev) => ({ ...prev, [findingId]: previous }));
+        if (previous) onSeverityChange?.(findingId, previous);
+        toast.error(json.error?.message ?? "Failed to update severity");
+        return;
+      }
+      dispatchRiskStateChanged({
+        projectId,
+        entity: "finding",
+        id: findingId,
+        severity,
+      });
+      toast.success(`Severity set to ${severity.toLowerCase()}`);
+    } catch {
+      setSeverities((prev) => ({ ...prev, [findingId]: previous }));
+      if (previous) onSeverityChange?.(findingId, previous);
+      toast.error("Failed to update severity");
+    } finally {
+      setSavingId(null);
+    }
+  }
 
   if (findings.length === 0) {
     return (
@@ -73,6 +123,7 @@ export function FindingsTable({ projectId, findings, citations }: FindingsTableP
           {findings.map((finding) => {
             const citation = citations.find((item) => item.chunkId === finding.sourceChunkId);
             const expanded = expandedId === finding.id;
+            const severity = severities[finding.id] ?? finding.severity;
             return (
               <tr key={finding.id} className="border-t border-border/50 align-top">
                 <td className="px-4 py-3">
@@ -92,11 +143,12 @@ export function FindingsTable({ projectId, findings, citations }: FindingsTableP
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{finding.category}</td>
                 <td className="px-4 py-3">
-                  {finding.severity ? (
-                    <Badge variant={SEVERITY_VARIANT[finding.severity]}>{finding.severity}</Badge>
-                  ) : (
-                    <span className="text-muted-foreground">—</span>
-                  )}
+                  <SeveritySelect
+                    value={severity}
+                    disabled={savingId === finding.id}
+                    ariaLabel={`Severity for ${finding.title}`}
+                    onChange={(next) => void updateSeverity(finding.id, next)}
+                  />
                 </td>
                 <td className="px-4 py-3">
                   {citation ? (
@@ -119,7 +171,9 @@ export function FindingsTable({ projectId, findings, citations }: FindingsTableP
                     aria-label={expanded ? "Collapse evidence" : "Expand evidence"}
                     onClick={() => setExpandedId(expanded ? null : finding.id)}
                   >
-                    <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />
+                    <ChevronDown
+                      className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")}
+                    />
                   </Button>
                 </td>
               </tr>

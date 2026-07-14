@@ -2,9 +2,8 @@
 
 Fictional M&A diligence files for **Helix Analytics, Inc.** (B2B analytics SaaS, ~$38.3M ARR).
 
-Use these to demo bulk upload, folder structure preservation, and future AI agent analysis.
-Several files contain intentional inconsistencies for contradiction detection (e.g. investor deck
-vs. audited financials, AR aging vs. management narrative).
+Use these to demo bulk upload, folder structure preservation, intelligence agents, and contradiction detection.
+Several files contain intentional inconsistencies (e.g. investor update vs MD&A on ARR growth and NRR).
 
 ## Upload walkthrough
 
@@ -12,11 +11,23 @@ vs. audited financials, AR aging vs. management narrative).
 2. Open **Data Room** → **Upload**.
 3. Drag the entire `demo/data-room` folder (or select all files).
 4. Folder paths (`01-Financials`, `02-Legal`, etc.) are preserved on bulk upload.
+5. After documents are **READY**, open **Contradictions** (scan or seed) and **Missing** (checklist gaps map to these folder names).
+
+## Sample contradictions
+
+After upload + processing, seed UI-visible sample rows that cite real values in these files:
+
+```bash
+pnpm exec tsx scripts/seed-sample-contradictions.ts
+```
+
+Or run **Run contradiction scan** on the Contradictions tab (requires Ollama).
 
 ## Regenerate files
 
 ```bash
 pnpm exec tsx scripts/generate-demo-data-room.ts
+# or: pnpm demo:data-room
 ```
 
 ## File inventory

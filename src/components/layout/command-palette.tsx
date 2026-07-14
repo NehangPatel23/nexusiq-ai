@@ -1,14 +1,17 @@
 "use client";
 
 import {
+  AlertTriangle,
   BarChart3,
   Bot,
+  FileQuestion,
   FileText,
   FolderOpen,
   LayoutDashboard,
   MessageSquare,
   Network,
   Search,
+  ShieldAlert,
   Upload,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
@@ -41,6 +44,9 @@ const actionCommands = (
   projectReportsHref: string,
   projectTimelineHref: string,
   projectGraphHref: string,
+  projectContradictionsHref: string,
+  projectMissingHref: string,
+  projectRisksHref: string,
 ) => [
   { label: "Upload to data room", icon: Upload, shortcut: "U", action: "upload-data-room" as const },
   { label: "Run full scan", href: projectIntelligenceHref, icon: Bot, action: "navigate" as const },
@@ -62,6 +68,24 @@ const actionCommands = (
     label: "Open relationship graph",
     href: projectGraphHref,
     icon: Network,
+    action: "navigate" as const,
+  },
+  {
+    label: "Scan contradictions",
+    href: projectContradictionsHref,
+    icon: AlertTriangle,
+    action: "navigate" as const,
+  },
+  {
+    label: "Missing documents",
+    href: projectMissingHref,
+    icon: FileQuestion,
+    action: "navigate" as const,
+  },
+  {
+    label: "Open risks overview",
+    href: projectRisksHref,
+    icon: ShieldAlert,
     action: "navigate" as const,
   },
 ];
@@ -114,6 +138,15 @@ export function CommandPalette() {
     : "/dashboard/projects";
   const projectGraphHref = projectId
     ? `/dashboard/projects/${projectId}/graph`
+    : "/dashboard/projects";
+  const projectContradictionsHref = projectId
+    ? `/dashboard/projects/${projectId}/contradictions?scan=1`
+    : "/dashboard/projects";
+  const projectMissingHref = projectId
+    ? `/dashboard/projects/${projectId}/missing?scan=1`
+    : "/dashboard/projects";
+  const projectRisksHref = projectId
+    ? `/dashboard/projects/${projectId}/risks`
     : "/dashboard/projects";
 
   const trimmedQuery = paletteQuery.trim();
@@ -184,6 +217,9 @@ export function CommandPalette() {
             projectReportsHref,
             projectTimelineHref,
             projectGraphHref,
+            projectContradictionsHref,
+            projectMissingHref,
+            projectRisksHref,
           ).map((command) => {
             const Icon = command.icon;
             const href =

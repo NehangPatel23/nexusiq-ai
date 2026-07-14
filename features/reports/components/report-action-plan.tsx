@@ -6,22 +6,11 @@ import { CheckCircle2, ClipboardList, ExternalLink } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { dataRoomCitationHref } from "@/features/chat/lib/citation-links";
+import { severityBadgeVariant } from "@/features/intelligence/components/severity-status-selects";
 import type { ChatCitation } from "@/lib/ai/citations";
 
 import type { ActionPlanItem } from "../lib/assemble-shared";
 import { humanizeLabel, resolveCitationIndex } from "../lib/assemble-shared";
-
-const SEVERITY_VARIANT: Record<
-  FindingSeverity | "UNKNOWN" | "n/a",
-  "destructive" | "default" | "secondary" | "outline" | "warning"
-> = {
-  CRITICAL: "destructive",
-  HIGH: "destructive",
-  MEDIUM: "warning",
-  LOW: "secondary",
-  UNKNOWN: "outline",
-  "n/a": "outline",
-};
 
 type ReportActionPlanProps = {
   items: ActionPlanItem[];
@@ -140,7 +129,7 @@ export function ReportActionPlan({
                     <Badge variant="outline" className="border-primary/30 bg-primary/10 text-primary">
                       {item.priority}
                     </Badge>
-                    <Badge variant={SEVERITY_VARIANT[item.severity]}>{item.severity}</Badge>
+                    <Badge variant={severityBadgeVariant(item.severity)}>{item.severity}</Badge>
                     <Badge variant="secondary" className="normal-case tracking-normal">
                       {item.source}
                     </Badge>

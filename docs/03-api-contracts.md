@@ -145,12 +145,18 @@ Consensus response adds: `agentOpinions[]`, `agreements[]`, `conflicts[]`, `reso
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/projects/[id]/contradictions/scan` | Run contradiction scan |
-| GET | `/api/projects/[id]/contradictions` | List contradictions |
-| PATCH | `/api/contradictions/[id]` | Update status |
-| POST | `/api/projects/[id]/missing/scan` | Run missing info scan |
-| GET | `/api/projects/[id]/missing` | List missing items |
-| POST | `/api/projects/[id]/missing/export-requests` | Export follow-up list |
+| POST | `/api/projects/[id]/contradictions/scan` | Run contradiction scan (`force?`) — requires Ollama; rejects unmatched citations |
+| GET | `/api/projects/[id]/contradictions` | List contradictions (`status`, `severity`, `factType` filters) |
+| PATCH | `/api/contradictions/[id]` | Update status and/or severity and/or `resolutionNote` |
+| PATCH | `/api/projects/[id]/contradictions/bulk` | Bulk status update (`ids[]`, `status`, optional `resolutionNote`) |
+| POST | `/api/contradictions/[id]/promote` | Promote contradiction → Risk finding |
+| POST | `/api/projects/[id]/missing/scan` | Run missing-info scan (rule-based; optional Ollama polish) |
+| GET | `/api/projects/[id]/missing` | List missing items (`status` filter) |
+| PATCH | `/api/missing/[id]` | Update missing item status and/or severity |
+| POST | `/api/projects/[id]/missing/export-requests` | Export follow-up list (markdown/CSV) |
+| GET | `/api/projects/[id]/risks/summary` | Risks overview rollup — findings, `contradictionOpenCount`, `missingOpenCount` (no Ollama) |
+
+Contradiction scan returns `503 OLLAMA_UNAVAILABLE` when Ollama is down; scan route uses `maxDuration = 120`. CRITICAL new contradictions emit `RISK_FOUND` notifications.
 
 ---
 
@@ -179,7 +185,7 @@ Request: `{ scenarioName, parameters: { revenueChange?: number, customerLoss?: s
 | DELETE | `/api/reports/[id]/shares/[shareId]` | Revoke share link |
 | GET | `/api/share/reports/[token]` | Public share metadata + markdown body |
 | GET | `/api/share/reports/[token]/export` | Public export download (format lock honored) |
-| PATCH | `/api/findings/[id]` | Update finding status (`OPEN` / `ACKNOWLEDGED` / `RESOLVED` / `DISMISSED`) |
+| PATCH | `/api/findings/[id]` | Update finding `status` and/or `severity` |
 
 Generate response includes `{ reportId, title, reportType, contentPreview?, status, createdAt, insufficientContext? }`.  
 `503 OLLAMA_UNAVAILABLE` only when narrative generation requires Ollama and it is unreachable.  

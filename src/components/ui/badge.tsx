@@ -15,6 +15,9 @@ const badgeVariants = cva(
         accent: "border-accent/20 bg-accent/10 text-accent",
         success: "border-success/20 bg-success/10 text-success",
         warning: "border-warning/20 bg-warning/10 text-warning",
+        orange: "border-risk-high/30 bg-risk-high/10 text-risk-high",
+        yellow: "border-risk-medium/30 bg-risk-medium/10 text-risk-medium",
+        info: "border-sky-400/30 bg-sky-400/10 text-sky-300",
       },
     },
     defaultVariants: {
