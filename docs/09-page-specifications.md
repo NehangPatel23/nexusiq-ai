@@ -271,7 +271,7 @@ Shell with sub-nav (not redirect-only):
 | Security | `/dashboard/settings/security` | Change password; delete account (password confirm; blocked if sole org owner) |
 | Notifications | `/dashboard/settings/notifications` | In-app notification preferences |
 | AI Models | `/dashboard/settings/ai` | Ollama base URL + chat/embed models via `SystemSetting`; **env vars win when set**; API key never shown; test connection returns host only |
-| Appearance | `/dashboard/settings/appearance` | Dark/light (`User.theme`) |
+| Appearance | `/dashboard/settings/appearance` | Dark/light (`User.theme`); light uses `:root` tokens, dark uses `.dark` |
 | Shortcuts | `/dashboard/settings/shortcuts` | Keyboard reference |
 
 Deferred deletion: user/org tombstone (`deletedAt` + `purgeAfter` = +24h) → `/account/recover` or org “Recently deactivated”; purge via `GET /api/cron/purge-deleted` or `pnpm db:purge-deleted`.
@@ -280,7 +280,7 @@ Deferred deletion: user/org tombstone (`deletedAt` + `purgeAfter` = +24h) → `/
 
 ## Admin (`/dashboard/admin`)
 
-Owner only: health cards, queue status, user table, usage charts, reindex buttons. **Slice 16 — not started.**
+Owner only: health cards (DB / Ollama host-only / storage / queue), usage charts, members table, failed-doc queue, FTS reindex + re-embed with confirmation. Non-owners see a forbidden message; Admin nav is hidden. Live OCI worker status deferred to [tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md).
 
 ---
 

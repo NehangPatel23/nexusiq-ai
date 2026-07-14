@@ -14,6 +14,7 @@ export type HistorySourceLabel =
   | "Search"
   | "Auth"
   | "Settings"
+  | "Admin"
   | "Organization"
   | "System";
 
@@ -105,6 +106,8 @@ export function resolveHistorySourceLabel(input: {
       return "Auth";
     case "SETTINGS_UPDATE":
       return "Settings";
+    case "MAINTENANCE":
+      return "Admin";
     case "ORG_DELETED":
     case "ORG_RECOVERED":
     case "ORG_PURGED":

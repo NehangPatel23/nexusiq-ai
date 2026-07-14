@@ -177,6 +177,7 @@ enum AuditAction {
   ORG_RECOVERED
   ORG_PURGED
   SETTINGS_UPDATE
+  MAINTENANCE
 }
 
 enum FindingSeverity {

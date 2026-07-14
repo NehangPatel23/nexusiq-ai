@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto max-w-3xl space-y-8">
+    <div className="space-y-8">
       <PageHeader
         icon={Settings}
         title="Settings"

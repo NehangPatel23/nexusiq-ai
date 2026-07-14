@@ -41,8 +41,8 @@ export function ProjectRiskSummary({ counts, refreshing = false, className }: Pr
               refreshing
                 ? "border-primary/30 bg-primary/10 text-primary"
                 : needsAttention > 0
-                  ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                  : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+                  ? "badge-tint-amber"
+                  : "border-emerald-500/30 bg-emerald-500/10 text-tint-emerald",
             )}
             aria-hidden="true"
           >

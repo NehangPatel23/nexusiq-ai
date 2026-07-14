@@ -58,15 +58,17 @@ History, Settings, Admin.
 5. Verify docs/08-acceptance-criteria.md for current slice
 6. Mark task DONE, proceed to next slice only when all checks pass
 
+**Status:** Core MVP slices 01–16 are shipped. Next work is optional [tasks/17-polish.md](../tasks/17-polish.md) or deferred OCI worker ([tasks/00-oci-worker-vps.md](../tasks/00-oci-worker-vps.md)) unless a regression / bugfix is requested.
+
 ## Quality Gates
 - pnpm build && pnpm test && pnpm lint pass
 - Loading + empty + error states on every screen
-- WCAG 2.2 AA, responsive, command palette (Cmd+K)
+- WCAG 2.2 AA (including light-mode badge contrast), responsive, command palette (Cmd+K)
+- Dark default + full light theme via Appearance
 - No TODOs, no fake APIs, no paid deps
 
 ## Current Task
-Find first incomplete task in tasks/. Implement ONLY that slice.
-```
+Find first incomplete task in tasks/ (typically polish backlog). Implement ONLY that workstream.```
 
 ## Per-Slice Usage
 

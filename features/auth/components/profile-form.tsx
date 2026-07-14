@@ -1,10 +1,12 @@
 "use client";
 
+import { UserRound } from "lucide-react";
 import Image from "next/image";
 import { useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { updateProfile, uploadAvatar } from "@/features/auth/actions";
+import { SettingsPanel } from "@/features/settings/components/settings-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -75,61 +77,67 @@ export function ProfileForm({ user }: ProfileFormProps) {
   }
 
   return (
-    <div className="surface-elevated p-8">
-      <div className="mb-8 flex items-center gap-6">
-        <div className="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/20 to-accent/20 text-xl font-semibold">
-          {image ? (
-            <Image src={image} alt="" fill className="object-cover" unoptimized />
-          ) : (
-            getInitials(user.name, user.email)
-          )}
+    <SettingsPanel
+      icon={UserRound}
+      title="Profile"
+      description="Manage your name, avatar, and account details."
+    >
+      <div className="grid gap-8 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-12">
+        <div className="flex flex-col items-start gap-4">
+          <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary/20 to-accent/20 text-2xl font-semibold">
+            {image ? (
+              <Image src={image} alt="" fill className="object-cover" unoptimized />
+            ) : (
+              getInitials(user.name, user.email)
+            )}
+          </div>
+          <div className="space-y-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="sr-only"
+              onChange={handleAvatarChange}
+              aria-label="Upload avatar"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isUploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {isUploading ? "Uploading…" : "Upload avatar"}
+            </Button>
+            <p className="text-caption">JPEG, PNG, WebP, or GIF. Max 2MB.</p>
+          </div>
         </div>
-        <div className="space-y-2">
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            className="sr-only"
-            onChange={handleAvatarChange}
-            aria-label="Upload avatar"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isUploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {isUploading ? "Uploading…" : "Upload avatar"}
+
+        <form onSubmit={handleProfileSubmit} className="max-w-xl space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              name="name"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              required
+              aria-invalid={!!fieldErrors.name}
+            />
+            {fieldErrors.name && <p className="text-sm text-destructive">{fieldErrors.name[0]}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" name="email" value={user.email} disabled readOnly className="opacity-70" />
+            <p className="text-caption">Email cannot be changed</p>
+          </div>
+
+          <Button type="submit" disabled={isPending}>
+            {isPending ? "Saving…" : "Save changes"}
           </Button>
-          <p className="text-caption">JPEG, PNG, WebP, or GIF. Max 2MB.</p>
-        </div>
+        </form>
       </div>
-
-      <form onSubmit={handleProfileSubmit} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            name="name"
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            required
-            aria-invalid={!!fieldErrors.name}
-          />
-          {fieldErrors.name && <p className="text-sm text-destructive">{fieldErrors.name[0]}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input id="email" name="email" value={user.email} disabled readOnly className="opacity-70" />
-          <p className="text-caption">Email cannot be changed</p>
-        </div>
-
-        <Button type="submit" disabled={isPending}>
-          {isPending ? "Saving…" : "Save changes"}
-        </Button>
-      </form>
-    </div>
+    </SettingsPanel>
   );
 }

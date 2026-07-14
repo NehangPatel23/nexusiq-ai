@@ -24,6 +24,7 @@ import { useConfirm } from "@/hooks/use-confirm";
 interface TopbarProps {
   user?: AppShellUser;
   breadcrumbs?: { label: string; href?: string }[];
+  showAdmin?: boolean;
 }
 
 function getInitials(name: string | null | undefined, email: string) {
@@ -41,6 +42,7 @@ function getInitials(name: string | null | undefined, email: string) {
 export function Topbar({
   user,
   breadcrumbs = [{ label: "Dashboard" }],
+  showAdmin = false,
 }: TopbarProps) {
   const confirm = useConfirm();
   const { collapsed, toggle } = useSidebar();
@@ -115,7 +117,7 @@ export function Topbar({
           </kbd>
         </Button>
 
-        <CommandPalette />
+        <CommandPalette showAdmin={showAdmin} />
 
         <NotificationsBell />
 

@@ -65,17 +65,17 @@ export function reportTypeAccent(reportType: ReportType): string {
     case "EXECUTIVE":
       return "border-primary/30 bg-primary/10 text-primary";
     case "BOARD":
-      return "border-sky-500/30 bg-sky-500/10 text-sky-300";
+      return "border-sky-600/30 bg-sky-500/12 text-tint-sky dark:border-sky-500/30 dark:bg-sky-500/10";
     case "INVESTMENT_MEMO":
-      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
+      return "border-emerald-500/30 bg-emerald-500/10 text-tint-emerald";
     case "AUDIT":
-      return "border-amber-500/30 bg-amber-500/10 text-amber-300";
+      return "badge-tint-amber";
     case "RISK_REGISTER":
-      return "border-rose-500/30 bg-rose-500/10 text-rose-300";
+      return "border-rose-500/30 bg-rose-500/10 text-tint-rose";
     case "ACTION_PLAN":
-      return "border-violet-500/30 bg-violet-500/10 text-violet-300";
+      return "border-violet-500/30 bg-violet-500/10 text-violet-900 dark:text-violet-300";
     case "PPTX":
-      return "border-orange-500/30 bg-orange-500/10 text-orange-300";
+      return "border-orange-500/30 bg-orange-500/10 text-tint-orange";
     default:
       return "border-border/60 bg-muted/30 text-muted-foreground";
   }

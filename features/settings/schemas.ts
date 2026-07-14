@@ -24,7 +24,6 @@ export const notificationPrefsSchema = z.object({
   processingComplete: z.boolean(),
   riskFound: z.boolean(),
   taskAssigned: z.boolean(),
-  emailDigest: z.boolean(),
 });
 
 export const themeSchema = z.object({

@@ -2,14 +2,12 @@ export type NotificationPrefs = {
   processingComplete: boolean;
   riskFound: boolean;
   taskAssigned: boolean;
-  emailDigest: boolean;
 };
 
 export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   processingComplete: true,
   riskFound: true,
   taskAssigned: true,
-  emailDigest: false,
 };
 
 export function parseNotificationPrefs(raw: unknown): NotificationPrefs {
@@ -26,7 +24,5 @@ export function parseNotificationPrefs(raw: unknown): NotificationPrefs {
       typeof obj.taskAssigned === "boolean"
         ? obj.taskAssigned
         : DEFAULT_NOTIFICATION_PREFS.taskAssigned,
-    emailDigest:
-      typeof obj.emailDigest === "boolean" ? obj.emailDigest : DEFAULT_NOTIFICATION_PREFS.emailDigest,
   };
 }

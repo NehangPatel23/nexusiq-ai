@@ -86,40 +86,40 @@ const CATEGORY_META: Record<
   FUNDING: {
     label: "Funding",
     icon: Wallet,
-    className: "border-emerald-500/40 text-emerald-300",
-    accent: "text-emerald-300",
+    className: "border-emerald-500/40 text-tint-emerald",
+    accent: "text-tint-emerald",
     barClass: "bg-emerald-500",
     railClass: "bg-emerald-500",
   },
   HIRING: {
     label: "Hiring",
     icon: Users,
-    className: "border-sky-500/40 text-sky-300",
-    accent: "text-sky-300",
+    className: "border-sky-500/40 text-tint-sky",
+    accent: "text-tint-sky",
     barClass: "bg-sky-500",
     railClass: "bg-sky-500",
   },
   ACQUISITION: {
     label: "Acquisition",
     icon: Building2,
-    className: "border-violet-500/40 text-violet-300",
-    accent: "text-violet-300",
+    className: "border-violet-500/40 text-violet-900 dark:text-violet-300",
+    accent: "text-violet-900 dark:text-violet-300",
     barClass: "bg-violet-500",
     railClass: "bg-violet-500",
   },
   LAWSUIT: {
     label: "Lawsuit",
     icon: Gavel,
-    className: "border-rose-500/40 text-rose-300",
-    accent: "text-rose-300",
+    className: "border-rose-500/40 text-tint-rose",
+    accent: "text-tint-rose",
     barClass: "bg-rose-500",
     railClass: "bg-rose-500",
   },
   LEADERSHIP: {
     label: "Leadership",
     icon: Briefcase,
-    className: "border-amber-500/40 text-amber-300",
-    accent: "text-amber-300",
+    className: "border-amber-500/40 text-tint-amber",
+    accent: "text-tint-amber",
     barClass: "bg-amber-500",
     railClass: "bg-amber-500",
   },
@@ -651,7 +651,7 @@ export function TimelinePage({
 
       {ollamaDown && (
         <div
-          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-tint-amber"
           role="alert"
         >
           Ollama is unavailable. Viewing still works; extraction needs a reachable{" "}
@@ -772,7 +772,7 @@ export function TimelinePage({
                             {event.pinned && (
                               <Badge
                                 variant="outline"
-                                className="gap-1 border-amber-500/40 text-amber-200"
+                                className="gap-1 border-amber-500/40 text-tint-amber"
                               >
                                 <Pin className="h-3 w-3" aria-hidden="true" />
                                 Pinned
@@ -809,7 +809,7 @@ export function TimelinePage({
                             )}
                             <Link
                               href={`/dashboard/projects/${projectId}/graph?q=${encodeURIComponent(event.title.split(/\s+/).slice(0, 3).join(" "))}`}
-                              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-300 hover:underline"
+                              className="inline-flex items-center gap-1.5 text-xs font-medium text-violet-900 dark:text-violet-300 hover:underline"
                             >
                               <Network className="h-3.5 w-3.5" aria-hidden="true" />
                               Find in graph
@@ -849,7 +849,7 @@ export function TimelinePage({
                                 onClick={() => void togglePin(event)}
                               >
                                 <Pin
-                                  className={cn("h-4 w-4", event.pinned && "fill-amber-400 text-amber-300")}
+                                  className={cn("h-4 w-4", event.pinned && "fill-amber-400 text-tint-amber")}
                                 />
                               </Button>
                               <Button

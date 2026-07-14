@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Network,
   Search,
+  Shield,
   ShieldAlert,
   Upload,
 } from "lucide-react";
@@ -38,6 +39,7 @@ const navigationCommands = [
   { label: "Reports", href: "/dashboard/reports", icon: FileText },
   { label: "History", href: "/dashboard/history", icon: BarChart3 },
   { label: "Settings", href: "/dashboard/settings", icon: ClipboardList },
+  { label: "Open admin", href: "/dashboard/admin", icon: Shield, ownersOnly: true },
 ];
 
 const actionCommands = (
@@ -107,11 +109,15 @@ const actionCommands = (
   },
 ];
 
-export function CommandPalette() {
+export function CommandPalette({ showAdmin = false }: { showAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const [paletteQuery, setPaletteQuery] = useState("");
   const router = useRouter();
   const pathname = usePathname();
+
+  const navCommands = navigationCommands.filter(
+    (cmd) => !("ownersOnly" in cmd && cmd.ownersOnly) || showAdmin,
+  );
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === "k" && (event.metaKey || event.ctrlKey)) {
@@ -218,7 +224,7 @@ export function CommandPalette() {
         )}
 
         <CommandGroup heading="Navigate">
-          {navigationCommands.map((command) => {
+          {navCommands.map((command) => {
             const Icon = command.icon;
             return (
               <CommandItem

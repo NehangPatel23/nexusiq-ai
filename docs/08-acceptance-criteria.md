@@ -116,15 +116,16 @@ Global and per-slice definition of done for NexusIQ-AI enterprise MVP.
 - [x] Project comparison view
 - [x] Settings shell: Profile, Security, Notifications, AI Models, Appearance, Shortcuts
 - [x] Profile, password, AI model config, notification prefs
+- [x] Appearance dark/light theme (`User.theme`) with readable status badges in both modes
 - [x] Account deletion with 24h grace period and recovery on re-login
 - [x] Organization deletion tombstone + 24h recovery (revert immediate hard delete)
 - [x] Purge job removes expired tombstoned users/orgs after 24h
 - [x] Keyboard shortcuts page
 
 ### 16 Admin
-- [ ] Health: DB, Ollama, disk
-- [ ] Usage stats, processing queue
-- [ ] Reindex/re-embed (owner only)
+- [x] Health: DB, Ollama, disk
+- [x] Usage stats, processing queue
+- [x] Reindex/re-embed (owner only)
 
 ### 17 Polish (parallel backlog)
 Optional UX polish — see [tasks/17-polish.md](../tasks/17-polish.md). Not required for MVP complete; track per batch.
@@ -143,10 +144,12 @@ Optional UX polish — see [tasks/17-polish.md](../tasks/17-polish.md). Not requ
 - [x] View timeline, graph, contradictions, missing docs, risks overview
 - [x] Run simulator → Create action items
 - [x] View History → Settings (profile / security / AI)
-- [x] No dead-end pages in journey (placeholders remain for slice 16 Admin only)
+- [x] No dead-end pages in journey (Admin shipped — slice 16)
 
 ---
 
 ## MVP Complete
 
 All slices + end-to-end journey pass. App runs from clean clone per README.
+
+**Note:** Slice 16 Admin acceptance checked above. OCI live worker health remains deferred (`tasks/00-oci-worker-vps.md` / deferred checklist on `tasks/16-admin.md`).

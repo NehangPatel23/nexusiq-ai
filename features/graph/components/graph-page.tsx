@@ -84,10 +84,10 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const SEVERITY_CLASS: Record<string, string> = {
-  CRITICAL: "border-rose-500/40 text-rose-300",
-  HIGH: "border-orange-500/40 text-orange-300",
-  MEDIUM: "border-amber-500/40 text-amber-300",
-  LOW: "border-emerald-500/40 text-emerald-300",
+  CRITICAL: "border-rose-500/40 text-tint-rose",
+  HIGH: "border-orange-500/40 text-tint-orange",
+  MEDIUM: "border-amber-500/40 text-tint-amber",
+  LOW: "border-emerald-500/40 text-tint-emerald",
 };
 
 type FgNode = GraphNode & { x?: number; y?: number };
@@ -764,7 +764,7 @@ export function GraphPage({
 
       {ollamaDown && (
         <div
-          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+          className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-tint-amber"
           role="alert"
         >
           Ollama is unavailable for extraction. Existing NER entities still render below.
@@ -855,14 +855,14 @@ export function GraphPage({
                 </div>
               )}
               {linkSourceId && (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1.5 text-xs text-amber-100 backdrop-blur">
+                <div className="flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/15 px-2.5 py-1.5 text-xs text-tint-amber backdrop-blur">
                   <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
                   Connect mode — click a target node
                   <Button
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-6 px-1.5 text-amber-100 hover:text-foreground"
+                    className="h-6 px-1.5 text-tint-amber hover:text-foreground"
                     onClick={cancelConnect}
                   >
                     Cancel

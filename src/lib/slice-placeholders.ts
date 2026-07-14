@@ -6,7 +6,6 @@ import {
   FolderOpen,
   MessageSquare,
   Search,
-  Shield,
 } from "lucide-react";
 
 export interface SlicePlaceholderConfig {
@@ -18,6 +17,7 @@ export interface SlicePlaceholderConfig {
   highlights?: string[];
 }
 
+/** Historical slice placeholders — all core journey slices are shipped (01–16). */
 export const SLICE_PLACEHOLDERS: Record<string, SlicePlaceholderConfig> = {
   projects: {
     title: "Projects",
@@ -72,14 +72,5 @@ export const SLICE_PLACEHOLDERS: Record<string, SlicePlaceholderConfig> = {
     sliceLabel: "History + Settings",
     icon: BarChart3,
     highlights: ["Audit log", "Activity filters", "Project comparison"],
-  },
-  admin: {
-    title: "Admin",
-    description:
-      "System health monitoring, usage stats, and reindex controls for organization owners.",
-    slice: 16,
-    sliceLabel: "Admin",
-    icon: Shield,
-    highlights: ["Health checks", "Usage stats", "Owner-only controls"],
   },
 };

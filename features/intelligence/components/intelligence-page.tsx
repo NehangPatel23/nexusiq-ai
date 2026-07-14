@@ -990,7 +990,7 @@ export function IntelligencePage({
           </CardHeader>
           <CardContent className="space-y-6">
             {completedSpecialists.size < 3 ? (
-              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-100">
+              <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-tint-amber">
                 Run at least 3 specialist agents before consensus
                 {missingSpecialists.length > 0
                   ? ` (still needed: ${missingSpecialists.map((agent) => AGENT_TYPE_LABELS[agent]).join(", ")})`
@@ -1137,7 +1137,7 @@ export function IntelligencePage({
             !isWaitingInFullScan &&
             (activeDetail ?? activeRun) &&
             currentConfidence === "INSUFFICIENT" ? (
-              <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-amber-100">
+              <p className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-tint-amber">
                 Insufficient evidence in the data room for a confident{" "}
                 {AGENT_TYPE_LABELS[activeAgent!].toLowerCase()} package. Upload and process more documents, then
                 re-run.

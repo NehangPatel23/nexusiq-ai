@@ -76,9 +76,9 @@ const config: Config = {
         topbar: "var(--topbar-height)",
       },
       boxShadow: {
-        soft: "0 1px 2px rgba(0,0,0,0.24), 0 12px 32px rgba(0,0,0,0.18)",
-        glow: "0 0 48px -12px hsl(var(--primary) / 0.35)",
-        "inner-soft": "inset 0 1px 0 0 hsl(var(--foreground) / 0.04)",
+        soft: "var(--shadow-soft)",
+        glow: "var(--shadow-glow)",
+        "inner-soft": "var(--shadow-inner-soft)",
       },
       keyframes: {
         "accordion-down": {

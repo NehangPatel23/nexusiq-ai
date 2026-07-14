@@ -32,9 +32,9 @@ export function getOrgRoleBadgeClass(role: OrgRole): string {
     case "ADMIN":
       return "border-accent/35 bg-accent/10 text-accent";
     case "ANALYST":
-      return "border-sky-500/30 bg-sky-500/10 text-sky-400";
+      return "border-sky-500/30 bg-sky-500/10 text-tint-sky";
     case "REVIEWER":
-      return "border-violet-500/25 bg-violet-500/10 text-violet-300";
+      return "border-violet-500/25 bg-violet-500/10 text-violet-900 dark:text-violet-300";
     case "VIEWER":
       return "border-border/70 bg-muted/30 text-muted-foreground";
     default:

@@ -114,8 +114,8 @@ function highlightExcerpt(
         className={cn(
           "rounded px-1 py-0.5 font-semibold not-italic",
           tone === "a"
-            ? "bg-rose-500/30 text-rose-100 ring-1 ring-rose-400/40"
-            : "bg-sky-500/30 text-sky-100 ring-1 ring-sky-400/40",
+            ? "bg-rose-500/15 text-tint-rose ring-1 ring-rose-500/40 dark:bg-rose-500/30 dark:text-tint-rose dark:ring-rose-400/40"
+            : "bg-sky-500/30 text-tint-sky ring-1 ring-sky-400/40",
         )}
       >
         {text.slice(matchIndex, matchIndex + matchLength)}
@@ -151,7 +151,7 @@ function FormattedExcerpt({
       {matched === false ? (
         <p
           role="status"
-          className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-amber-100"
+          className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2.5 py-2 text-xs leading-relaxed text-tint-amber"
         >
           The stated value wasn&apos;t found in the linked source excerpt. Open the document
           to verify the citation.
@@ -542,13 +542,13 @@ export function ContradictionsPageClient({
               label: "Open conflicts",
               value: stats.open,
               hint: stats.latest ? `Updated ${formatRelativeTime(stats.latest)}` : "No scans yet",
-              tone: "text-sky-300",
+              tone: "text-tint-sky",
             },
             {
               label: "Critical / high",
               value: stats.critical,
               hint: "Need diligence attention",
-              tone: "text-rose-300",
+              tone: "text-tint-rose",
             },
             {
               label: "Acknowledged",
@@ -560,7 +560,7 @@ export function ContradictionsPageClient({
               label: "Closed",
               value: stats.resolved,
               hint: `${stats.total} total found`,
-              tone: "text-emerald-300",
+              tone: "text-tint-emerald",
             },
           ].map((card) => (
             <div
@@ -586,12 +586,12 @@ export function ContradictionsPageClient({
       {ollamaDown ? (
         <div
           role="alert"
-          className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100"
+          className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-tint-amber"
         >
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <div>
             <p className="font-medium">Ollama unavailable</p>
-            <p className="mt-0.5 text-amber-100/80">
+            <p className="mt-0.5 text-tint-amber-soft">
               Contradiction scan needs a reachable Ollama endpoint. List and status updates still
               work offline.
             </p>
@@ -758,11 +758,11 @@ export function ContradictionsPageClient({
                       {row.explanation}
                     </p>
                     <div className="mt-2 flex flex-wrap items-center gap-1.5 font-mono text-xs">
-                      <span className="rounded-md border border-rose-500/25 bg-rose-500/10 px-1.5 py-0.5 text-rose-200">
+                      <span className="rounded-md border badge-tint-rose px-1.5 py-0.5">
                         {row.valueA}
                       </span>
                       <span className="text-muted-foreground">vs</span>
-                      <span className="rounded-md border border-sky-500/25 bg-sky-500/10 px-1.5 py-0.5 text-sky-200">
+                      <span className="rounded-md border border-sky-500/25 bg-sky-500/10 px-1.5 py-0.5 text-tint-sky">
                         {row.valueB}
                       </span>
                     </div>
@@ -931,7 +931,7 @@ export function ContradictionsPageClient({
                 <div className="overflow-hidden rounded-xl border border-rose-500/25 bg-gradient-to-b from-rose-500/10 to-card/40">
                   <div className="flex items-center justify-between gap-2 border-b border-rose-500/20 px-4 py-3">
                     <div className="min-w-0">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-rose-300/90">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-tint-rose/90">
                         Document A
                       </p>
                       <p className="mt-0.5 truncate text-sm font-medium">{selected.documentAName}</p>
@@ -950,10 +950,10 @@ export function ContradictionsPageClient({
                   </div>
                   <div className="space-y-3 px-4 py-4">
                     <div className="rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-rose-300/80">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-tint-rose/80">
                         Conflicting value
                       </p>
-                      <p className="mt-1 font-mono text-lg font-semibold text-rose-100">
+                      <p className="mt-1 font-mono text-lg font-semibold text-tint-rose">
                         {selected.valueA}
                       </p>
                     </div>
@@ -980,7 +980,7 @@ export function ContradictionsPageClient({
                 <div className="overflow-hidden rounded-xl border border-sky-500/25 bg-gradient-to-b from-sky-500/10 to-card/40">
                   <div className="flex items-center justify-between gap-2 border-b border-sky-500/20 px-4 py-3">
                     <div className="min-w-0">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-sky-300/90">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-tint-sky">
                         Document B
                       </p>
                       <p className="mt-0.5 truncate text-sm font-medium">{selected.documentBName}</p>
@@ -999,10 +999,10 @@ export function ContradictionsPageClient({
                   </div>
                   <div className="space-y-3 px-4 py-4">
                     <div className="rounded-lg border border-sky-500/20 bg-sky-500/10 px-3 py-2">
-                      <p className="text-[11px] font-medium uppercase tracking-wider text-sky-300/80">
+                      <p className="text-[11px] font-medium uppercase tracking-wider text-tint-sky">
                         Conflicting value
                       </p>
-                      <p className="mt-1 font-mono text-lg font-semibold text-sky-100">
+                      <p className="mt-1 font-mono text-lg font-semibold text-tint-sky">
                         {selected.valueB}
                       </p>
                     </div>

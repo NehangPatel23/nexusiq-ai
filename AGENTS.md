@@ -15,7 +15,7 @@ You are building **NexusIQ-AI** — an enterprise decision intelligence platform
 ## Product Scope
 
 Full enterprise MVP — no placeholder pages at journey end:
-Landing, Auth, Dashboard, Data Room, Multi-Agent Intelligence (Financial/Legal/Compliance/Risk/Fraud), Consensus, Chat, Search, Reports, Timeline, Graph, Contradictions, Missing Info, Risks overview, Simulator, Action Plan, History, Settings (**slices 01–15 shipped**); Admin (**slice 16 next**).
+Landing, Auth, Dashboard, Data Room, Multi-Agent Intelligence (Financial/Legal/Compliance/Risk/Fraud), Consensus, Chat, Search, Reports, Timeline, Graph, Contradictions, Missing Info, Risks overview, Simulator, Action Plan, History, Settings, Admin (**slices 01–16 shipped**); Polish (**slice 17 backlog**).
 
 ## AI Rules
 
@@ -29,7 +29,7 @@ Landing, Auth, Dashboard, Data Room, Multi-Agent Intelligence (Financial/Legal/C
 - One vertical slice per session
 - **Polish:** defer to [tasks/17-polish.md](./tasks/17-polish.md) unless the user asks to implement; add new polish ideas there
 - Complete loading/empty/error states
-- WCAG 2.2 AA, command palette, premium dark UI
+- WCAG 2.2 AA, command palette, premium dual-theme UI (dark default)
 - Tests with every feature
 
 ## Conflict Resolution

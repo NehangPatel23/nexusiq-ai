@@ -54,7 +54,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <html lang="en" className={themeClass || undefined} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={themeClass === "dark" ? "dark" : undefined}
+      style={{ colorScheme: themeClass === "dark" ? "dark" : "light" }}
+      suppressHydrationWarning
+    >
       <body
         className={`${instrumentSans.variable} ${sora.variable} ${jetbrainsMono.variable} font-sans`}
       >

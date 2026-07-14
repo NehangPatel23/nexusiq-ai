@@ -24,7 +24,16 @@ import { Button } from "@/components/ui/button";
 import { SidebarTooltip } from "@/components/ui/truncate-tooltip";
 import { cn } from "@/lib/utils";
 
-const navGroups = [
+const navGroups: Array<{
+  label: string;
+  items: Array<{
+    href: string;
+    label: string;
+    icon: typeof LayoutDashboard;
+    exact?: boolean;
+    ownersOnly?: boolean;
+  }>;
+}> = [
   {
     label: "Overview",
     items: [
@@ -52,14 +61,19 @@ const navGroups = [
     items: [
       { href: "/dashboard/organizations", label: "Organizations", icon: Building2 },
       { href: "/dashboard/settings", label: "Settings", icon: Settings },
-      { href: "/dashboard/admin", label: "Admin", icon: Shield },
+      { href: "/dashboard/admin", label: "Admin", icon: Shield, ownersOnly: true },
     ],
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ showAdmin = false }: { showAdmin?: boolean }) {
   const pathname = usePathname();
   const { collapsed, toggle } = useSidebar();
+
+  const groups = navGroups.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => !item.ownersOnly || showAdmin),
+  }));
 
   return (
     <aside
@@ -128,7 +142,7 @@ export function Sidebar() {
         )}
         aria-label="Dashboard"
       >
-        {navGroups.map((group) => (
+        {groups.map((group) => (
           <div key={group.label}>
             {!collapsed && (
               <p className="mb-2 px-3 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/70">

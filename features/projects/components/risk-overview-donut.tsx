@@ -59,7 +59,7 @@ export function RiskOverviewDonut({ data }: RiskOverviewDonutProps) {
         </div>
         {hasData ? (
           <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/25 bg-amber-500/10 px-2.5 py-1 text-amber-200/90">
+            <span className="inline-flex items-center gap-1.5 rounded-full badge-tint-amber px-2.5 py-1">
               <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" />
               {needsAttention} need attention
             </span>
