@@ -112,13 +112,13 @@ const PRIORITY_RANK: Record<TaskPriority, number> = {
 function priorityBadgeClass(priority: TaskPriority) {
   switch (priority) {
     case "CRITICAL":
-      return "border-rose-500/50 bg-rose-500/15 text-rose-100";
+      return "badge-tint-rose";
     case "URGENT":
-      return "border-orange-500/50 bg-orange-500/15 text-orange-100";
+      return "border-orange-500/50 bg-orange-500/15 text-tint-orange";
     case "HIGH":
-      return "border-amber-500/45 bg-amber-500/12 text-amber-100";
+      return "badge-tint-amber";
     case "MEDIUM":
-      return "border-sky-500/35 bg-sky-500/10 text-sky-100";
+      return "border-sky-500/35 bg-sky-500/10 text-tint-sky";
     default:
       return "border-border/60 bg-muted/30 text-muted-foreground";
   }
@@ -393,7 +393,7 @@ export function ActionsPageClient({
             <p
               className={cn(
                 "mt-1 text-2xl font-semibold tabular-nums",
-                stats.overdue > 0 && "text-amber-200",
+                stats.overdue > 0 && "text-tint-amber",
               )}
             >
               {stats.overdue}
@@ -579,7 +579,7 @@ export function ActionsPageClient({
                                     <span
                                       className={cn(
                                         "inline-flex items-center gap-1",
-                                        overdue && "font-medium text-amber-200",
+                                        overdue && "font-medium text-tint-amber",
                                       )}
                                     >
                                       <CalendarDays className="h-3 w-3" aria-hidden />
@@ -823,7 +823,7 @@ export function ActionsPageClient({
                               className={cn(
                                 "text-[10px]",
                                 finding.severity === "HIGH" || finding.severity === "CRITICAL"
-                                  ? "border-orange-500/40 text-orange-200"
+                                  ? "border-orange-500/40 text-tint-orange"
                                   : "",
                               )}
                             >

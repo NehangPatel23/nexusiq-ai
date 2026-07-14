@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
+import { userIsOrgOwner } from "@/features/admin/lib/auth";
 import { isWithinGrace } from "@/features/history/lib/constants";
 import { getSession } from "@/lib/session";
 import { prisma } from "@/lib/db";
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
+  let showAdmin = false;
 
   if (session?.user?.id) {
     if (session.user.accountStatus === "pending_deletion") {
@@ -27,10 +29,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
       }
       redirect("/login");
     }
+    showAdmin = await userIsOrgOwner(session.user.id);
   }
 
   return (
     <AppShell
+      showAdmin={showAdmin}
       user={
         session?.user
           ? {

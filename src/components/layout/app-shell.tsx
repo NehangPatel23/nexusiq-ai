@@ -16,15 +16,16 @@ interface AppShellProps {
   children: React.ReactNode;
   user?: AppShellUser;
   breadcrumbs?: { label: string; href?: string }[];
+  showAdmin?: boolean;
 }
 
-function AppShellInner({ children, user, breadcrumbs }: AppShellProps) {
+function AppShellInner({ children, user, breadcrumbs, showAdmin = false }: AppShellProps) {
   const { collapsed } = useSidebar();
 
   return (
     <div className="relative min-h-screen">
       <div className="pointer-events-none absolute inset-0 grid-bg opacity-20" aria-hidden="true" />
-      <Sidebar />
+      <Sidebar showAdmin={showAdmin} />
       <div
         className={cn(
           "relative transition-[padding] duration-300 ease-out print:pl-0",
@@ -32,7 +33,7 @@ function AppShellInner({ children, user, breadcrumbs }: AppShellProps) {
         )}
       >
         <div className="print:hidden">
-          <Topbar user={user} breadcrumbs={breadcrumbs} />
+          <Topbar user={user} breadcrumbs={breadcrumbs} showAdmin={showAdmin} />
         </div>
         <main id="main-content" className="page-content print:overflow-visible print:p-0">
           {children}

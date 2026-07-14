@@ -98,7 +98,7 @@ User → Organization (teams, roles) → Workspace → Project (data room)
 
 | Area | Features |
 |------|----------|
-| **Auth** | Signup, login, forgot password, profile, dark mode |
+| **Auth** | Signup, login, forgot password, profile, dark/light theme |
 | **Org** | Teams, roles (Owner/Admin/Analyst/Reviewer/Viewer), permissions, notifications |
 | **Dashboard** | Risk overview, activity, analytics, quick actions, recent reports, tasks |
 | **Data Room** | Folders, bulk upload, OCR, version history, preview, tags |
@@ -129,14 +129,14 @@ User → Organization (teams, roles) → Workspace → Project (data room)
 | 12 | Timeline + Graph | Executive timeline, relationship graph | Done |
 | 13 | Contradiction + Missing | Cross-doc contradictions, missing docs | Done |
 | 14 | Simulator + Actions | Risk simulator, action plan kanban | Done |
-| 15 | History + Settings | Audit, comparison, AI config | Pending |
-| 16 | Admin | Health, usage, reindex | Pending |
+| 15 | History + Settings | Audit, comparison, AI config | Done |
+| 16 | Admin | Health, usage, reindex | Done |
 
 One slice at a time. Each slice: DB + API + UI + tests before next.
 
 ### Deferred (post-MVP)
 
-SSO/SAML, billing/Stripe, paid LLMs, hosted vector/graph DBs, microservices, marketplace, webhooks.
+SSO/SAML, billing/Stripe, paid LLMs, hosted vector/graph DBs, microservices, marketplace, webhooks. Polish backlog: [tasks/17-polish.md](./tasks/17-polish.md). Live OCI worker health: [tasks/00-oci-worker-vps.md](./tasks/00-oci-worker-vps.md).
 
 ---
 
@@ -183,4 +183,4 @@ SSO/SAML, billing/Stripe, paid LLMs, hosted vector/graph DBs, microservices, mar
 1. Paste [docs/CURSOR_MASTER_PROMPT.md](./docs/CURSOR_MASTER_PROMPT.md) into Cursor Agent
 2. Agent reads `.cursor/rules/` → `docs/` → `tasks/<NN>.md`
 3. One slice per session; validate [docs/08-acceptance-criteria.md](./docs/08-acceptance-criteria.md)
-4. Repeat until slice 16 complete
+4. Core MVP (slices 01–16) complete; optional polish via [tasks/17-polish.md](./tasks/17-polish.md)

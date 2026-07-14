@@ -29,13 +29,5 @@ export default async function ProfileSettingsPage() {
     redirect("/login");
   }
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold">Profile</h2>
-        <p className="text-sm text-muted-foreground">Manage your name, avatar, and account details.</p>
-      </div>
-      <ProfileForm user={user} />
-    </div>
-  );
+  return <ProfileForm user={user} />;
 }

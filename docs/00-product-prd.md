@@ -336,15 +336,15 @@ Combines all agent outputs into:
 ### 4.24 Admin
 - Users, organizations, permissions
 - Audit logs, usage stats (local aggregates)
-- System health: DB, Ollama, disk, processing queue
-- Reindex, re-embed maintenance
-- **Status:** Slice 16 — not started
+- System health: DB, Ollama (host only — never API key), disk, processing queue
+- Reindex FTS / re-embed maintenance (confirmation required)
+- **Status:** Slice 16 — **shipped** (live OCI worker health deferred)
 
 ### 4.25 Settings
 - Profile, security, notifications preferences
 - Ollama model configuration (env overrides stored settings)
 - Keyboard shortcuts reference
-- Dark/light theme toggle
+- Dark/light theme toggle (`User.theme`; light tokens on `:root`, dark on `.dark`)
 - Deferred account deletion (24h recovery) + org tombstone restore
 
 ---
@@ -353,7 +353,8 @@ Combines all agent outputs into:
 
 **Feel:** Linear, Stripe, Notion, Arc, Vercel, Apple — premium, futuristic, trustworthy.
 
-- Dark mode first; optional light mode
+- Dark mode default for authenticated shell; full light theme via Appearance settings
+- Status badges / tint chips must remain readable in both themes (use `text-tint-*` / `badge-tint-*`)
 - Glassmorphism on key panels (subtle backdrop-blur)
 - Minimal chrome, professional density
 - Smooth Framer Motion transitions; AI "thinking" animation during agent runs

@@ -75,11 +75,11 @@ function formatScore(value: number | null | undefined) {
 function confidenceBadgeClass(confidence: string | null | undefined) {
   switch (confidence) {
     case "HIGH":
-      return "border-emerald-500/40 bg-emerald-500/10 text-emerald-200";
+      return "badge-tint-emerald";
     case "MEDIUM":
-      return "border-sky-500/40 bg-sky-500/10 text-sky-200";
+      return "border-sky-500/40 bg-sky-500/10 text-tint-sky";
     case "LOW":
-      return "border-amber-500/40 bg-amber-500/10 text-amber-200";
+      return "badge-tint-amber";
     case "INSUFFICIENT":
       return "border-border/60 bg-muted/40 text-muted-foreground";
     default:
@@ -90,11 +90,11 @@ function confidenceBadgeClass(confidence: string | null | undefined) {
 function severityBadgeClass(severity: string) {
   switch (severity) {
     case "CRITICAL":
-      return "border-rose-500/50 bg-rose-500/15 text-rose-200";
+      return "badge-tint-rose";
     case "HIGH":
-      return "border-orange-500/50 bg-orange-500/15 text-orange-200";
+      return "border-orange-500/50 bg-orange-500/15 text-tint-orange";
     case "MEDIUM":
-      return "border-amber-500/40 bg-amber-500/10 text-amber-100";
+      return "badge-tint-amber";
     default:
       return "border-border/60 bg-muted/30 text-muted-foreground";
   }
@@ -122,7 +122,7 @@ function DeltaChip({
     <span
       className={cn(
         "inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums",
-        worse ? "bg-amber-500/15 text-amber-200" : "bg-emerald-500/15 text-emerald-200",
+        worse ? "bg-amber-500/15 text-tint-amber" : "bg-emerald-500/15 text-tint-emerald",
       )}
     >
       {up ? (
@@ -345,7 +345,7 @@ export function SimulatorPageClient({
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
                 prerequisites.financial
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                  ? "badge-tint-emerald"
                   : "border-border/60 bg-muted/40 text-muted-foreground",
               )}
             >
@@ -360,7 +360,7 @@ export function SimulatorPageClient({
               className={cn(
                 "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs",
                 prerequisites.risk
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-200"
+                  ? "badge-tint-emerald"
                   : "border-border/60 bg-muted/40 text-muted-foreground",
               )}
             >
@@ -386,7 +386,7 @@ export function SimulatorPageClient({
           role="status"
         >
           <div className="flex gap-3">
-            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" aria-hidden />
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-tint-amber" aria-hidden />
             <div>
               <p className="font-medium text-foreground">Need baseline agent runs</p>
               <p className="text-sm text-muted-foreground">

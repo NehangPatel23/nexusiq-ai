@@ -1,6 +1,6 @@
 # Task 16: Admin
 
-**Status:** NOT STARTED | **Slice:** 16/16 | **Depends on:** 06-documents, 15-settings
+**Status:** DONE | **Slice:** 16/16 | **Depends on:** 06-documents, 15-settings
 
 ## Goal
 System admin: health, usage, users, reindex.
@@ -13,7 +13,7 @@ System admin: health, usage, users, reindex.
 ### UI: `/dashboard/admin` — health cards, queue status, action buttons
 
 ## Acceptance
-docs/08-acceptance-criteria.md § 16
+docs/08-acceptance-criteria.md § 16 — passed
 
 ## Deferred — OCI worker (production)
 

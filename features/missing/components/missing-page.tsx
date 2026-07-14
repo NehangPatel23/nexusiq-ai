@@ -397,7 +397,7 @@ export function MissingPageClient({
               label: "Open gaps",
               value: stats.open,
               hint: "Awaiting documents",
-              tone: "text-sky-300",
+              tone: "text-tint-sky",
             },
             {
               label: "Requested",
@@ -409,13 +409,13 @@ export function MissingPageClient({
               label: "Critical / high",
               value: stats.critical,
               hint: "Active high priority",
-              tone: "text-rose-300",
+              tone: "text-tint-rose",
             },
             {
               label: "Coverage",
               value: `${coveragePct}%`,
               hint: `${foundCount}/${checklist.length || 0} checklist items`,
-              tone: "text-emerald-300",
+              tone: "text-tint-emerald",
             },
           ].map((card) => (
             <div
@@ -531,7 +531,7 @@ export function MissingPageClient({
                       <MatchedDocumentsAction projectId={projectId} documents={matchedDocs} />
                     ) : (
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <p className="text-xs text-amber-200/80">Not found in data room</p>
+                        <p className="text-xs text-tint-amber-soft">Not found in data room</p>
                         <Link
                           href={dataRoomUploadHref(projectId, row.expectedFolderPath)}
                           className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"

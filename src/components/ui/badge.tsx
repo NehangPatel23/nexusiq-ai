@@ -15,9 +15,11 @@ const badgeVariants = cva(
         accent: "border-accent/20 bg-accent/10 text-accent",
         success: "border-success/20 bg-success/10 text-success",
         warning: "border-warning/20 bg-warning/10 text-warning",
-        orange: "border-risk-high/30 bg-risk-high/10 text-risk-high",
-        yellow: "border-risk-medium/30 bg-risk-medium/10 text-risk-medium",
-        info: "border-sky-400/30 bg-sky-400/10 text-sky-300",
+        orange:
+          "border-risk-high/40 bg-risk-high/15 text-orange-900 dark:border-risk-high/30 dark:bg-risk-high/10 dark:text-risk-high",
+        yellow:
+          "border-amber-600/35 bg-amber-500/15 text-amber-950 dark:border-risk-medium/30 dark:bg-risk-medium/10 dark:text-risk-medium",
+        info: "border-sky-600/30 bg-sky-500/12 text-sky-900 dark:border-sky-400/30 dark:bg-sky-400/10 dark:text-sky-300",
       },
     },
     defaultVariants: {

@@ -59,7 +59,7 @@ Enterprise decision intelligence — one developer, zero cost, production qualit
 | Day | Slice | Deliverable | Status |
 |-----|-------|-------------|--------|
 | 19 | 15 History + Settings | Audit, comparison, AI config, deferred deletion | Done |
-| 20 | 16 Admin | Health, usage, reindex | Pending |
+| 20 | 16 Admin | Health, usage, reindex | Done |
 | 21–22 | QA | E2E flows, accessibility audit, bug fixes | Ongoing |
 
 ---
@@ -84,7 +84,7 @@ pnpm install && pnpm db:migrate && pnpm dev
 ## MVP Complete When
 
 All 16 slices pass [08-acceptance-criteria.md](./08-acceptance-criteria.md).  
-Full journey: Landing → Auth → Dashboard → Upload → Intelligence → Contradictions / Missing / Risks → Simulator / Actions → Export works end-to-end.
+Full journey: Landing → Auth → Dashboard → Upload → Intelligence → Contradictions / Missing / Risks → Simulator / Actions → History / Settings → Admin (owner) → Export works end-to-end.
 
 **Slice 17 (Polish)** is a parallel backlog ([tasks/17-polish.md](../tasks/17-polish.md)) — optional UX improvements; not required for MVP complete.
 

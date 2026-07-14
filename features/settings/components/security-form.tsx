@@ -1,5 +1,6 @@
 "use client";
 
+import { KeyRound, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -8,6 +9,7 @@ import {
   changePasswordAction,
   deleteAccountAction,
 } from "@/features/settings/actions";
+import { SettingsPanel } from "@/features/settings/components/settings-panel";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -67,15 +69,13 @@ export function SecurityForm() {
   }
 
   return (
-    <div className="space-y-10">
-      <section className="surface-elevated space-y-6 p-8">
-        <div>
-          <h2 className="text-lg font-semibold">Change password</h2>
-          <p className="text-sm text-muted-foreground">
-            Enter your current password to set a new one.
-          </p>
-        </div>
-        <form onSubmit={handlePasswordSubmit} className="space-y-4">
+    <div className="space-y-6">
+      <SettingsPanel
+        icon={KeyRound}
+        title="Change password"
+        description="Enter your current password to set a new one."
+      >
+      <form onSubmit={handlePasswordSubmit} className="max-w-xl space-y-4">
           <div className="space-y-2">
             <Label htmlFor="currentPassword">Current password</Label>
             <Input
@@ -119,21 +119,18 @@ export function SecurityForm() {
             {isPending ? "Updating…" : "Update password"}
           </Button>
         </form>
-      </section>
+      </SettingsPanel>
 
-      <section className="surface-elevated space-y-4 border-destructive/30 p-8">
-        <div>
-          <h2 className="text-lg font-semibold text-destructive">Delete account</h2>
-          <p className="text-sm text-muted-foreground">
-            Your account is deactivated immediately and permanently removed after 24 hours. You can
-            recover it by signing in during the grace period. Transfer or delete organizations where
-            you are the sole owner first.
-          </p>
-        </div>
+      <SettingsPanel
+        icon={Trash2}
+        title="Delete account"
+        description="Your account is deactivated immediately and permanently removed after 24 hours. You can recover it by signing in during the grace period. Transfer or delete organizations where you are the sole owner first."
+        tone="danger"
+      >
         <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
           Delete my account
         </Button>
-      </section>
+      </SettingsPanel>
 
       <AlertDialog
         open={deleteOpen}

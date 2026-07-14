@@ -27,6 +27,7 @@ const AUDIT_ACTIONS = new Set<string>([
   "ORG_RECOVERED",
   "ORG_PURGED",
   "SETTINGS_UPDATE",
+  "MAINTENANCE",
 ]);
 
 export async function GET(request: Request, context: RouteContext) {

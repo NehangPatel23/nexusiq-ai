@@ -247,9 +247,11 @@ View endpoints never require Ollama. Extract returns `503 OLLAMA_UNAVAILABLE` wh
 | GET/PATCH | `/api/settings/profile` | User profile |
 | GET/PATCH | `/api/settings/ai` | Ollama effective config (env wins; never returns API key) |
 | GET | `/api/cron/purge-deleted` | Purge expired tombstoned users/orgs (`Authorization: Bearer CRON_SECRET`) |
-| GET | `/api/admin/health` | System health (Slice 16) |
-| GET | `/api/admin/usage` | Usage stats (Slice 16) |
-| POST | `/api/admin/reindex` | Reindex search (Slice 16) |
+| GET | `/api/admin/health` | Owner-only system health (DB, Ollama host-only, storage, queue) |
+| GET | `/api/admin/usage` | Owner-only org usage aggregates + 7/30d series |
+| GET | `/api/admin/users` | Owner-only org members (excludes deleted users) |
+| POST | `/api/admin/reindex` | Owner-only FTS / embeddings reindex (`confirm: true`) |
+| POST | `/api/admin/queue/retry` | Owner-only retry FAILED docs → PENDING |
 
 ---
 

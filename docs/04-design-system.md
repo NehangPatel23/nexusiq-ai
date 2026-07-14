@@ -1,6 +1,6 @@
 # Design System
 
-Premium enterprise SaaS — dark mode first. Target feel: Linear, Stripe, Notion, Arc, Vercel.
+Premium enterprise SaaS — dark default with a full light theme. Target feel: Linear, Stripe, Notion, Arc, Vercel.
 
 ---
 
@@ -10,32 +10,54 @@ Premium enterprise SaaS — dark mode first. Target feel: Linear, Stripe, Notion
 - **Minimal:** no clutter, purposeful density
 - **Futuristic:** subtle glassmorphism, AI thinking animations
 - **Professional:** enterprise-grade, not hackathon
+- **Readable in both themes:** status chips never use pale-on-pale text in light mode
+
+---
+
+## Theming
+
+| Mode | CSS | Activation |
+|------|-----|------------|
+| Light | `:root` tokens | `User.theme = light` (no `.dark` on `<html>`) |
+| Dark | `.dark` tokens | Default for shell / landing; `User.theme = dark` |
+
+Appearance settings (`/dashboard/settings/appearance`) persist `User.theme` and toggle `document.documentElement.classList` + `color-scheme`.
+
+Shadows use theme CSS variables (`--shadow-soft`, `--shadow-glow`) rather than fixed dark-only values.
 
 ---
 
 ## Color Tokens
 
+Light (`:root`) and dark (`.dark`) both define the same semantic variables. Representative values (HSL channels without `hsl()` wrapper — Tailwind `hsl(var(--token))`):
+
 ```css
-:root {
-  --background: 222 47% 5%;
-  --foreground: 210 40% 96%;
-  --card: 222 47% 8%;
-  --card-foreground: 210 40% 96%;
-  --glass: 222 47% 10% / 0.7;
-  --primary: 217 91% 60%;
-  --primary-foreground: 222 47% 6%;
-  --secondary: 217 33% 17%;
-  --muted: 217 33% 14%;
-  --muted-foreground: 215 20% 55%;
-  --accent: 262 83% 58%;
-  --destructive: 0 63% 50%;
-  --success: 142 71% 45%;
-  --warning: 38 92% 50%;
-  --border: 217 33% 17%;
-  --ring: 217 91% 60%;
-  --radius: 0.625rem;
-}
+/* Light — :root */
+--background: 220 24% 97%;
+--foreground: 222 40% 12%;
+--card: 0 0% 100%;
+--primary: 213 94% 46%;
+--muted-foreground: 215 14% 38%;
+--accent: 252 65% 52%;
+--destructive: 0 72% 48%;
+--success: 152 60% 34%;
+--warning: 38 92% 42%;
+--border: 220 16% 86%;
+
+/* Dark — .dark */
+--background: 228 32% 4%;
+--foreground: 210 28% 97%;
+--card: 228 26% 7%;
+--primary: 213 94% 62%;
+--muted-foreground: 215 14% 58%;
+--accent: 252 78% 68%;
+--destructive: 0 72% 58%;
+--success: 152 68% 46%;
+--warning: 38 92% 55%;
+--border: 228 16% 14%;
 ```
+
+Source of truth: `src/app/globals.css`.
 
 ### Semantic Colors
 | Token | Use |
@@ -46,6 +68,16 @@ Premium enterprise SaaS — dark mode first. Target feel: Linear, Stripe, Notion
 | `risk-low` | #22c55e |
 | `confidence-high` | #22c55e |
 | `confidence-insufficient` | #6b7280 |
+
+### Status tint utilities (light + dark)
+
+Prefer these over raw `text-amber-200` / pastel-on-tint patterns so badges stay WCAG-readable in light mode:
+
+| Utility | Purpose |
+|---------|---------|
+| `text-tint-amber` / `rose` / `emerald` / `sky` / `orange` | Ink text on tinted surfaces |
+| `badge-tint-amber` / `rose` / `emerald` | Pill chips (border + bg + text) |
+| `Badge` variants `orange` / `yellow` / `info` | Theme-aware built-ins in `src/components/ui/badge.tsx` |
 
 ---
 
@@ -61,7 +93,7 @@ Premium enterprise SaaS — dark mode first. Target feel: Linear, Stripe, Notion
 | `small` | 0.75rem | 400 | Meta, captions |
 | `mono` | 0.8125rem | 400 | Citations, code |
 
-Font: **Inter** (UI), **JetBrains Mono** (citations, data).
+Fonts: **Instrument Sans** (UI), **Sora** (display), **JetBrains Mono** (citations, data).
 
 ---
 
@@ -116,7 +148,7 @@ Button, Input, Textarea, Select, Checkbox, Switch, Form, Card, Table, Dialog, Sh
 ## Charts (Recharts)
 
 - Risk donut, activity line, score gauges
-- Dark theme axis/grid colors
+- Theme-aware axis/grid via CSS tokens (works in light and dark)
 - Accessible color palette (not color-only)
 
 ---
@@ -138,7 +170,7 @@ Button, Input, Textarea, Select, Checkbox, Switch, Form, Card, Table, Dialog, Sh
 
 ## Command Palette (`Cmd+K`)
 
-- Navigate: projects, data room, intelligence, chat
+- Navigate: projects, data room, intelligence, chat, admin (owners)
 - Actions: upload, new chat, run full scan, generate report
 - Search: quick document search
 
@@ -167,7 +199,7 @@ Button, Input, Textarea, Select, Checkbox, Switch, Form, Card, Table, Dialog, Sh
 
 ## Accessibility
 
-WCAG 2.2 AA: focus rings, skip link, ARIA labels, contrast ≥ 4.5:1, form errors linked, table headers.
+WCAG 2.2 AA: focus rings, skip link, ARIA labels, contrast ≥ 4.5:1 (including tinted status badges in light mode), form errors linked, table headers.
 
 ---
 

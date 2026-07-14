@@ -71,12 +71,12 @@ What-if scenarios (single Ollama JSON call from FINANCIAL+RISK baselines → `Si
 Org + project audit history (filters, source labels), project compare, settings hub (profile, security, notifications, AI, appearance, shortcuts), deferred user/org deletion with 24h recovery + purge cron.
 
 ## Slice 16: Admin
-**Task:** [tasks/16-admin.md](../tasks/16-admin.md) · **Status:** NOT STARTED  
-Users, permissions, usage stats, health, reindex.
+**Task:** [tasks/16-admin.md](../tasks/16-admin.md) · **Status:** DONE (OCI live worker health deferred)  
+Owner-only system admin: health (DB, Ollama host-only, storage, Postgres queue), usage aggregates, members table, failed-doc retry, FTS / embeddings reindex with confirmation. Never returns `OLLAMA_API_KEY`.
 
 ## Slice 17: Polish (parallel backlog)
 **Task:** [tasks/17-polish.md](../tasks/17-polish.md)  
-Cross-cutting UX and data-room polish. **Does not block core slices 6–16.** All future polish ideas go here unless explicitly requested for immediate implementation. Ship in small opportunistic batches.
+Cross-cutting UX and data-room polish. **Does not block core MVP (slices 01–16 shipped).** All future polish ideas go here unless explicitly requested for immediate implementation. Ship in small opportunistic batches.
 
 ---
 

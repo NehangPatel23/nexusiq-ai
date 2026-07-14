@@ -4,7 +4,8 @@
 
 Premium enterprise SaaS — **Linear, Stripe, Notion, Arc, Vercel** quality.
 
-- Dark mode first (light mode optional in settings)
+- Dark mode default; full light theme via Appearance (`User.theme`)
+- Status tint badges must stay readable in light mode (`text-tint-*` / `badge-tint-*`)
 - Glassmorphism on intelligence panels (subtle `backdrop-blur`)
 - Minimal clutter, professional density
 - AI thinking animations during agent runs
